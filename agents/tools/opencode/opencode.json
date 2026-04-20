@@ -1,0 +1,43 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "model": "github-copilot/gpt-5.4",
+  "small_model": "github-copilot/gpt-5-mini",
+  "autoupdate": true,
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "mcp": {
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "@playwright/mcp@latest"
+        ],
+        "enabled": true
+      }
+  },
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "frontend/node_modules/**",
+      "dist/**",
+      "build/**",
+      ".git/**",
+      "__pycache__/**",
+      "*.pyc",
+      ".venv/**",
+      ".uv/**",
+      "backend/staticfiles/**",
+      "backend/media/**",
+      ".astro/**",
+      "coverage/**",
+      ".coverage",
+      ".pytest_cache/**",
+      "*.egg-info/**"
+    ]
+  }
+}

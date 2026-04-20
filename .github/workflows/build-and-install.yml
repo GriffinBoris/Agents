@@ -1,0 +1,192 @@
+name: Build And Install
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  smoke:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build all targets
+        run: python agents/build_agents.py --target all --out dist --clean
+
+      - name: Verify built package files
+        shell: pwsh
+        run: |
+          $requiredPaths = @(
+            'dist/opencode/AGENTS.md',
+            'dist/opencode/opencode.json',
+            'dist/claude/AGENTS.md',
+            'dist/claude/.claude/CLAUDE.md',
+            'dist/copilot/.github/copilot-instructions.md',
+            'dist/codex/AGENTS.md',
+            'dist/gemini/AGENTS.md',
+            'dist/gemini/GEMINI.md'
+          )
+
+          foreach ($path in $requiredPaths) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Missing required build artifact: $path"
+            }
+          }
+
+      - name: Run shell installer smoke tests
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for target in source opencode claude copilot codex gemini; do
+            dest="$(mktemp -d)"
+            bash agents/scripts/install-agents.sh --target "$target" --dest "$dest" --repo .
+
+            case "$target" in
+              source)
+                test -f "$dest/agents/guidance/guidance.md"
+                test -f "$dest/agents/build_agents.py"
+                test -f "$dest/agents/agents_builder/cli.py"
+                test -f "$dest/agents/scripts/install-agents.sh"
+                test -f "$dest/agents/scripts/install-agents.ps1"
+                test ! -f "$dest/.gitattributes"
+                python3 "$dest/agents/build_agents.py" --target codex --out "$dest/dist" --clean
+                test -f "$dest/dist/codex/AGENTS.md"
+                printf 'keep\n' > "$dest/local-only.txt"
+                bash agents/scripts/install-agents.sh --target source --dest "$dest" --repo .
+                test -f "$dest/local-only.txt"
+                test -f "$dest/agents/build_agents.py"
+                ;;
+              opencode)
+                test -f "$dest/AGENTS.md"
+                test -f "$dest/opencode.json"
+                test -d "$dest/.opencode/commands"
+                test -d "$dest/.opencode/skills"
+                mkdir -p "$dest/.opencode/commands"
+                printf 'keep\n' > "$dest/.opencode/commands/local-only.md"
+                printf 'stale\n' > "$dest/AGENTS.md"
+                bash agents/scripts/install-agents.sh --target opencode --dest "$dest" --repo .
+                test -f "$dest/.opencode/commands/local-only.md"
+                cmp -s dist/opencode/AGENTS.md "$dest/AGENTS.md"
+                ;;
+              claude)
+                test -f "$dest/AGENTS.md"
+                test -f "$dest/.claude/CLAUDE.md"
+                ;;
+              copilot)
+                test -f "$dest/.github/copilot-instructions.md"
+                ;;
+              codex)
+                test -f "$dest/AGENTS.md"
+                ;;
+              gemini)
+                test -f "$dest/AGENTS.md"
+                test -f "$dest/GEMINI.md"
+                test -d "$dest/.gemini/skills"
+                ;;
+            esac
+          done
+
+      - name: Run PowerShell installer smoke tests
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $targets = @('source', 'opencode', 'claude', 'copilot', 'codex', 'gemini')
+
+          foreach ($target in $targets) {
+            $dest = Join-Path $env:RUNNER_TEMP ("install-" + $target)
+            if (Test-Path -LiteralPath $dest) {
+              Remove-Item -LiteralPath $dest -Recurse -Force
+            }
+
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+            pwsh -File agents/scripts/install-agents.ps1 -Target $target -Dest $dest -Repo .
+
+            switch ($target) {
+              'source' {
+                foreach ($path in @('agents/guidance/guidance.md', 'agents/build_agents.py', 'agents/agents_builder/cli.py', 'agents/scripts/install-agents.sh', 'agents/scripts/install-agents.ps1')) {
+                  if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
+                    throw "Missing source install output: $path"
+                  }
+                }
+
+                if (Test-Path -LiteralPath (Join-Path $dest '.gitattributes')) {
+                  throw 'Source install should only copy agents/.'
+                }
+
+                python (Join-Path $dest 'agents/build_agents.py') --target codex --out (Join-Path $dest 'dist') --clean
+                if (-not (Test-Path -LiteralPath (Join-Path $dest 'dist/codex/AGENTS.md'))) {
+                  throw 'Missing source install output.'
+                }
+
+                Set-Content -LiteralPath (Join-Path $dest 'local-only.txt') -Value 'keep'
+                pwsh -File agents/scripts/install-agents.ps1 -Target $target -Dest $dest -Repo .
+                if (-not (Test-Path -LiteralPath (Join-Path $dest 'local-only.txt'))) {
+                  throw 'Source install removed an unrelated file.'
+                }
+              }
+              'opencode' {
+                foreach ($path in @('AGENTS.md', 'opencode.json', '.opencode/commands', '.opencode/skills')) {
+                  if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
+                    throw "Missing OpenCode install output: $path"
+                  }
+                }
+
+                $customCommand = Join-Path $dest '.opencode/commands/local-only.md'
+                Set-Content -LiteralPath $customCommand -Value 'keep'
+                Set-Content -LiteralPath (Join-Path $dest 'AGENTS.md') -Value 'stale'
+                pwsh -File agents/scripts/install-agents.ps1 -Target $target -Dest $dest -Repo .
+
+                if (-not (Test-Path -LiteralPath $customCommand)) {
+                  throw 'OpenCode install removed an unrelated file.'
+                }
+
+                $expectedAgents = Get-Content -LiteralPath 'dist/opencode/AGENTS.md' -Raw
+                $installedAgents = Get-Content -LiteralPath (Join-Path $dest 'AGENTS.md') -Raw
+                if ($expectedAgents -ne $installedAgents) {
+                  throw 'OpenCode install did not overwrite AGENTS.md.'
+                }
+              }
+              'claude' {
+                foreach ($path in @('AGENTS.md', '.claude/CLAUDE.md')) {
+                  if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
+                    throw "Missing Claude install output: $path"
+                  }
+                }
+              }
+              'copilot' {
+                if (-not (Test-Path -LiteralPath (Join-Path $dest '.github/copilot-instructions.md'))) {
+                  throw 'Missing Copilot install output.'
+                }
+              }
+              'codex' {
+                if (-not (Test-Path -LiteralPath (Join-Path $dest 'AGENTS.md'))) {
+                  throw 'Missing Codex install output.'
+                }
+              }
+              'gemini' {
+                foreach ($path in @('AGENTS.md', 'GEMINI.md', '.gemini/skills')) {
+                  if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
+                    throw "Missing Gemini install output: $path"
+                  }
+                }
+              }
+            }
+          }
