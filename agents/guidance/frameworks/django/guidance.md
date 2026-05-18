@@ -108,6 +108,7 @@ order: 1
 ### Structure And Fields
 
 - Every serializer needs a `Meta` class with `model` and `fields`.
+- Serializer `Meta` inheritance is acceptable when a derived serializer is intentionally extending a base serializer's `fields` tuple or other serializer metadata. Do not apply the concrete-model-`Meta` example to serializers.
 - Output serializers should normally set `read_only_fields = fields`.
 - Always include `id` first in the fields tuple.
 - Verify field tuples for completeness. Duplicate entries can silently hide missing fields.
@@ -159,7 +160,7 @@ order: 1
 - For relation fields, pass the target model as `'app.Model'` and set `on_delete` explicitly.
 - Keep field declarations on one line.
 - Wrap human-readable `TextChoices` labels in `gettext(...)`.
-- Prefer `@staticmethod` over `@classmethod` for model helper methods.
+- Prefer `@staticmethod` for model helpers that do not need class state. Use `@classmethod` only when the helper genuinely depends on `cls`, such as shared permission-name helpers.
 - Keep intrinsic lifecycle and invariant rules on the model.
 - Prefer direct attribute access over `getattr` when a field is guaranteed by the model or serializer contract.
 - Choose an explicit `on_delete` strategy for every relation and follow the repository's established convention unless you are deliberately migrating away from it.
@@ -177,6 +178,7 @@ order: 1
 - Do not add new unrelated concerns to an existing catch-all module.
 - If you are touching one concern inside a god module, consider extracting that concern into a dedicated module instead of growing the shared file further.
 - In new projects, start with split modules instead of growing a single `common.py`-style catch-all file.
+- Keep shared access or base-view modules focused on request context, permission checks, and scoped object resolution. Do not place feature-specific queryset builders or domain query shaping there; keep that logic in the owning app's views, models, or app-local query helpers.
 
 ## URL Patterns
 
@@ -194,10 +196,11 @@ order: 1
 
 ## Admin Configuration
 
+- Keep each model's admin registration in that model app's `admin.py` instead of centralizing unrelated registrations in a shared module.
 - Register models with `@admin.register(Model)` and subclass `admin.ModelAdmin`.
 - Always include `id`, `created_ts`, and `updated_ts` in `list_display` and `readonly_fields`.
 - Use `search_fields`, `list_filter`, and `raw_id_fields` where relevant.
-- Keep custom actions in the `actions` tuple and give them meaningful `short_description` values.
+- Keep custom actions in the `actions` tuple and label them with `@admin.action(description='...')`.
 - Use multi-line tuples when admin field lists grow long.
 
 ## Management Commands
