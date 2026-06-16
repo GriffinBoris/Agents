@@ -235,6 +235,19 @@ order: 1
 - In production, prefer same-origin API calls from the built frontend served by Django. Keep production hosts and trusted origins environment-driven, require secure cookies, and avoid wildcard `ALLOWED_HOSTS`.
 - Keep frontend session state in the shared shell bootstrap flow instead of asking every route to check authentication or fetch current-user data independently.
 
+## Browser Session SSO
+
+- Use the session SSO example as the baseline when a browser SPA signs in through an OAuth or OIDC identity provider and Django owns the session cookie.
+- Keep provider client secrets, token exchange, profile loading, and profile validation on the backend. The frontend should only navigate the browser to a backend SSO login URL.
+- Store the SSO `state`, provider identifier, and normalized relative frontend redirect path in the server-side session before redirecting to the provider.
+- On callback, validate and remove the stored state before exchanging the authorization code. Never create or log in a user after an invalid, missing, or mismatched state.
+- Normalize post-login redirects to relative frontend paths. Reject absolute URLs, protocol-relative URLs, and values containing carriage returns or newlines.
+- Put provider URLs, scopes, client IDs, client secrets, and request timeouts in settings, with secrets coming from environment variables.
+- Expose available auth methods from the anonymous-safe bootstrap endpoint so the frontend can show password and SSO options from backend-owned feature flags or configuration.
+- Map provider profiles through a small backend service boundary, require a valid email address, require verified email claims when the provider exposes them, and fail on ambiguous account matches.
+- Create SSO-only users with an unusable password unless the product explicitly supports password setup after SSO.
+- Log callback failures at `warning` with provider context and `exc_info=True`, then redirect the browser to a stable frontend error code instead of returning provider details.
+
 ## Security Checklist
 
 - Do not hardcode secrets in settings files.
