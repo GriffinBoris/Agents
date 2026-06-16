@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import argparse
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
-
-try:
-    from opencode_ai import APIConnectionError, Opencode
-    from opencode_ai.types import StepFinishPart, TextPart
-except ModuleNotFoundError as exc:  # pragma: no cover - import guard for local usage
-    raise SystemExit(
-        'Missing dependency: opencode-ai. Install it with '
-        '`python3 -m pip install opencode-ai`. '
-        'Then rerun this workflow.'
-    ) from exc
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 GUIDANCE_ROOT = WORKSPACE_ROOT / 'agents' / 'guidance'
@@ -27,12 +20,160 @@ GUIDANCE_SETS = {
     'view': ('frameworks', 'vue'),
     'vue': ('frameworks', 'vue'),
 }
+
+APIConnectionError: type[Exception]
+Opencode: object
+EventFileEdited: object
+EventListResponse: object
+EventMessagePartUpdated: object
+EventPermissionUpdated: object
+EventSessionError: object
+EventSessionIdle: object
+StepFinishPart: object
+StepStartPart: object
+TextPart: object
+ToolPart: object
+
+
+def load_opencode_dependency() -> type[Exception]:
+    global APIConnectionError
+    global Opencode
+    global EventFileEdited
+    global EventListResponse
+    global EventMessagePartUpdated
+    global EventPermissionUpdated
+    global EventSessionError
+    global EventSessionIdle
+    global StepFinishPart
+    global StepStartPart
+    global TextPart
+    global ToolPart
+
+    try:
+        from opencode_ai import APIConnectionError as loaded_api_connection_error
+        from opencode_ai import Opencode as loaded_opencode
+        from opencode_ai.types import (
+            EventFileEdited as loaded_event_file_edited,
+            EventListResponse as loaded_event_list_response,
+            EventMessagePartUpdated as loaded_event_message_part_updated,
+            EventPermissionUpdated as loaded_event_permission_updated,
+            EventSessionError as loaded_event_session_error,
+            EventSessionIdle as loaded_event_session_idle,
+            StepFinishPart as loaded_step_finish_part,
+            StepStartPart as loaded_step_start_part,
+            TextPart as loaded_text_part,
+            ToolPart as loaded_tool_part,
+        )
+    except ModuleNotFoundError as exc:  # pragma: no cover - import guard for local usage
+        raise SystemExit(
+            'Missing dependency: opencode-ai. Install it with '
+            '`python3 -m pip install opencode-ai`. '
+            'Then rerun this workflow.'
+        ) from exc
+
+    APIConnectionError = loaded_api_connection_error
+    Opencode = loaded_opencode
+    EventFileEdited = loaded_event_file_edited
+    EventListResponse = loaded_event_list_response
+    EventMessagePartUpdated = loaded_event_message_part_updated
+    EventPermissionUpdated = loaded_event_permission_updated
+    EventSessionError = loaded_event_session_error
+    EventSessionIdle = loaded_event_session_idle
+    StepFinishPart = loaded_step_finish_part
+    StepStartPart = loaded_step_start_part
+    TextPart = loaded_text_part
+    ToolPart = loaded_tool_part
+
+    return APIConnectionError
+
+
 @dataclass(frozen=True)
 class WorkflowOptions:
     model_id: str
     provider_id: str
     mode: str
     reasoning_effort: Optional[str]
+    stream: bool
+
+
+class StreamReporter:
+    def __init__(self, client: Opencode, session_id: str) -> None:
+        self.client = client
+        self.session_id = session_id
+        self.error: Optional[Exception] = None
+        self.done = threading.Event()
+        self._seen_part_ids: set[str] = set()
+        self._seen_permission_ids: set[str] = set()
+
+    def start(self) -> None:
+        thread = threading.Thread(target=self._run, daemon=True)
+        thread.start()
+
+    def wait(self) -> None:
+        self.done.wait(timeout=1.0)
+        if self.error is not None:
+            raise RuntimeError(f'Stream reporter failed: {self.error}')
+
+    def _run(self) -> None:
+        event_client = Opencode(base_url=str(self.client.base_url))
+
+        try:
+            with event_client.event.list() as stream:
+                for event in stream:
+                    if self._handle_event(event):
+                        return
+        except Exception as exc:  # pragma: no cover - best effort status reporting
+            self.error = exc
+        finally:
+            self.done.set()
+
+    def _handle_event(self, event: EventListResponse) -> bool:
+        if isinstance(event, EventMessagePartUpdated):
+            part = event.properties.part
+            if part.session_id != self.session_id or part.id in self._seen_part_ids:
+                return False
+
+            self._seen_part_ids.add(part.id)
+            self._print_part_status(part)
+            return False
+
+        if isinstance(event, EventPermissionUpdated):
+            if event.properties.session_id != self.session_id or event.properties.id in self._seen_permission_ids:
+                return False
+
+            self._seen_permission_ids.add(event.properties.id)
+            print(f'\n[stream] permission requested: {event.properties.title}')
+            return False
+
+        if isinstance(event, EventFileEdited):
+            print(f'\n[stream] file edited: {event.properties.file}')
+            return False
+
+        if isinstance(event, EventSessionError):
+            if event.properties.session_id == self.session_id:
+                raise RuntimeError(f'Session error: {event.properties.error}')
+            return False
+
+        if isinstance(event, EventSessionIdle):
+            return event.properties.session_id == self.session_id
+
+        return False
+
+    def _print_part_status(self, part: object) -> None:
+        if isinstance(part, TextPart):
+            print('\n[stream] assistant text updated')
+            return
+
+        if isinstance(part, ToolPart):
+            print(f'\n[stream] tool {part.state.status}: {part.tool}')
+            return
+
+        if isinstance(part, StepStartPart):
+            print('\n[stream] step started')
+            return
+
+        if isinstance(part, StepFinishPart):
+            print('\n[stream] step finished')
 
 
 class GuidanceReviewWorkflow:
@@ -67,6 +208,10 @@ class GuidanceReviewWorkflow:
             extra_body = {'reasoningEffort': self.options.reasoning_effort}
 
         print('Running review prompt...')
+        reporter = None
+        if self.options.stream:
+            reporter = StreamReporter(self.client, session_id)
+            reporter.start()
 
         message = self.client.session.chat(
             session_id,
@@ -78,6 +223,9 @@ class GuidanceReviewWorkflow:
         )
 
         print('Review prompt completed.')
+        if reporter is not None:
+            reporter.wait()
+
         self._print_final_message(session_id, message.id)
 
         if message.error is not None:
@@ -148,12 +296,18 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_SERVER_URL,
         help='OpenCode server base URL.',
     )
+    parser.add_argument(
+        '--stream',
+        action='store_true',
+        help='Print live OpenCode status events while a prompt is running.',
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     guidance_set = args.guidance_set or prompt_guidance_set()
+    api_connection_error = load_opencode_dependency()
 
     client = Opencode(base_url=args.base_url)
     options = WorkflowOptions(
@@ -161,6 +315,7 @@ def main() -> int:
         provider_id=args.provider,
         mode=args.mode,
         reasoning_effort=args.reasoning_effort,
+        stream=args.stream,
     )
 
     print(
@@ -169,13 +324,14 @@ def main() -> int:
         f'provider={options.provider_id} '
         f'model={options.model_id} '
         f'reasoning_effort={options.reasoning_effort} '
-        f'mode={options.mode}'
+        f'mode={options.mode} '
+        f'stream={options.stream}'
     )
 
     try:
         workflow = GuidanceReviewWorkflow(client, options)
         workflow.run(guidance_set)
-    except APIConnectionError as exc:
+    except api_connection_error as exc:
         raise SystemExit(
             'Could not connect to the OpenCode server at '
             f'{args.base_url}. '
