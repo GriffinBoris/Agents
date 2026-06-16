@@ -56,6 +56,10 @@ order: 2
 - Route views, dialogs, and route-local stores must not call the auth bootstrap endpoint directly. They should read the shared shell store instead.
 - Express route access with route metadata such as `requiresAuth`, `guestOnly`, `skipShellBootstrap`, and `requiredPermissions` instead of route-local redirect logic.
 - Reset and re-bootstrap the shell store after any frontend flow that creates a new authenticated session, and reset shell state immediately after logout.
+- For session-backed SSO, route provider sign-in buttons to backend SSO login URLs and let the backend complete the provider callback, create the Django session, and redirect back to the SPA.
+- Preserve the intended destination as a relative redirect path in the SSO login URL, and let the backend reject unsafe redirect values.
+- Let the shared shell bootstrap own post-callback session detection. Do not add frontend token parsing, local-storage auth, or route-local provider callback handlers unless the backend contract explicitly requires them.
+- Render available password and SSO methods from the bootstrap payload instead of hardcoding provider buttons in the login page.
 - Mount notification or snackbar containers once near the app root and drive them from a shared store or composable.
 - Use shared global notifications for cross-feature success and error feedback instead of rendering one-off banners inside every page.
 
@@ -86,6 +90,7 @@ order: 2
 - Use `apiClient.get(...)`, `apiClient.post(...)`, `apiClient.put(...)`, and `apiClient.delete(...)` for JSON API requests.
 - Use `apiClient.postForm(...)` and `apiClient.putForm(...)` for `FormData` uploads.
 - Use `apiClient.setCsrfToken(...)` only at shell/bootstrap boundaries when a CSRF token is read from the rendered page.
+- Keep SSO login URL builders near the canonical API client so they share the same API base URL, but use normal browser navigation for SSO redirects instead of `apiClient.get(...)`.
 - Backend responses should stay snake_case; the client layer converts them to camelCase.
 - Components, composables, stores, and route views should work only with camelCase field names.
 - The API client converts POST and PUT JSON request bodies from camelCase to snake_case before sending them to the backend.
