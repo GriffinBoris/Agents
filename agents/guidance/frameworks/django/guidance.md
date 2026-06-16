@@ -20,7 +20,7 @@ order: 1
 
 - Capture Django, DRF, and Celery conventions.
 - Keep Python-wide conventions in `agents/guidance/languages/python/guidance.md`.
-- Keep product- and repository-specific tenant, clinic, shell, and workflow architecture in `agents/guidance/project/guidance.md`.
+- Keep product- and repository-specific domain architecture in `agents/guidance/project/guidance.md`.
 
 ## App Structure
 
@@ -33,15 +33,16 @@ order: 1
 - Keep the app-root `urls.py` thin and use it as an include hub for feature URL modules.
 - Keep app-wide model tests in `<app>/tests/` and feature-specific API tests next to the feature package when that split keeps responsibilities clearer.
 - When an app has many models, prefer a `models/` package with one model per file and re-export from `models/__init__.py` instead of growing one giant `models.py`.
+- When using a `models/` package, name each model file after the model class itself, such as `InvoiceBatch.py`, instead of snake_case filenames such as `invoice_batch.py`. This keeps model-package imports and file discovery aligned with the class names they define.
 - Keep service modules in `<app>/services/` and management commands under `<app>/management/commands/`.
 
-## Data Ownership And Tenant Scoping
+## Data Ownership And Organization Scoping
 
-- Every authenticated endpoint must scope data to the current user or tenant. This is a security requirement, not a convenience.
+- Every authenticated endpoint must scope data to the current user or organization. This is a security requirement, not a convenience.
 - List endpoints must filter by ownership, such as `request.user`, `request.employee.company`, or the equivalent boundary.
-- Detail, update, and delete endpoints must verify that the requested object belongs to the current user or tenant before operating on it.
+- Detail, update, and delete endpoints must verify that the requested object belongs to the current user or organization before operating on it.
 - Tests must verify ownership boundaries. If an endpoint is scoped to user A, add a test proving user B cannot see user A's data.
-- When multi-tenant middleware exists, keep queries flowing through that boundary instead of re-implementing tenant selection ad hoc.
+- When multi-organization middleware exists, keep queries flowing through that boundary instead of re-implementing organization selection ad hoc.
 - When repeated scoping depends on a request-owned domain object such as `request.employee` or `request.member`, attach it once in middleware and let views and serializers reuse that shared boundary.
 
 ## Views And APIs
@@ -223,6 +224,17 @@ order: 1
 - Production settings must not hardcode secrets.
 - Wildcard imports from base settings are acceptable only inside settings modules.
 
+## Sessions, CSRF, And Frontend Serving
+
+- Use the session-CSRF-SPA example as the baseline when Django APIs are consumed by a browser SPA.
+- Prefer Django's cookie-backed session authentication for browser API requests instead of adding JWT, bearer-token, or local-storage auth alongside Django sessions.
+- Keep `SessionMiddleware`, `CsrfViewMiddleware`, and `AuthenticationMiddleware` in the request stack, and keep authenticated DRF browser views on `SessionAuthentication`.
+- Do not disable CSRF or make browser mutation endpoints CSRF-exempt to work around split-origin local development. Fix `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, credentialed requests, and the bootstrap CSRF flow instead.
+- When local development uses separate frontend and backend servers, keep the frontend origin in both CORS and CSRF trusted-origin settings, allow credentials, and make the frontend API client send credentials and the CSRF header.
+- Provide one anonymous-safe bootstrap endpoint that sets a CSRF cookie and returns current session state, current user data, organization or access context, and any shell bootstrap data needed before route pages load.
+- In production, prefer same-origin API calls from the built frontend served by Django. Keep production hosts and trusted origins environment-driven, require secure cookies, and avoid wildcard `ALLOWED_HOSTS`.
+- Keep frontend session state in the shared shell bootstrap flow instead of asking every route to check authentication or fetch current-user data independently.
+
 ## Security Checklist
 
 - Do not hardcode secrets in settings files.
@@ -256,7 +268,7 @@ order: 1
 
 ## Testing Guidelines
 
-- Add reusable object builders to the repository's shared test-fixture helpers, usually `core/test_fixtures.py` or an equivalent shared module, instead of creating ad hoc builders inside test modules.
+- Add reusable object builders to the repository's shared test-fixture helpers, usually `tests/fixtures.py` or an equivalent shared module, instead of creating ad hoc builders inside test modules.
 - Keep fixture helpers explicit with named parameters and sensible defaults.
 - Place tests alongside their feature modules when that is the local pattern.
 - Tests should assign permissions explicitly instead of relying on implicit defaults.
@@ -293,8 +305,9 @@ order: 1
 - Views inherit from the expected base classes.
 - Serializer field tuples are complete and non-duplicated.
 - URL names follow kebab-case `{model}-{action}` patterns.
-- List endpoints are scoped to the current user or tenant.
+- List endpoints are scoped to the current user or organization.
 - Mutating endpoints return the created or updated resource.
 - Model lifecycle methods do not hide third-party I/O.
 - Tests cover permission-positive, permission-negative, and cross-user isolation paths.
 - Django-specific examples live in the Django `examples/` folder instead of inline guidance blocks.
+- Session-authenticated browser APIs keep CSRF enabled and have a tested bootstrap flow that provides session state and a CSRF token.
