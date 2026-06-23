@@ -39,7 +39,8 @@ order: 21
 
 ```typescript
 export interface AuthMethodsInterface {
-  corporateSso: boolean
+  googleSso: boolean
+  microsoftSso: boolean
   passwordLogin: boolean
 }
 
@@ -105,7 +106,7 @@ export class ApiClient {
 
 export const apiClient = new ApiClient(__API_URL__)
 
-export type SSOProvider = 'corporate'
+export type SSOProvider = 'google' | 'microsoft'
 
 export function buildSSOLoginUrl(provider: SSOProvider, redirect?: string | null) {
   const apiBaseUrl = __API_URL__.replace(/\/$/, '')
@@ -116,7 +117,7 @@ export function buildSSOLoginUrl(provider: SSOProvider, redirect?: string | null
   }
 
   const queryString = queryParams.toString()
-  return `${apiBaseUrl}/api/auth/sso/${provider}/login/${queryString ? `?${queryString}` : ''}`
+  return `${apiBaseUrl}/api/user/sso/${provider}/login/${queryString ? `?${queryString}` : ''}`
 }
 
 export const api = {
@@ -141,7 +142,8 @@ import { ref } from 'vue'
 
 export const useAppShellStore = defineStore('appShell', () => {
   const authMethods = ref<AuthMethodsInterface>({
-    corporateSso: true,
+    googleSso: true,
+    microsoftSso: true,
     passwordLogin: true,
   })
   const currentUser = ref<AuthUserInterface | null>(null)
@@ -152,7 +154,8 @@ export const useAppShellStore = defineStore('appShell', () => {
 
   function resetState() {
     authMethods.value = {
-      corporateSso: true,
+      googleSso: true,
+      microsoftSso: true,
       passwordLogin: true,
     }
     currentUser.value = null
@@ -234,13 +237,15 @@ const redirectPath = computed(() => {
 
   return '/workspace'
 })
-const corporateSSOUrl = computed(() => buildSSOLoginUrl('corporate', redirectPath.value))
-const hasSSOProvider = computed(() => appShellStore.authMethods.corporateSso)
+const googleSSOUrl = computed(() => buildSSOLoginUrl('google', redirectPath.value))
+const microsoftSSOUrl = computed(() => buildSSOLoginUrl('microsoft', redirectPath.value))
+const hasSSOProvider = computed(() => appShellStore.authMethods.googleSso || appShellStore.authMethods.microsoftSso)
 const hasLoginMethod = computed(() => appShellStore.authMethods.passwordLogin || hasSSOProvider.value)
 const ssoDividerLabel = computed(() => (appShellStore.authMethods.passwordLogin ? 'or continue with' : 'Continue with'))
 
 const ssoErrorMessages: Record<string, string> = {
   invalid_state: 'Unable to sign in with SSO. Please try again.',
+  no_operator_access: 'This account does not have operator access. Please sign in through the patient portal instead.',
   not_configured: 'SSO is not configured for this environment.',
   profile_failed: 'Unable to load your SSO profile. Contact support if this continues.',
   provider_denied: 'The SSO provider denied the sign-in request.',
@@ -318,9 +323,16 @@ async function submitLogin() {
       <p class="text-sm text-secondary">{{ ssoDividerLabel }}</p>
 
       <AppButton
-        v-if="appShellStore.authMethods.corporateSso"
-        :href="corporateSSOUrl"
-        label="Continue with company SSO"
+        v-if="appShellStore.authMethods.googleSso"
+        :href="googleSSOUrl"
+        label="Sign in with Google"
+        root-class="w-full justify-center"
+      />
+
+      <AppButton
+        v-if="appShellStore.authMethods.microsoftSso"
+        :href="microsoftSSOUrl"
+        label="Sign in with Microsoft"
         root-class="w-full justify-center"
       />
     </div>
