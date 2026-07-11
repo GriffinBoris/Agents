@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from ..document_types import BuildContext
-from ..file_ops import clean_output_dir, remove_output_path
+from agents.agents_builder.document_types import BuildContext
+from agents.agents_builder.file_ops import clean_output_dir, remove_output_path
 
 
 class BaseTarget:

@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 
-from .constants import ROOT
+from agents.agents_builder.constants import ROOT
 
 
 def display_path(path: Path) -> str:

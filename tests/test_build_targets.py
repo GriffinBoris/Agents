@@ -6,6 +6,18 @@ from agents.agents_builder.build_runner import build
 
 
 class BuildTargetsTest(unittest.TestCase):
+    def test_builder_uses_fully_qualified_imports(self) -> None:
+        builder_root = Path(__file__).resolve().parents[1] / 'agents' / 'agents_builder'
+
+        for path in builder_root.rglob('*.py'):
+            with self.subTest(path=path.relative_to(builder_root)):
+                relative_imports = [
+                    line
+                    for line in path.read_text(encoding='utf-8').splitlines()
+                    if line.startswith(('from .', 'import .'))
+                ]
+                self.assertEqual([], relative_imports)
+
     def test_all_builds_claude_codex_and_opencode_packages(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             output_root = Path(temporary_directory)

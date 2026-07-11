@@ -1,10 +1,10 @@
-from .base_target import BaseTarget
-from .claude_target import ClaudeTarget
-from .codex_target import CodexTarget
-from .copilot_target import CopilotTarget
-from .gemini_target import GeminiTarget
-from .opencode_target import OpenCodeTarget
-from .source_target import SourceTarget
+from agents.agents_builder.targets.base_target import BaseTarget
+from agents.agents_builder.targets.claude_target import ClaudeTarget
+from agents.agents_builder.targets.codex_target import CodexTarget
+from agents.agents_builder.targets.copilot_target import CopilotTarget
+from agents.agents_builder.targets.gemini_target import GeminiTarget
+from agents.agents_builder.targets.opencode_target import OpenCodeTarget
+from agents.agents_builder.targets.source_target import SourceTarget
 
 __all__ = [
     'BaseTarget',
