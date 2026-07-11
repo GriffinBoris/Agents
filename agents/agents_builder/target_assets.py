@@ -31,26 +31,13 @@ def render_claude_document(context: BuildContext) -> str:
     )
 
 
-def render_gemini_document() -> str:
-    return render_import_document(
-        '# Gemini CLI Instructions',
-        '@AGENTS.md',
-        [
-            '## Gemini CLI',
-            '- Project custom commands live in `.gemini/commands/`.',
-            '- Project skills live in `.gemini/skills/`.',
-        ],
+def render_gemini_document(context: BuildContext) -> str:
+    return render_document(
+        '# Gemini CLI Guidance',
+        context.guidance_tree,
+        example_mode=context.example_mode,
+        preamble='Project custom commands live in `.gemini/commands/`. Project skills live in `.gemini/skills/`.',
     )
-
-
-def render_import_document(title: str, import_path: str, extra_sections: list[str]) -> str:
-    parts = [title.strip(), import_path.strip()]
-
-    for section in extra_sections:
-        if section.strip():
-            parts.append(section.strip())
-
-    return '\n\n'.join(parts).strip() + '\n'
 
 
 def render_opencode_command(asset: ContentAsset) -> str:
