@@ -611,7 +611,7 @@ python3 agents/build_agents.py --target all --out /tmp/guidance-examples-build -
 
 ```bash
 rg -c '^```' agents/guidance/frameworks/vue/examples/vue-notification-system.md
-rg -n "Vue Notification System Example" /tmp/guidance-examples-build/codex/AGENTS.md /tmp/guidance-examples-build/opencode/AGENTS.md
+rg -n "Vue Notification System Example" /tmp/guidance-examples-build/codex/.agents/AGENTS.md /tmp/guidance-examples-build/opencode/.opencode/AGENTS.md
 ```
 
 - Check the frontend structure when changing notification behavior:

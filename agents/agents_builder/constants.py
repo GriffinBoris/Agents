@@ -25,4 +25,5 @@ SUPPORTED_FRONTMATTER_FIELDS = {
 ALLOWED_STATUSES = {'active', 'draft', 'deprecated'}
 BUILD_TARGETS = ('opencode', 'claude', 'copilot', 'codex', 'gemini')
 ALL_TARGETS = ('source', *BUILD_TARGETS)
-DEFAULT_OPENCODE_JSON = '{\n  "$schema": "https://opencode.ai/config.json",\n  "instructions": [\n    "AGENTS.md"\n  ]\n}\n'
+DEFAULT_OPENCODE_JSON = '{\n  "$schema": "https://opencode.ai/config.json",\n  "instructions": [\n    ".opencode/AGENTS.md"\n  ]\n}\n'
+DEFAULT_CODEX_CONFIG = '#:schema https://developers.openai.com/codex/config-schema.json\n\nproject_doc_fallback_filenames = [".agents/AGENTS.md"]\n'

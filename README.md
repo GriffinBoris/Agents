@@ -87,16 +87,17 @@ python3 agents/build_agents.py --target source --out dist --clean
 ## Generated Outputs
 
 - `dist/source/agents/`
-- `dist/opencode/AGENTS.md`
+- `dist/opencode/.opencode/AGENTS.md`
 - `dist/opencode/opencode.json`
 - `dist/opencode/.opencode/commands/*.md`
 - `dist/opencode/.opencode/skills/*/SKILL.md`
-- `dist/claude/CLAUDE.md`
+- `dist/claude/.claude/CLAUDE.md`
 - `dist/claude/.claude/commands/*.md` for Claude-compatible commands
 - `dist/claude/.claude/skills/*/SKILL.md`
 - `dist/copilot/AGENTS.md`
 - `dist/copilot/.github/copilot-instructions.md`
-- `dist/codex/AGENTS.md`
+- `dist/codex/.agents/AGENTS.md`
+- `dist/codex/.codex/config.toml`
 - `dist/codex/.agents/skills/*/SKILL.md` for command workflows converted to Codex skills
 - `dist/codex/.agents/skills/*/SKILL.md`
 - `dist/gemini/AGENTS.md`
@@ -104,7 +105,7 @@ python3 agents/build_agents.py --target source --out dist --clean
 - `dist/gemini/.gemini/commands/*.toml` for Gemini-compatible commands
 - `dist/gemini/.gemini/skills/*/SKILL.md`
 
-The same authored guidance is rendered into each harness's native root instruction file. OpenCode and Codex use `AGENTS.md`; Claude uses `CLAUDE.md`.
+The same authored guidance is rendered into each harness's target directory. OpenCode reads `.opencode/AGENTS.md` through root `opencode.json`; Claude reads `.claude/CLAUDE.md`; Codex reads `.agents/AGENTS.md` through `.codex/config.toml`.
 
 ## Install The Source Package
 
@@ -202,19 +203,19 @@ Both installers support:
 
 ## Target Layouts
 
-- `opencode`: root `AGENTS.md`, root `opencode.json`, `.opencode/commands/`, `.opencode/skills/`
-- `claude`: root `CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
+- `opencode`: root `opencode.json`, `.opencode/AGENTS.md`, `.opencode/commands/`, `.opencode/skills/`
+- `claude`: `.claude/CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
 - `copilot`: root `AGENTS.md`, `.github/copilot-instructions.md`
-- `codex`: root `AGENTS.md`, `.agents/skills/` containing both authored skills and converted command workflows
+- `codex`: `.agents/AGENTS.md`, `.agents/skills/` containing both authored skills and converted command workflows, and `.codex/config.toml`
 - `gemini`: root `AGENTS.md`, root `GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`
 
-Claude reads the complete generated guidance directly from root `CLAUDE.md`. Gemini reads `GEMINI.md`, which imports the shared root `AGENTS.md`.
+Claude reads the complete generated guidance directly from `.claude/CLAUDE.md`. Gemini reads `GEMINI.md`, which imports its shared root `AGENTS.md`.
 
 Target paths are case-sensitive and follow the tools' documented discovery conventions:
 
-- Claude uses root `CLAUDE.md` for guidance and `.claude/` for project commands and skills. Custom subagents, when authored, belong in `.claude/agents/`.
-- OpenCode uses root `AGENTS.md` for guidance, root `opencode.json` for configuration, and `.opencode/` for commands, skills, and custom agents. `.OpenCode/` is not a recognized project path.
-- Codex uses root `AGENTS.md` for guidance and `.agents/skills/` for repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory. Optional trusted-project configuration belongs in `.codex/config.toml`; `.Codex/` is not a recognized project path.
+- Claude supports `.claude/CLAUDE.md` for project guidance and `.claude/` for project commands and skills. Custom subagents, when authored, belong in `.claude/agents/`.
+- OpenCode reads `.opencode/AGENTS.md` through the `instructions` entry in root `opencode.json`; `.opencode/` also contains commands, skills, and custom agents.
+- Codex reads `.agents/AGENTS.md` through the fallback configured in `.codex/config.toml`; `.agents/skills/` contains repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory.
 
 ## Typical Workflows
 
@@ -252,8 +253,8 @@ python3 agents/build_agents.py --target gemini --out dist --layout in-place --cl
 
 These produce layouts like:
 
-- OpenCode: `dist/.opencode`, `dist/AGENTS.md`, `dist/opencode.json`
-- Claude: `dist/.claude`, `dist/CLAUDE.md`
+- OpenCode: `dist/.opencode`, `dist/opencode.json`
+- Claude: `dist/.claude`
 - Copilot: `dist/.github/copilot-instructions.md`, `dist/AGENTS.md`
-- Codex: `dist/.agents`, `dist/AGENTS.md`
+- Codex: `dist/.agents`, `dist/.codex`
 - Gemini: `dist/.gemini`, `dist/GEMINI.md`, `dist/AGENTS.md`

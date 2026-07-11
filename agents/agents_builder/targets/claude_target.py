@@ -10,10 +10,10 @@ class ClaudeTarget(BaseTarget):
     name = 'claude'
 
     def output_paths(self) -> tuple[str, ...]:
-        return ('CLAUDE.md', '.claude')
+        return ('AGENTS.md', 'CLAUDE.md', '.claude')
 
     def emit(self, context: BuildContext, out_dir: Path) -> None:
-        write_file(out_dir / 'CLAUDE.md', render_claude_document(context))
+        write_file(out_dir / '.claude' / 'CLAUDE.md', render_claude_document(context))
 
         for command in context.assets.commands:
             if not should_emit_command(command, self.name):

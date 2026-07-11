@@ -14,7 +14,7 @@ class OpenCodeTarget(BaseTarget):
         return ('AGENTS.md', 'opencode.json', '.opencode')
 
     def emit(self, context: BuildContext, out_dir: Path) -> None:
-        write_file(out_dir / 'AGENTS.md', render_agents_document(context))
+        write_file(out_dir / '.opencode' / 'AGENTS.md', render_agents_document(context))
         write_file(out_dir / 'opencode.json', load_opencode_json())
 
         for command in context.assets.commands:

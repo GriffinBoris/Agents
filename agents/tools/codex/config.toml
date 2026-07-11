@@ -1,0 +1,3 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+project_doc_fallback_filenames = [".agents/AGENTS.md"]

@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
-    "AGENTS.md"
+    ".opencode/AGENTS.md"
   ],
   "model": "github-copilot/gpt-5.4",
   "small_model": "github-copilot/gpt-5-mini",
