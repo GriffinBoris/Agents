@@ -40,8 +40,7 @@ jobs:
             'dist/codex/.agents/AGENTS.md',
             'dist/codex/.codex/config.toml',
             'dist/codex/.agents/skills/full-review/SKILL.md',
-            'dist/gemini/AGENTS.md',
-            'dist/gemini/GEMINI.md'
+            'dist/gemini/.gemini/GEMINI.md'
           )
 
           foreach ($path in $requiredPaths) {
@@ -102,9 +101,10 @@ jobs:
                 test ! -f "$dest/AGENTS.md"
                 ;;
               gemini)
-                test -f "$dest/AGENTS.md"
-                test -f "$dest/GEMINI.md"
+                test -f "$dest/.gemini/GEMINI.md"
                 test -d "$dest/.gemini/skills"
+                test ! -f "$dest/AGENTS.md"
+                test ! -f "$dest/GEMINI.md"
                 ;;
             esac
           done
@@ -197,9 +197,15 @@ jobs:
                 }
               }
               'gemini' {
-                foreach ($path in @('AGENTS.md', 'GEMINI.md', '.gemini/skills')) {
+                foreach ($path in @('.gemini/GEMINI.md', '.gemini/skills')) {
                   if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
                     throw "Missing Gemini install output: $path"
+                  }
+                }
+
+                foreach ($path in @('AGENTS.md', 'GEMINI.md')) {
+                  if (Test-Path -LiteralPath (Join-Path $dest $path)) {
+                    throw "Gemini install should not contain root $path."
                   }
                 }
               }

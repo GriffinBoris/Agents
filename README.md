@@ -100,12 +100,11 @@ python3 agents/build_agents.py --target source --out dist --clean
 - `dist/codex/.codex/config.toml`
 - `dist/codex/.agents/skills/*/SKILL.md` for command workflows converted to Codex skills
 - `dist/codex/.agents/skills/*/SKILL.md`
-- `dist/gemini/AGENTS.md`
-- `dist/gemini/GEMINI.md`
+- `dist/gemini/.gemini/GEMINI.md`
 - `dist/gemini/.gemini/commands/*.toml` for Gemini-compatible commands
 - `dist/gemini/.gemini/skills/*/SKILL.md`
 
-The same authored guidance is rendered into each harness's target directory. OpenCode reads `.opencode/AGENTS.md` through root `opencode.json`; Claude reads `.claude/CLAUDE.md`; Codex reads `.agents/AGENTS.md` through `.codex/config.toml`.
+The same authored guidance is rendered into each harness's target directory. OpenCode reads `.opencode/AGENTS.md` through root `opencode.json`; Claude reads `.claude/CLAUDE.md`; Codex reads `.agents/AGENTS.md` through `.codex/config.toml`; Gemini reads `.gemini/GEMINI.md`.
 
 ## Install The Source Package
 
@@ -207,15 +206,16 @@ Both installers support:
 - `claude`: `.claude/CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
 - `copilot`: root `AGENTS.md`, `.github/copilot-instructions.md`
 - `codex`: `.agents/AGENTS.md`, `.agents/skills/` containing both authored skills and converted command workflows, and `.codex/config.toml`
-- `gemini`: root `AGENTS.md`, root `GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`
+- `gemini`: `.gemini/GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`
 
-Claude reads the complete generated guidance directly from `.claude/CLAUDE.md`. Gemini reads `GEMINI.md`, which imports its shared root `AGENTS.md`.
+Claude and Gemini read the complete generated guidance directly from `.claude/CLAUDE.md` and `.gemini/GEMINI.md`, respectively.
 
 Target paths are case-sensitive and follow the tools' documented discovery conventions:
 
 - Claude supports `.claude/CLAUDE.md` for project guidance and `.claude/` for project commands and skills. Custom subagents, when authored, belong in `.claude/agents/`.
 - OpenCode reads `.opencode/AGENTS.md` through the `instructions` entry in root `opencode.json`; `.opencode/` also contains commands, skills, and custom agents.
 - Codex reads `.agents/AGENTS.md` through the fallback configured in `.codex/config.toml`; `.agents/skills/` contains repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory.
+- Gemini supports `.gemini/GEMINI.md` for project guidance; its commands and skills also remain under `.gemini/`.
 
 ## Typical Workflows
 
@@ -257,4 +257,4 @@ These produce layouts like:
 - Claude: `dist/.claude`
 - Copilot: `dist/.github/copilot-instructions.md`, `dist/AGENTS.md`
 - Codex: `dist/.agents`, `dist/.codex`
-- Gemini: `dist/.gemini`, `dist/GEMINI.md`, `dist/AGENTS.md`
+- Gemini: `dist/.gemini`
