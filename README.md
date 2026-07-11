@@ -91,20 +91,20 @@ python3 agents/build_agents.py --target source --out dist --clean
 - `dist/opencode/opencode.json`
 - `dist/opencode/.opencode/commands/*.md`
 - `dist/opencode/.opencode/skills/*/SKILL.md`
-- `dist/claude/AGENTS.md`
-- `dist/claude/.claude/CLAUDE.md`
+- `dist/claude/CLAUDE.md`
 - `dist/claude/.claude/commands/*.md` for Claude-compatible commands
 - `dist/claude/.claude/skills/*/SKILL.md`
 - `dist/copilot/AGENTS.md`
 - `dist/copilot/.github/copilot-instructions.md`
 - `dist/codex/AGENTS.md`
+- `dist/codex/.agents/skills/*/SKILL.md` for command workflows converted to Codex skills
 - `dist/codex/.agents/skills/*/SKILL.md`
 - `dist/gemini/AGENTS.md`
 - `dist/gemini/GEMINI.md`
 - `dist/gemini/.gemini/commands/*.toml` for Gemini-compatible commands
 - `dist/gemini/.gemini/skills/*/SKILL.md`
 
-`AGENTS.md` is the shared root guidance file for all generated targets. Harness-specific files import or complement it from their expected locations.
+The same authored guidance is rendered into each harness's native root instruction file. OpenCode and Codex use `AGENTS.md`; Claude uses `CLAUDE.md`.
 
 ## Install The Source Package
 
@@ -203,12 +203,18 @@ Both installers support:
 ## Target Layouts
 
 - `opencode`: root `AGENTS.md`, root `opencode.json`, `.opencode/commands/`, `.opencode/skills/`
-- `claude`: root `AGENTS.md`, `.claude/CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
+- `claude`: root `CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
 - `copilot`: root `AGENTS.md`, `.github/copilot-instructions.md`
-- `codex`: root `AGENTS.md`, `.agents/skills/`
+- `codex`: root `AGENTS.md`, `.agents/skills/` containing both authored skills and converted command workflows
 - `gemini`: root `AGENTS.md`, root `GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`
 
-Claude reads `.claude/CLAUDE.md`, which imports the shared root `AGENTS.md`. Gemini reads `GEMINI.md`, which imports the shared root `AGENTS.md`.
+Claude reads the complete generated guidance directly from root `CLAUDE.md`. Gemini reads `GEMINI.md`, which imports the shared root `AGENTS.md`.
+
+Target paths are case-sensitive and follow the tools' documented discovery conventions:
+
+- Claude uses root `CLAUDE.md` for guidance and `.claude/` for project commands and skills. Custom subagents, when authored, belong in `.claude/agents/`.
+- OpenCode uses root `AGENTS.md` for guidance, root `opencode.json` for configuration, and `.opencode/` for commands, skills, and custom agents. `.OpenCode/` is not a recognized project path.
+- Codex uses root `AGENTS.md` for guidance and `.agents/skills/` for repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory. Optional trusted-project configuration belongs in `.codex/config.toml`; `.Codex/` is not a recognized project path.
 
 ## Typical Workflows
 
@@ -247,7 +253,7 @@ python3 agents/build_agents.py --target gemini --out dist --layout in-place --cl
 These produce layouts like:
 
 - OpenCode: `dist/.opencode`, `dist/AGENTS.md`, `dist/opencode.json`
-- Claude: `dist/.claude`, `dist/AGENTS.md`
+- Claude: `dist/.claude`, `dist/CLAUDE.md`
 - Copilot: `dist/.github/copilot-instructions.md`, `dist/AGENTS.md`
 - Codex: `dist/.agents`, `dist/AGENTS.md`
 - Gemini: `dist/.gemini`, `dist/GEMINI.md`, `dist/AGENTS.md`

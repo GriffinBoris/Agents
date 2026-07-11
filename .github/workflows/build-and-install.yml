@@ -35,10 +35,10 @@ jobs:
           $requiredPaths = @(
             'dist/opencode/AGENTS.md',
             'dist/opencode/opencode.json',
-            'dist/claude/AGENTS.md',
-            'dist/claude/.claude/CLAUDE.md',
+            'dist/claude/CLAUDE.md',
             'dist/copilot/.github/copilot-instructions.md',
             'dist/codex/AGENTS.md',
+            'dist/codex/.agents/skills/full-review/SKILL.md',
             'dist/gemini/AGENTS.md',
             'dist/gemini/GEMINI.md'
           )
@@ -87,8 +87,8 @@ jobs:
                 cmp -s dist/opencode/AGENTS.md "$dest/AGENTS.md"
                 ;;
               claude)
-                test -f "$dest/AGENTS.md"
-                test -f "$dest/.claude/CLAUDE.md"
+                test -f "$dest/CLAUDE.md"
+                test ! -f "$dest/AGENTS.md"
                 ;;
               copilot)
                 test -f "$dest/.github/copilot-instructions.md"
@@ -165,10 +165,12 @@ jobs:
                 }
               }
               'claude' {
-                foreach ($path in @('AGENTS.md', '.claude/CLAUDE.md')) {
-                  if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
-                    throw "Missing Claude install output: $path"
-                  }
+                if (-not (Test-Path -LiteralPath (Join-Path $dest 'CLAUDE.md'))) {
+                  throw 'Missing Claude install output: CLAUDE.md'
+                }
+
+                if (Test-Path -LiteralPath (Join-Path $dest 'AGENTS.md')) {
+                  throw 'Claude install should not contain AGENTS.md.'
                 }
               }
               'copilot' {

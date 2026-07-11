@@ -22,15 +22,12 @@ def render_agents_document(context: BuildContext) -> str:
     )
 
 
-def render_claude_document() -> str:
-    return render_import_document(
-        '# Claude Code Instructions',
-        '@../AGENTS.md',
-        [
-            '## Claude Code',
-            '- Project commands live in `.claude/commands/`.',
-            '- Project skills live in `.claude/skills/`.',
-        ],
+def render_claude_document(context: BuildContext) -> str:
+    return render_document(
+        '# Claude Code Guidance',
+        context.guidance_tree,
+        example_mode=context.example_mode,
+        preamble='Project commands live in `.claude/commands/`. Project skills live in `.claude/skills/`.',
     )
 
 
@@ -62,6 +59,21 @@ def render_opencode_command(asset: ContentAsset) -> str:
 
 def render_claude_command(asset: ContentAsset) -> str:
     return render_markdown_command(convert_claude_arguments(asset.body), description=asset.description)
+
+
+def render_codex_command_skill(asset: ContentAsset) -> str:
+    body = convert_codex_command_syntax(asset.body)
+    invocation = (
+        '## Invocation\n\n'
+        'Treat any text supplied with this skill invocation as its arguments. '
+        'Follow the argument references in the workflow below.'
+    )
+    frontmatter = [f'name: {asset.name}']
+
+    if asset.description:
+        frontmatter.append(render_yaml_string('description', asset.description))
+
+    return render_markdown_with_frontmatter(frontmatter, f'{invocation}\n\n{body}')
 
 
 def render_gemini_command(asset: ContentAsset) -> str:
@@ -139,3 +151,18 @@ def convert_claude_arguments(body: str) -> str:
         return f'${index}' if index >= 0 else match.group(0)
 
     return re.sub(r'\$(\d+)', replace, body)
+
+
+def convert_codex_command_syntax(body: str) -> str:
+    body = body.replace('$ARGUMENTS', 'the full arguments supplied with this skill')
+
+    def replace_argument(match: re.Match[str]) -> str:
+        return f'argument {match.group(1)} supplied with this skill'
+
+    body = re.sub(r'\$(\d+)', replace_argument, body)
+
+    def replace_shell_command(match: re.Match[str]) -> str:
+        command = match.group(1).strip()
+        return f'Run `{command}` and use its output here.'
+
+    return re.sub(r'^!([^`\n].*)$', replace_shell_command, body, flags=re.MULTILINE)

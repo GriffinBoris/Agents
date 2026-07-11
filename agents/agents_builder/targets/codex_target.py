@@ -2,7 +2,7 @@ from pathlib import Path
 
 from ..document_types import BuildContext
 from ..file_ops import write_file
-from ..target_assets import render_agents_document, render_skill_document
+from ..target_assets import render_agents_document, render_codex_command_skill, render_skill_document
 from .base_target import BaseTarget
 
 
@@ -14,6 +14,15 @@ class CodexTarget(BaseTarget):
 
     def emit(self, context: BuildContext, out_dir: Path) -> None:
         write_file(out_dir / 'AGENTS.md', render_agents_document(context))
+
+        for command in context.assets.commands:
+            if command.kind != 'command':
+                continue
+
+            write_file(
+                out_dir / '.agents' / 'skills' / command.name / 'SKILL.md',
+                render_codex_command_skill(command),
+            )
 
         for skill in context.assets.skills:
             if skill.kind != 'skill':
