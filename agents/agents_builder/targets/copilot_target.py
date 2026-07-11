@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from ..document_types import BuildContext
-from ..file_ops import write_file
-from ..guidance_renderer import render_document
-from ..target_assets import render_agents_document
-from .base_target import BaseTarget
+from agents.agents_builder.document_types import BuildContext
+from agents.agents_builder.file_ops import write_file
+from agents.agents_builder.guidance_renderer import render_document
+from agents.agents_builder.target_assets import render_agents_document
+from agents.agents_builder.targets.base_target import BaseTarget
 
 
 class CopilotTarget(BaseTarget):

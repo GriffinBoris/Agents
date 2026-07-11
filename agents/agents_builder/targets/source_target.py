@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from ..constants import AGENTS_ROOT
-from ..document_types import BuildContext
-from ..file_ops import copy_tree
-from .base_target import BaseTarget
+from agents.agents_builder.constants import AGENTS_ROOT
+from agents.agents_builder.document_types import BuildContext
+from agents.agents_builder.file_ops import copy_tree
+from agents.agents_builder.targets.base_target import BaseTarget
 
 
 class SourceTarget(BaseTarget):

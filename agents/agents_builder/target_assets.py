@@ -1,8 +1,8 @@
 import json
 import re
 
-from .document_types import BuildContext, ContentAsset
-from .guidance_renderer import render_document
+from agents.agents_builder.document_types import BuildContext, ContentAsset
+from agents.agents_builder.guidance_renderer import render_document
 
 
 COMMAND_ROLES = {

@@ -33,11 +33,12 @@ jobs:
         shell: pwsh
         run: |
           $requiredPaths = @(
-            'dist/opencode/AGENTS.md',
+            'dist/opencode/.opencode/AGENTS.md',
             'dist/opencode/opencode.json',
-            'dist/claude/CLAUDE.md',
+            'dist/claude/.claude/CLAUDE.md',
             'dist/copilot/.github/copilot-instructions.md',
-            'dist/codex/AGENTS.md',
+            'dist/codex/.agents/AGENTS.md',
+            'dist/codex/.codex/config.toml',
             'dist/codex/.agents/skills/full-review/SKILL.md',
             'dist/gemini/AGENTS.md',
             'dist/gemini/GEMINI.md'
@@ -68,33 +69,37 @@ jobs:
                 test -f "$dest/agents/scripts/install-agents.ps1"
                 test ! -f "$dest/.gitattributes"
                 python3 "$dest/agents/build_agents.py" --target codex --out "$dest/dist" --clean
-                test -f "$dest/dist/codex/AGENTS.md"
+                test -f "$dest/dist/codex/.agents/AGENTS.md"
                 printf 'keep\n' > "$dest/local-only.txt"
                 bash agents/scripts/install-agents.sh --target source --dest "$dest" --repo .
                 test -f "$dest/local-only.txt"
                 test -f "$dest/agents/build_agents.py"
                 ;;
               opencode)
-                test -f "$dest/AGENTS.md"
+                test -f "$dest/.opencode/AGENTS.md"
                 test -f "$dest/opencode.json"
                 test -d "$dest/.opencode/commands"
                 test -d "$dest/.opencode/skills"
                 mkdir -p "$dest/.opencode/commands"
                 printf 'keep\n' > "$dest/.opencode/commands/local-only.md"
-                printf 'stale\n' > "$dest/AGENTS.md"
+                printf 'stale\n' > "$dest/.opencode/AGENTS.md"
                 bash agents/scripts/install-agents.sh --target opencode --dest "$dest" --repo .
                 test -f "$dest/.opencode/commands/local-only.md"
-                cmp -s dist/opencode/AGENTS.md "$dest/AGENTS.md"
+                cmp -s dist/opencode/.opencode/AGENTS.md "$dest/.opencode/AGENTS.md"
                 ;;
               claude)
-                test -f "$dest/CLAUDE.md"
+                test -f "$dest/.claude/CLAUDE.md"
                 test ! -f "$dest/AGENTS.md"
+                test ! -f "$dest/CLAUDE.md"
                 ;;
               copilot)
                 test -f "$dest/.github/copilot-instructions.md"
                 ;;
               codex)
-                test -f "$dest/AGENTS.md"
+                test -f "$dest/.agents/AGENTS.md"
+                test -f "$dest/.codex/config.toml"
+                test -f "$dest/.agents/skills/full-review/SKILL.md"
+                test ! -f "$dest/AGENTS.md"
                 ;;
               gemini)
                 test -f "$dest/AGENTS.md"
@@ -132,7 +137,7 @@ jobs:
                 }
 
                 python (Join-Path $dest 'agents/build_agents.py') --target codex --out (Join-Path $dest 'dist') --clean
-                if (-not (Test-Path -LiteralPath (Join-Path $dest 'dist/codex/AGENTS.md'))) {
+                if (-not (Test-Path -LiteralPath (Join-Path $dest 'dist/codex/.agents/AGENTS.md'))) {
                   throw 'Missing source install output.'
                 }
 
@@ -143,7 +148,7 @@ jobs:
                 }
               }
               'opencode' {
-                foreach ($path in @('AGENTS.md', 'opencode.json', '.opencode/commands', '.opencode/skills')) {
+                foreach ($path in @('.opencode/AGENTS.md', 'opencode.json', '.opencode/commands', '.opencode/skills')) {
                   if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
                     throw "Missing OpenCode install output: $path"
                   }
@@ -151,26 +156,28 @@ jobs:
 
                 $customCommand = Join-Path $dest '.opencode/commands/local-only.md'
                 Set-Content -LiteralPath $customCommand -Value 'keep'
-                Set-Content -LiteralPath (Join-Path $dest 'AGENTS.md') -Value 'stale'
+                Set-Content -LiteralPath (Join-Path $dest '.opencode/AGENTS.md') -Value 'stale'
                 pwsh -File agents/scripts/install-agents.ps1 -Target $target -Dest $dest -Repo .
 
                 if (-not (Test-Path -LiteralPath $customCommand)) {
                   throw 'OpenCode install removed an unrelated file.'
                 }
 
-                $expectedAgents = Get-Content -LiteralPath 'dist/opencode/AGENTS.md' -Raw
-                $installedAgents = Get-Content -LiteralPath (Join-Path $dest 'AGENTS.md') -Raw
+                $expectedAgents = Get-Content -LiteralPath 'dist/opencode/.opencode/AGENTS.md' -Raw
+                $installedAgents = Get-Content -LiteralPath (Join-Path $dest '.opencode/AGENTS.md') -Raw
                 if ($expectedAgents -ne $installedAgents) {
                   throw 'OpenCode install did not overwrite AGENTS.md.'
                 }
               }
               'claude' {
-                if (-not (Test-Path -LiteralPath (Join-Path $dest 'CLAUDE.md'))) {
-                  throw 'Missing Claude install output: CLAUDE.md'
+                if (-not (Test-Path -LiteralPath (Join-Path $dest '.claude/CLAUDE.md'))) {
+                  throw 'Missing Claude install output: .claude/CLAUDE.md'
                 }
 
-                if (Test-Path -LiteralPath (Join-Path $dest 'AGENTS.md')) {
-                  throw 'Claude install should not contain AGENTS.md.'
+                foreach ($path in @('AGENTS.md', 'CLAUDE.md')) {
+                  if (Test-Path -LiteralPath (Join-Path $dest $path)) {
+                    throw "Claude install should not contain root $path."
+                  }
                 }
               }
               'copilot' {
@@ -179,8 +186,14 @@ jobs:
                 }
               }
               'codex' {
-                if (-not (Test-Path -LiteralPath (Join-Path $dest 'AGENTS.md'))) {
-                  throw 'Missing Codex install output.'
+                foreach ($path in @('.agents/AGENTS.md', '.codex/config.toml', '.agents/skills/full-review/SKILL.md')) {
+                  if (-not (Test-Path -LiteralPath (Join-Path $dest $path))) {
+                    throw "Missing Codex install output: $path"
+                  }
+                }
+
+                if (Test-Path -LiteralPath (Join-Path $dest 'AGENTS.md')) {
+                  throw 'Codex install should not contain root AGENTS.md.'
                 }
               }
               'gemini' {

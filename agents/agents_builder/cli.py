@@ -1,8 +1,8 @@
 import argparse
 from pathlib import Path
 
-from .build_runner import build
-from .constants import ALL_TARGETS
+from agents.agents_builder.build_runner import build
+from agents.agents_builder.constants import ALL_TARGETS
 
 
 def parse_args() -> argparse.Namespace:

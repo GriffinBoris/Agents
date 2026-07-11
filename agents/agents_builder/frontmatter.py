@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .constants import ALLOWED_STATUSES, ROOT, SUPPORTED_FRONTMATTER_FIELDS
+from agents.agents_builder.constants import ALLOWED_STATUSES, ROOT, SUPPORTED_FRONTMATTER_FIELDS
 
 
 def parse_frontmatter(raw_text: str, path: Path) -> tuple[dict[str, Any], str]:

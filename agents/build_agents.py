@@ -4,14 +4,14 @@ import sys
 from pathlib import Path
 
 
-CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-if str(CURRENT_DIR) not in sys.path:
-    sys.path.insert(0, str(CURRENT_DIR))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
-import agents_builder.cli  # noqa: E402
+import agents.agents_builder.cli  # noqa: E402
 
 
 if __name__ == '__main__':
-    raise SystemExit(agents_builder.cli.main())
+    raise SystemExit(agents.agents_builder.cli.main())

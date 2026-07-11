@@ -1,9 +1,16 @@
 from pathlib import Path
 
-from .constants import BUILD_TARGETS, CONTENT_ROOT, GUIDANCE_ROOT
-from .content_loader import load_content_assets, load_guidance_tree
-from .document_types import BuildContext
-from .targets import ClaudeTarget, CodexTarget, CopilotTarget, GeminiTarget, OpenCodeTarget, SourceTarget
+from agents.agents_builder.constants import BUILD_TARGETS, CONTENT_ROOT, GUIDANCE_ROOT
+from agents.agents_builder.content_loader import load_content_assets, load_guidance_tree
+from agents.agents_builder.document_types import BuildContext
+from agents.agents_builder.targets import (
+    ClaudeTarget,
+    CodexTarget,
+    CopilotTarget,
+    GeminiTarget,
+    OpenCodeTarget,
+    SourceTarget,
+)
 
 TARGETS = {
     'source': SourceTarget(),

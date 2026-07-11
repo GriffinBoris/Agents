@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from .constants import GUIDANCE_ROOT, ROOT
-from .document_types import Assets, ContentAsset, GuidancePackage, GuidanceTree, MarkdownDocument
-from .frontmatter import parse_frontmatter, validate_frontmatter
-from .guidance_renderer import derive_title, normalize_body, sort_key
+from agents.agents_builder.constants import GUIDANCE_ROOT, ROOT
+from agents.agents_builder.document_types import Assets, ContentAsset, GuidancePackage, GuidanceTree, MarkdownDocument
+from agents.agents_builder.frontmatter import parse_frontmatter, validate_frontmatter
+from agents.agents_builder.guidance_renderer import derive_title, normalize_body, sort_key
 
 
 def load_markdown_document(path: Path, *, expected_kind: str, expected_scope: str, expected_name: str) -> MarkdownDocument:
