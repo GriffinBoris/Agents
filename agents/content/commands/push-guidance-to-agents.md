@@ -1,7 +1,7 @@
 ---
 kind: command
 role: shared-command
-description: Filter and push reusable guidance from a third-party project to Agents through a pull request
+description: Push reusable guidance from a third-party project to Agents through a pull request
 ---
 
 Push reusable guidance from the third-party project in the current working directory to the global Agents repository through a pull request.
