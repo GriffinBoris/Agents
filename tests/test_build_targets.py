@@ -49,6 +49,11 @@ class BuildTargetsTest(unittest.TestCase):
                     '.opencode/commands/full-review.md',
                     '.opencode/skills/architecture-audit/SKILL.md',
                 ),
+                'gemini': (
+                    '.gemini/GEMINI.md',
+                    '.gemini/commands/pull-guidance-from-agents.toml',
+                    '.gemini/skills/architecture-audit/SKILL.md',
+                ),
             }
 
             for target, relative_paths in expected_files.items():
@@ -69,6 +74,8 @@ class BuildTargetsTest(unittest.TestCase):
 
             self.assertFalse((output_root / 'claude' / 'CLAUDE.md').exists())
             self.assertFalse((output_root / 'claude' / 'AGENTS.md').exists())
+            self.assertFalse((output_root / 'gemini' / 'AGENTS.md').exists())
+            self.assertFalse((output_root / 'gemini' / 'GEMINI.md').exists())
             self.assertIn('.opencode', {path.name for path in (output_root / 'opencode').iterdir()})
             self.assertNotIn('.OpenCode', {path.name for path in (output_root / 'opencode').iterdir()})
             self.assertNotIn('.Codex', {path.name for path in (output_root / 'codex').iterdir()})
@@ -92,7 +99,7 @@ class BuildTargetsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary_directory:
             output_root = Path(temporary_directory)
 
-            for target in ('claude', 'opencode', 'codex'):
+            for target in ('claude', 'opencode', 'codex', 'gemini'):
                 build(
                     target,
                     output_root,
@@ -107,6 +114,7 @@ class BuildTargetsTest(unittest.TestCase):
             self.assertTrue((output_root / '.opencode' / 'AGENTS.md').is_file())
             self.assertTrue((output_root / '.agents' / 'AGENTS.md').is_file())
             self.assertTrue((output_root / '.codex' / 'config.toml').is_file())
+            self.assertTrue((output_root / '.gemini' / 'GEMINI.md').is_file())
 
 
 if __name__ == '__main__':
