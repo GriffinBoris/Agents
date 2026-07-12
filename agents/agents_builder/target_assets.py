@@ -45,7 +45,7 @@ def render_opencode_command(asset: ContentAsset) -> str:
 
 
 def render_claude_command(asset: ContentAsset) -> str:
-    return render_markdown_command(convert_claude_arguments(asset.body), description=asset.description)
+    return render_markdown_command(asset.body, description=asset.description)
 
 
 def render_codex_command_skill(asset: ContentAsset) -> str:
@@ -130,14 +130,6 @@ def render_markdown_with_frontmatter(frontmatter_lines: list[str], body: str) ->
 
 def render_yaml_string(key: str, value: str) -> str:
     return f'{key}: {json.dumps(value)}'
-
-
-def convert_claude_arguments(body: str) -> str:
-    def replace(match: re.Match[str]) -> str:
-        index = int(match.group(1)) - 1
-        return f'${index}' if index >= 0 else match.group(0)
-
-    return re.sub(r'\$(\d+)', replace, body)
 
 
 def convert_codex_command_syntax(body: str) -> str:
