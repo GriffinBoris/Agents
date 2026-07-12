@@ -18,7 +18,8 @@ def parse_frontmatter(raw_text: str, path: Path) -> tuple[dict[str, Any], str]:
             break
 
     if closing_index is None:
-        raise ValueError(f'Frontmatter block is missing a closing --- delimiter in {path.relative_to(ROOT).as_posix()}')
+        message = f'Frontmatter block is missing a closing --- delimiter in {path.relative_to(ROOT).as_posix()}'
+        raise ValueError(message)
 
     frontmatter = parse_frontmatter_mapping(lines[1:closing_index], path)
     body = ''.join(lines[closing_index + 1 :])
@@ -38,17 +39,20 @@ def parse_frontmatter_mapping(lines: list[str], path: Path) -> dict[str, Any]:
             continue
 
         if raw_line.startswith(' '):
-            raise ValueError(f'Unsupported nested frontmatter structure in {path.relative_to(ROOT).as_posix()}')
+            message = f'Unsupported nested frontmatter structure in {path.relative_to(ROOT).as_posix()}'
+            raise ValueError(message)
 
         if ':' not in raw_line:
-            raise ValueError(f'Invalid frontmatter line in {path.relative_to(ROOT).as_posix()}: {raw_line}')
+            message = f'Invalid frontmatter line in {path.relative_to(ROOT).as_posix()}: {raw_line}'
+            raise ValueError(message)
 
         key, raw_value = raw_line.split(':', 1)
         key = key.strip()
         value = raw_value.lstrip()
 
         if key in frontmatter:
-            raise ValueError(f'Duplicate frontmatter field in {path.relative_to(ROOT).as_posix()}: {key}')
+            message = f'Duplicate frontmatter field in {path.relative_to(ROOT).as_posix()}: {key}'
+            raise ValueError(message)
 
         if value in {'>', '|'}:
             block_lines: list[str] = []
@@ -94,7 +98,8 @@ def parse_frontmatter_mapping(lines: list[str], path: Path) -> dict[str, Any]:
                     continue
 
                 if next_line.startswith('  '):
-                    raise ValueError(f'Unsupported nested frontmatter structure in {path.relative_to(ROOT).as_posix()}')
+                    message = f'Unsupported nested frontmatter structure in {path.relative_to(ROOT).as_posix()}'
+                    raise ValueError(message)
 
                 break
 
@@ -142,11 +147,13 @@ def parse_block_scalar(lines: list[str], *, folded: bool) -> str:
 def validate_frontmatter(frontmatter: dict[str, Any], path: Path) -> None:
     for key in frontmatter:
         if key not in SUPPORTED_FRONTMATTER_FIELDS:
-            raise ValueError(f'Unsupported frontmatter field in {path.relative_to(ROOT).as_posix()}: {key}')
+            message = f'Unsupported frontmatter field in {path.relative_to(ROOT).as_posix()}: {key}'
+            raise ValueError(message)
 
     status = frontmatter.get('status')
     if status is not None and status not in ALLOWED_STATUSES:
-        raise ValueError(f'Unsupported frontmatter status in {path.relative_to(ROOT).as_posix()}: {status}')
+        message = f'Unsupported frontmatter status in {path.relative_to(ROOT).as_posix()}: {status}'
+        raise ValueError(message)
 
     for list_field in ('tags', 'applies_to'):
         value = frontmatter.get(list_field)
@@ -155,11 +162,14 @@ def validate_frontmatter(frontmatter: dict[str, Any], path: Path) -> None:
             continue
 
         if not isinstance(value, list):
-            raise ValueError(f'Expected {list_field} to be a list in {path.relative_to(ROOT).as_posix()}')
+            message = f'Expected {list_field} to be a list in {path.relative_to(ROOT).as_posix()}'
+            raise ValueError(message)
 
         if any(not isinstance(item, str) for item in value):
-            raise ValueError(f'Expected {list_field} items to be strings in {path.relative_to(ROOT).as_posix()}')
+            message = f'Expected {list_field} items to be strings in {path.relative_to(ROOT).as_posix()}'
+            raise ValueError(message)
 
     order = frontmatter.get('order')
     if order is not None and not isinstance(order, int):
-        raise ValueError(f'Expected order to be an integer in {path.relative_to(ROOT).as_posix()}')
+        message = f'Expected order to be an integer in {path.relative_to(ROOT).as_posix()}'
+        raise ValueError(message)

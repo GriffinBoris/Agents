@@ -12,13 +12,16 @@ def load_markdown_document(path: Path, *, expected_kind: str, expected_scope: st
     validate_frontmatter(frontmatter, path)
 
     if frontmatter.get('kind') not in {None, expected_kind}:
-        raise ValueError(f'Frontmatter kind does not match file location in {path.relative_to(ROOT).as_posix()}')
+        message = f'Frontmatter kind does not match file location in {path.relative_to(ROOT).as_posix()}'
+        raise ValueError(message)
 
     if frontmatter.get('scope') not in {None, expected_scope}:
-        raise ValueError(f'Frontmatter scope does not match file location in {path.relative_to(ROOT).as_posix()}')
+        message = f'Frontmatter scope does not match file location in {path.relative_to(ROOT).as_posix()}'
+        raise ValueError(message)
 
     if frontmatter.get('name') not in {None, expected_name}:
-        raise ValueError(f'Frontmatter name does not match file location in {path.relative_to(ROOT).as_posix()}')
+        message = f'Frontmatter name does not match file location in {path.relative_to(ROOT).as_posix()}'
+        raise ValueError(message)
 
     return MarkdownDocument(
         id=frontmatter.get('id') or '-'.join(path.relative_to(GUIDANCE_ROOT).with_suffix('').parts),
