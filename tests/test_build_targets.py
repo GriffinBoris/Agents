@@ -34,6 +34,8 @@ class BuildTargetsTest(unittest.TestCase):
                 'claude': (
                     '.claude/CLAUDE.md',
                     '.claude/commands/pull-guidance-from-agents.md',
+                    '.claude/commands/full-review.md',
+                    '.claude/commands/create-command.md',
                     '.claude/skills/architecture-audit/SKILL.md',
                 ),
                 'codex': (
@@ -88,6 +90,13 @@ class BuildTargetsTest(unittest.TestCase):
 
             codex_config = (output_root / 'codex' / '.codex' / 'config.toml').read_text(encoding='utf-8')
             self.assertIn('project_doc_fallback_filenames = [".agents/AGENTS.md"]', codex_config)
+
+            claude_command = (
+                output_root / 'claude' / '.claude' / 'commands' / 'create-command.md'
+            ).read_text(encoding='utf-8')
+            self.assertIn('agents/content/commands/$1.md', claude_command)
+            self.assertIn('Use `$2` as the description', claude_command)
+            self.assertNotIn('$0', claude_command)
 
             codex_command_skill = (
                 output_root / 'codex' / '.agents' / 'skills' / 'full-review' / 'SKILL.md'

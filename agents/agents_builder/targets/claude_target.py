@@ -6,7 +6,6 @@ from agents.agents_builder.target_assets import (
     render_claude_command,
     render_claude_document,
     render_skill_document,
-    should_emit_command,
 )
 from agents.agents_builder.targets.base_target import BaseTarget
 
@@ -21,7 +20,7 @@ class ClaudeTarget(BaseTarget):
         write_file(out_dir / '.claude' / 'CLAUDE.md', render_claude_document(context))
 
         for command in context.assets.commands:
-            if not should_emit_command(command, self.name):
+            if command.kind != 'command':
                 continue
 
             write_file(out_dir / '.claude' / 'commands' / f'{command.name}.md', render_claude_command(command))
