@@ -1,0 +1,39 @@
+version = 1
+
+[[tools]]
+name = "ruff-lint"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["pyproject.toml"]
+check = ["ruff", "check", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "tests/test_agents_linter.py"]
+fix = ["ruff", "check", "--fix", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "tests/test_agents_linter.py"]
+
+[[tools]]
+name = "ruff-format"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["pyproject.toml"]
+check = ["ruff", "format", "--check", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "tests/test_agents_linter.py"]
+fix = ["ruff", "format", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "tests/test_agents_linter.py"]
+
+[[tools]]
+name = "python-tests"
+profiles = ["backend", "custom"]
+cwd = "."
+required_paths = ["tests"]
+check = ["{python}", "-m", "unittest", "discover", "-s", "tests"]
+
+[[tools]]
+name = "eslint-plugin-tests"
+profiles = ["frontend", "custom"]
+cwd = "agents/rules/eslint-plugin-agents"
+required_paths = ["agents/rules/eslint-plugin-agents/package.json"]
+check = ["node", "--test"]
+
+[[tools]]
+name = "ast-grep-rule-tests"
+profiles = ["custom"]
+cwd = "."
+required_paths = ["agents/rules/ast-grep/sgconfig.yml"]
+check = ["ast-grep", "test", "--config", "agents/rules/ast-grep/sgconfig.yml"]
+optional = true

@@ -1,0 +1,33 @@
+name: Lint Rule Pack
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install lint engines
+        run: |
+          python -m pip install ruff==0.15.22
+          npm install --global @ast-grep/cli@0.44.1
+
+      - name: Run unified lint checks
+        run: python agents/lint_agents.py check

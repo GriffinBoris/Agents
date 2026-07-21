@@ -1,0 +1,13 @@
+id: AGPY001
+valid:
+  - |-
+    from typing import Optional
+
+    def find_name() -> Optional[str]:
+      return None
+invalid:
+  - |-
+    from __future__ import annotations
+
+    def find_name() -> str | None:
+      return None

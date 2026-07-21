@@ -1,0 +1,67 @@
+version = 1
+
+# Tools run in declaration order. `fix` runs all available fix commands, then
+# Agents Lint runs every `check` command again as final verification.
+
+[[tools]]
+name = "custom-structural-rules"
+profiles = ["custom"]
+cwd = "."
+required_paths = ["backend"]
+check = ["ast-grep", "scan", "--config", "agents/rules/ast-grep/sgconfig.yml", "backend"]
+fix = ["ast-grep", "scan", "--config", "agents/rules/ast-grep/sgconfig.yml", "--update-all", "backend"]
+optional = true
+
+[[tools]]
+name = "ruff-lint"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["backend"]
+check = ["ruff", "check", "backend"]
+fix = ["ruff", "check", "--fix", "backend"]
+
+[[tools]]
+name = "ruff-format"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["backend"]
+check = ["ruff", "format", "--check", "backend"]
+fix = ["ruff", "format", "backend"]
+
+[[tools]]
+name = "mypy-django"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["backend"]
+check = ["mypy", "backend"]
+optional = true
+
+[[tools]]
+name = "django-checks"
+profiles = ["backend", "custom"]
+cwd = "."
+required_paths = ["backend/manage.py"]
+check = ["{python}", "backend/manage.py", "check", "--tag", "agents"]
+
+[[tools]]
+name = "eslint"
+profiles = ["frontend"]
+cwd = "frontend"
+required_paths = ["frontend/package.json"]
+check = ["npx", "--no-install", "eslint", "src", "--config", "../agents/rules/config/eslint.config.mjs"]
+fix = ["npx", "--no-install", "eslint", "src", "--fix", "--config", "../agents/rules/config/eslint.config.mjs"]
+
+[[tools]]
+name = "prettier"
+profiles = ["frontend"]
+cwd = "frontend"
+required_paths = ["frontend/package.json"]
+check = ["npx", "--no-install", "prettier", "--check", "src", "--config", "../agents/rules/config/prettier.config.mjs"]
+fix = ["npx", "--no-install", "prettier", "--write", "src", "--config", "../agents/rules/config/prettier.config.mjs"]
+
+[[tools]]
+name = "vue-tsc"
+profiles = ["frontend"]
+cwd = "frontend"
+required_paths = ["frontend/package.json"]
+check = ["npx", "--no-install", "vue-tsc", "--noEmit"]

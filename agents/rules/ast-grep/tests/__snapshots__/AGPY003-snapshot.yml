@@ -1,0 +1,14 @@
+id: AGPY003
+snapshots:
+  setattr(record, field_name, value):
+    labels:
+    - source: setattr(record, field_name, value)
+      style: primary
+      start: 0
+      end: 34
+  value = getattr(record, field_name):
+    labels:
+    - source: getattr(record, field_name)
+      style: primary
+      start: 8
+      end: 35

@@ -1,0 +1,13 @@
+id: AGPY003
+language: Python
+severity: warning
+message: Prefer direct attribute access over dynamic getattr or setattr calls.
+note: Suppress this warning only at a genuine dynamic integration boundary and explain why the dynamic lookup is required.
+rule:
+  any:
+    - pattern: getattr($OBJECT, $ATTRIBUTE)
+    - pattern: setattr($OBJECT, $ATTRIBUTE, $VALUE)
+constraints:
+  ATTRIBUTE:
+    not:
+      kind: string

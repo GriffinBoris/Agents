@@ -4,6 +4,8 @@ This repo builds installable guidance packages for multiple coding agents.
 
 Authored content, the builder, and installer scripts live in `agents/`.
 
+It also includes an experimental, unified lint rule pack. The rule pack delegates standard linting and formatting to Ruff, ESLint, Prettier, ast-grep, Django checks, and type checkers while giving developers and agents one `check`/`fix` interface. See [`agents/rules/README.md`](agents/rules/README.md) for the architecture, starter configuration, rule catalog, and rollout policy.
+
 ## Quick Start
 
 macOS:
@@ -29,12 +31,33 @@ That OpenCode build writes a packaged output to `dist/opencode/`. If you want th
 - `agents/guidance/`: authored modular guidance packages and examples
 - `agents/content/commands/`: authored command assets
 - `agents/content/skills/`: authored skill assets
+- `agents/rules/`: unified lint runner configuration and repository-owned rule pack
 - `agents/tools/`: target-specific static assets such as OpenCode config
 - `agents/build_agents.py`: primary build CLI entrypoint
 - `agents/agents_builder/`: shared builder package
 - `agents/scripts/install-agents.sh`: shell installer
 - `agents/scripts/install-agents.ps1`: PowerShell installer
 - `dist/`: generated output
+
+## Lint Rule Pack
+
+Run the repository's checks through the unified command:
+
+```bash
+python3 agents/lint_agents.py check --config .agents-lint.toml
+python3 agents/lint_agents.py fix --config .agents-lint.toml
+```
+
+If a target project has no `.agents-lint.toml`, the command uses the bundled starter manifest. That manifest discovers conventional `backend/` and `frontend/` project areas and skips tools for areas that are absent. An installed package exposes the same interface as `agents-lint check` and `agents-lint fix`.
+
+The starter implementation includes:
+
+- a stable catalog linking machine rule IDs to guidance and examples;
+- shared Ruff, ESLint, and Prettier configuration;
+- ast-grep structural rules and fixtures for Python conventions;
+- an ESLint plugin for Vue import boundaries and SFC structure;
+- a Django system check for audited model admin registration;
+- normalized text or JSON orchestration output and automatic post-fix verification.
 
 ## Build Locally
 
