@@ -1,0 +1,31 @@
+version = 1
+
+[[tools]]
+name = "ruff-lint"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["pyproject.toml"]
+check = ["ruff", "check", "--no-cache", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "agents/rules/python", "tests/test_agents_linter.py", "tests/test_python_rules.py"]
+fix = ["ruff", "check", "--fix", "--no-cache", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "agents/rules/python", "tests/test_agents_linter.py", "tests/test_python_rules.py"]
+
+[[tools]]
+name = "ruff-format"
+profiles = ["backend"]
+cwd = "."
+required_paths = ["pyproject.toml"]
+check = ["ruff", "format", "--check", "--no-cache", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "agents/rules/python", "tests/test_agents_linter.py", "tests/test_python_rules.py"]
+fix = ["ruff", "format", "--no-cache", "--config", "agents/rules/config/ruff.toml", "agents/agents_linter", "agents/lint_agents.py", "agents/rules/__init__.py", "agents/rules/django_checks", "agents/rules/python", "tests/test_agents_linter.py", "tests/test_python_rules.py"]
+
+[[tools]]
+name = "python-tests"
+profiles = ["backend", "custom"]
+cwd = "."
+required_paths = ["tests"]
+check = ["{python}", "-m", "unittest", "discover", "-s", "tests"]
+
+[[tools]]
+name = "eslint-plugin-tests"
+profiles = ["frontend", "custom"]
+cwd = "agents/rules/eslint-plugin-agents"
+required_paths = ["agents/rules/eslint-plugin-agents/package.json"]
+check = ["node", "--test"]

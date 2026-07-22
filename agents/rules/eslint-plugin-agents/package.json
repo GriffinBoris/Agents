@@ -1,0 +1,12 @@
+{
+  "name": "eslint-plugin-agents",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
