@@ -12,6 +12,7 @@ from agents.agents_linter.cli import main
 from agents.agents_linter.config import LintConfig, ToolConfig, load_config
 from agents.agents_linter.runner import exit_code_for, print_results, run_tools
 from agents.rules.django_checks.policy import missing_admin_audit_fields
+from agents.rules.python.rules import RULES
 
 
 class AgentsLinterTest(unittest.TestCase):
@@ -151,6 +152,7 @@ check = ["{sys.executable}", "-c", "raise SystemExit(0)"]
                 'agents/agents_linter/runner.py',
                 'agents/rules/catalog.toml',
                 'agents/rules/config/agents-lint.toml',
+                'agents/rules/python/rules/__init__.py',
                 'agents/rules/eslint-plugin-agents/index.js',
             )
 
@@ -178,6 +180,15 @@ class RuleCatalogTest(unittest.TestCase):
                 self.assertTrue((repository_root / guidance_path).is_file())
                 self.assertIn(rule['fix'], {'safe', 'unsafe', 'none'})
                 self.assertIn(rule['status'], {'active', 'experimental', 'planned'})
+
+        registered_python_rules = {rule.id: rule for rule in RULES}
+        catalog_rules = {rule['id']: rule for rule in rules}
+        for rule_id, python_rule in registered_python_rules.items():
+            with self.subTest(registered_rule=rule_id):
+                catalog_rule = catalog_rules[rule_id]
+                self.assertEqual(python_rule.visitor.severity, catalog_rule['severity'])
+                expected_fix = 'safe' if python_rule.fixable else 'none'
+                self.assertEqual(expected_fix, catalog_rule['fix'])
 
 
 class DjangoCheckPolicyTest(unittest.TestCase):

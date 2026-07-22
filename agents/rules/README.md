@@ -21,7 +21,7 @@ The wrapper is deliberately small. It reads `.agents-lint.toml`, selects tools w
 | Python formatting | Ruff format | `config/ruff.toml` |
 | Vue and TypeScript lint | ESLint, typescript-eslint, eslint-plugin-vue | `config/eslint.config.mjs` |
 | Vue and TypeScript formatting | Prettier | `config/prettier.config.mjs` |
-| Cross-language structural patterns | ast-grep | `ast-grep/` |
+| Repository-specific Python rules and refactors | LibCST visitors/transformers | `python/` |
 | Loaded Django metadata | Django system checks | `django_checks/` |
 | Type correctness | mypy/django-stubs and vue-tsc | target-project configuration |
 | Unified command and output | Agents Lint | `agents/agents_linter/` |
@@ -45,10 +45,10 @@ agents/rules/
     eslint.config.mjs             Vue/TypeScript baseline
     prettier.config.mjs           frontend formatting baseline
     ruff.toml                     Python baseline
-  ast-grep/
-    sgconfig.yml
-    rules/                         simple structural checks/rewrites
-    tests/                         valid and invalid rule fixtures
+  python/
+    api.py                         rule, diagnostic, and suppression API
+    rules/                         one LibCST visitor/transformer module per rule
+    runner.py                      file discovery, checking, and fixing
   eslint-plugin-agents/
     rules/                         Vue-aware repository rules
     tests/
@@ -68,13 +68,16 @@ Every custom rule must have:
 
 New rules should start as `experimental` warnings. Promote them to `active` errors only after running them across representative repositories and eliminating noisy matches. Rules requiring architectural judgment stay in the homogeneity-audit skills instead of this pack.
 
+Python rules are normal Python objects registered in `python/rules/__init__.py`, with one focused module per rule. Checks use LibCST visitors with position metadata; safe fixes use LibCST transformers. Shared reporting and `# noqa: AGPY...` suppression behavior lives in `python/api.py`. The catalog is metadata for documentation and rollout—it does not define executable matching behavior.
+
 ## Target-Project Setup
 
-1. Copy `config/agents-lint.toml` to the target root as `.agents-lint.toml` and adjust paths or commands.
-2. Extend the target Ruff configuration from `agents/rules/config/ruff.toml`, or copy the settings into its existing `pyproject.toml`.
-3. Point the frontend ESLint and Prettier scripts at the starter configs, merging with existing project configuration where necessary.
-4. Add `agents.rules.django_checks` to `INSTALLED_APPS` to enable `python manage.py check --tag agents`.
-5. Install only the engines used by that repository. Optional tools are reported as skipped by the wrapper.
+1. Install this package so the LibCST dependency and `agents-lint` entrypoint are available: `python -m pip install -e /path/to/Agents`. If the `agents/` tree was copied directly by the source installer, add `libcst==1.8.6` to the target project's Python development dependencies instead.
+2. Copy `config/agents-lint.toml` to the target root as `.agents-lint.toml` and adjust paths or commands.
+3. Extend the target Ruff configuration from `agents/rules/config/ruff.toml`, or copy the settings into its existing `pyproject.toml`.
+4. Point the frontend ESLint and Prettier scripts at the starter configs, merging with existing project configuration where necessary.
+5. Add `agents.rules.django_checks` to `INSTALLED_APPS` to enable `python manage.py check --tag agents`.
+6. Install only the remaining engines used by that repository. Optional tools are reported as skipped by the wrapper.
 
 The starter manifest assumes `backend/` and `frontend/` roots. A monorepo can add more `[[tools]]` entries without changing the Python runner.
 

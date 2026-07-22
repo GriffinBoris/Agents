@@ -4,29 +4,28 @@ version = 1
 # Agents Lint runs every `check` command again as final verification.
 
 [[tools]]
-name = "custom-structural-rules"
+name = "custom-python-rules"
 profiles = ["custom"]
 cwd = "."
 required_paths = ["backend"]
-check = ["ast-grep", "scan", "--config", "agents/rules/ast-grep/sgconfig.yml", "backend"]
-fix = ["ast-grep", "scan", "--config", "agents/rules/ast-grep/sgconfig.yml", "--update-all", "backend"]
-optional = true
+check = ["{python}", "-m", "agents.rules.python", "check", "backend"]
+fix = ["{python}", "-m", "agents.rules.python", "fix", "backend"]
 
 [[tools]]
 name = "ruff-lint"
 profiles = ["backend"]
 cwd = "."
 required_paths = ["backend"]
-check = ["ruff", "check", "backend"]
-fix = ["ruff", "check", "--fix", "backend"]
+check = ["ruff", "check", "--no-cache", "backend"]
+fix = ["ruff", "check", "--fix", "--no-cache", "backend"]
 
 [[tools]]
 name = "ruff-format"
 profiles = ["backend"]
 cwd = "."
 required_paths = ["backend"]
-check = ["ruff", "format", "--check", "backend"]
-fix = ["ruff", "format", "backend"]
+check = ["ruff", "format", "--check", "--no-cache", "backend"]
+fix = ["ruff", "format", "--no-cache", "backend"]
 
 [[tools]]
 name = "mypy-django"

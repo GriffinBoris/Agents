@@ -4,7 +4,7 @@ This repo builds installable guidance packages for multiple coding agents.
 
 Authored content, the builder, and installer scripts live in `agents/`.
 
-It also includes an experimental, unified lint rule pack. The rule pack delegates standard linting and formatting to Ruff, ESLint, Prettier, ast-grep, Django checks, and type checkers while giving developers and agents one `check`/`fix` interface. See [`agents/rules/README.md`](agents/rules/README.md) for the architecture, starter configuration, rule catalog, and rollout policy.
+It also includes an experimental, unified lint rule pack. The rule pack delegates standard linting and formatting to Ruff, ESLint, Prettier, Django checks, and type checkers, while repository-specific Python rules and refactors use LibCST. Developers and agents still get one `check`/`fix` interface. See [`agents/rules/README.md`](agents/rules/README.md) for the architecture, starter configuration, rule catalog, and rollout policy.
 
 ## Quick Start
 
@@ -54,7 +54,7 @@ The starter implementation includes:
 
 - a stable catalog linking machine rule IDs to guidance and examples;
 - shared Ruff, ESLint, and Prettier configuration;
-- ast-grep structural rules and fixtures for Python conventions;
+- Python-authored LibCST rules, suppressions, diagnostics, and safe refactors;
 - an ESLint plugin for Vue import boundaries and SFC structure;
 - a Django system check for audited model admin registration;
 - normalized text or JSON orchestration output and automatic post-fix verification.

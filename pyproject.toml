@@ -2,7 +2,9 @@
 name = "agents"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "libcst==1.8.6",
+]
 
 [project.scripts]
 agents-lint = "agents.agents_linter.cli:main"
@@ -12,10 +14,6 @@ agents-lint = "agents.agents_linter.cli:main"
     "README.md",
     "catalog.toml",
     "config/*",
-    "ast-grep/*.yml",
-    "ast-grep/rules/*.yml",
-    "ast-grep/tests/*.yml",
-    "ast-grep/tests/__snapshots__/*.yml",
     "eslint-plugin-agents/*.js",
     "eslint-plugin-agents/*.json",
     "eslint-plugin-agents/rules/*.js",

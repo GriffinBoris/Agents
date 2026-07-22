@@ -3,7 +3,7 @@ version = 1
 [[rules]]
 id = "AGPY001"
 title = "Do not postpone annotations"
-engine = "ast-grep"
+engine = "libcst"
 severity = "error"
 status = "active"
 fix = "none"
@@ -13,7 +13,7 @@ message = "Do not use from __future__ import annotations. Use runtime-safe expli
 [[rules]]
 id = "AGPY002"
 title = "Use Optional and Union annotations"
-engine = "future-libcst"
+engine = "libcst"
 severity = "warning"
 status = "planned"
 fix = "unsafe"
@@ -23,7 +23,7 @@ message = "Use typing.Optional and typing.Union instead of the vertical-bar unio
 [[rules]]
 id = "AGPY003"
 title = "Avoid dynamic attribute access"
-engine = "ast-grep"
+engine = "libcst"
 severity = "warning"
 status = "experimental"
 fix = "none"
@@ -34,7 +34,7 @@ message = "Prefer direct attribute access over dynamic getattr or setattr calls.
 [[rules]]
 id = "AGPY004"
 title = "Keep package initializers declarative"
-engine = "future-python-ast"
+engine = "libcst"
 severity = "warning"
 status = "planned"
 fix = "none"
@@ -42,9 +42,19 @@ guidance = "agents/guidance/languages/python/guidance.md#organization-and-import
 message = "Do not put runtime workflows or business logic in __init__.py."
 
 [[rules]]
+id = "AGPY005"
+title = "Use concrete requests verb helpers"
+engine = "libcst"
+severity = "warning"
+status = "active"
+fix = "safe"
+guidance = "agents/guidance/languages/python/guidance.md#http-adapters-and-debugging"
+message = "Use requests.get, requests.post, and other concrete helpers when the HTTP method is already known."
+
+[[rules]]
 id = "AGDJ001"
 title = "Keep network I/O out of model persistence hooks"
-engine = "future-semgrep"
+engine = "libcst"
 severity = "error"
 status = "planned"
 fix = "none"
@@ -55,7 +65,7 @@ message = "Model save and delete methods must not perform network I/O."
 [[rules]]
 id = "AGDJ002"
 title = "Order output serializer identity fields first"
-engine = "future-libcst"
+engine = "libcst"
 severity = "warning"
 status = "planned"
 fix = "safe"
@@ -77,7 +87,7 @@ message = "Registered admin classes for audited models must display id, created_
 [[rules]]
 id = "AGDJ004"
 title = "Keep URL namespaces and names consistent"
-engine = "future-django-checks"
+engine = "django-checks"
 severity = "warning"
 status = "planned"
 fix = "none"

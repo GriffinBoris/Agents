@@ -1,7 +1,0 @@
-id: AGPY001
-language: Python
-severity: error
-message: Do not use from __future__ import annotations.
-note: Use runtime-safe explicit annotations. See agents/guidance/languages/python/guidance.md#types-and-readability.
-rule:
-  pattern: from __future__ import annotations
