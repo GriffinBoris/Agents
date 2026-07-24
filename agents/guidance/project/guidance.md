@@ -36,84 +36,15 @@ order: 0
 | `agents/guidance/frameworks/django/guidance.md` | Django, DRF, and Celery guidance |
 | `agents/guidance/frameworks/vue/guidance.md` | Vue, TypeScript, Pinia, and frontend API guidance |
 | `agents/guidance/project/guidance.md` | Project-specific guidance |
-| `agents/reference/antipatterns/overview.md` | Cross-stack anti-pattern catalog |
-| `agents/reference/review/` | Review rubric and reporting templates |
+| `agents/reference/` | Anti-pattern catalog, review rubric, and reporting templates; ships as the `guidance-reference` skill |
 
 ### Skills And Commands
 
-- OpenCode command content currently spans `agents/content/commands/` in the new tree and `agents/opencode/commands/` in the legacy tree.
-
-## Repository Layout
-
-- **Backend**: Django REST Framework app in `backend/` when present.
-  - Apps usually follow Django conventions with `models.py`, `views.py`, `serializers.py`, `urls.py`, `admin.py`, and `tests/`.
-  - Base classes typically live in `core/`, such as `ProjectBaseModel` and `ProjectBaseAPIView`.
-- **Frontend**: Vue 3 and TypeScript in `frontend/` when present.
-  - Common directories include `src/components/`, `src/views/`, `src/composables/`, `src/types/`, `src/core/`, `src/styles/`, and `src/utils/`.
-  - Route folders under `src/views/` can own their route component, subcomponents, local store modules, and route-specific helpers.
-  - Shared shell-level frontend state should live under `src/views/application/`, and the canonical API client should live under `src/utils/api.ts`.
+- Authored command and skill content lives under `agents/content/`.
 
 ## Local Verification And Tooling
 
-### Build, Lint, And Test Commands
-
-**Backend (task runner, if available):**
-
-```bash
-task backend:tests:unit
-task backend:tests:coverage
-task backend:lint
-task backend:test
-task backend:db:migrate
-task backend:db:makemigrations
-task backend:db:makemigrations-app APP=app_name
-task backend:db:bootstrap
-task backend:server:run
-task backend:shell:django
-```
-
-**Backend (direct Django and Python commands):**
-
-```bash
-pytest
-pytest path/to/test_file.py
-pytest path/to/test_file.py::TestClass
-pytest path/to/test_file.py::TestClass::test_method
-
-ruff check
-ruff check --fix
-ruff format
-
-python manage.py migrate
-python manage.py makemigrations
-python manage.py makemigrations app_name
-
-python manage.py runserver
-python manage.py shell
-```
-
-**Frontend (Vue and TypeScript, if present):**
-
-```bash
-cd frontend
-
-npm run dev
-npm run type-check
-npm run lint
-npm run format
-npm run build
-npm run preview
-```
-
-**Docker (if present):**
-
-```bash
-task docker:start
-task docker:start:detached
-task docker:stop
-task docker:bootstrap
-task docker:logs SERVICE=web
-```
+When the repository exposes a `Taskfile`, prefer its entrypoints over raw commands; `task --list` shows what is available. Everything else — pytest, Ruff, `manage.py`, and the frontend `npm` scripts — follows the standard invocation for the tool and is discoverable from `pyproject.toml` and `package.json`.
 
 ### Tooling Notes
 
@@ -150,10 +81,3 @@ task docker:logs SERVICE=web
 - Do not render a second empty optimistic assistant bubble while a waiting-state card is already visible.
 - Use `useClipboard` for copy interactions instead of direct `navigator.clipboard` calls.
 
-## Consistency Checklist
-
-### Project
-
-- Project-specific rules are captured here instead of being mixed into global guidance.
-- Repository layout, local tooling, and migration notes are explicit.
-- Cross-cutting product and architecture decisions that are not general development rules live here.

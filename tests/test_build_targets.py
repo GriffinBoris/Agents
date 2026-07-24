@@ -1,3 +1,4 @@
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -103,6 +104,55 @@ class BuildTargetsTest(unittest.TestCase):
             ).read_text(encoding='utf-8')
             self.assertIn('name: full-review', codex_command_skill)
             self.assertIn('the full arguments supplied with this skill', codex_command_skill)
+
+    def test_stack_guidance_ships_as_on_demand_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output_root = Path(temporary_directory)
+
+            build('all', output_root, clean=True, include_examples=False, layout='packaged')
+
+            skill_roots = {
+                'claude': output_root / 'claude' / '.claude' / 'skills',
+                'opencode': output_root / 'opencode' / '.opencode' / 'skills',
+                'codex': output_root / 'codex' / '.agents' / 'skills',
+                'gemini': output_root / 'gemini' / '.gemini' / 'skills',
+            }
+
+            for target, skills_root in skill_roots.items():
+                with self.subTest(target=target):
+                    for package in ('python-guidance', 'django-guidance', 'vue-guidance'):
+                        skill = skills_root / package / 'SKILL.md'
+                        self.assertTrue(skill.is_file(), f'{target} did not generate {package}')
+                        self.assertIn(f'name: {package}', skill.read_text(encoding='utf-8'))
+
+                    self.assertTrue((skills_root / 'guidance-reference' / 'review' / 'architecture-rubric.md').is_file())
+                    self.assertTrue((skills_root / 'guidance-reference' / 'antipatterns' / 'overview.md').is_file())
+
+            vue_skill_root = skill_roots['claude'] / 'vue-guidance'
+            referenced_examples = re.findall(r'`(examples/[^`]+\.md)`', (vue_skill_root / 'SKILL.md').read_text(encoding='utf-8'))
+            self.assertTrue(referenced_examples)
+
+            for relative_path in referenced_examples:
+                self.assertTrue((vue_skill_root / relative_path).is_file(), f'missing bundled example {relative_path}')
+
+    def test_resident_guidance_defers_stack_packages(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output_root = Path(temporary_directory)
+
+            build('all', output_root, clean=True, include_examples=False, layout='packaged')
+
+            claude_guidance = (output_root / 'claude' / '.claude' / 'CLAUDE.md').read_text(encoding='utf-8')
+
+            self.assertIn('## Stack Guidance', claude_guidance)
+            self.assertIn('`django-guidance`', claude_guidance)
+            self.assertNotIn('## Django Guidance', claude_guidance)
+            self.assertEqual(1, len([line for line in claude_guidance.splitlines() if line.startswith('# ')]))
+
+            copilot_instructions = (output_root / 'copilot' / '.github' / 'copilot-instructions.md').read_text(encoding='utf-8')
+
+            self.assertIn('## Django Guidance', copilot_instructions)
+            self.assertEqual(1, len([line for line in copilot_instructions.splitlines() if line.startswith('# ')]))
+            self.assertNotIn('agents/guidance/frameworks/vue/examples/', copilot_instructions)
 
     def test_in_place_targets_keep_guidance_out_of_the_project_root(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

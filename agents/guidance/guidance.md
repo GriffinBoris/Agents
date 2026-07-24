@@ -22,34 +22,17 @@ order: 0
 
 ## Living Document Philosophy
 
-- Guidance evolves with the codebase. Update it when you discover repeated patterns, architectural decisions, common mistakes, or better ways to explain existing guidance.
-- When you encounter durable patterns or learnings that would help future work, update the relevant guidance immediately.
-- Before finishing a task, re-check the relevant guidance and decide whether a new lesson, rule refinement, exception, or clarification should be recorded.
-- When reflecting at the end of a task, explicitly check for:
-  - verification coverage and any failures or timeouts
-  - UI and UX consistency with existing patterns
-  - reuse of existing components or utilities before creating new ones
-  - data handling consistency, including query params, formatting, and error handling
-- If no update is needed, state that you reviewed the guidance and decided no changes were warranted.
-
-### How to Update
-
-- Prefer small, incremental edits over large rewrites.
-- Add context explaining why a rule exists, not just what it is.
-- If a rule becomes obsolete, remove or revise it instead of layering exceptions.
-- If two rules conflict, resolve the conflict explicitly.
+- Guidance evolves with the codebase. When you discover a durable pattern, architectural decision, or recurring mistake, record it here.
+- Prefer small, incremental edits over large rewrites, and explain why a rule exists, not just what it is.
+- If a rule becomes obsolete, remove or revise it instead of layering exceptions. If two rules conflict, resolve the conflict explicitly.
 - Avoid speculative rules. Document decisions made, not hypotheticals.
 
 ## Expectations & Best Practices
 
 ### Agent Compliance
 
-- Read this file at the start of every task and treat it as required instructions.
-- Read the entire document top to bottom and confirm you reviewed all relevant requirements before taking action.
-- Before making changes, scan all sections for relevant requirements and follow them explicitly.
 - If a request conflicts with this file, call out the conflict and follow the most restrictive rule.
-- Read the relevant language, framework, and project guidance before stack-specific or project-specific work.
-- Explicitly confirm in the final response that you reviewed and complied with the relevant guidance.
+- Load the relevant language, framework, and project guidance before stack-specific work.
 
 ### Match Existing Patterns
 
@@ -85,16 +68,10 @@ order: 0
 
 ### Core Philosophy
 
-- **Simplicity, readability, and organization above all else.** Every decision should optimize for code that is easy to understand, intelligently organized, loosely coupled, and minimal in scope.
 - **YAGNI first.** Do not add helpers, constants, abstractions, extension points, or configuration layers until the current requirements actually need them.
 - **Readability over performance.** If a simpler approach is slightly slower but far easier to understand, choose simplicity. Optimize only when there is a measured, real problem.
 - **No defensive programming.** Trust data and contracts. Do not add try or catch blocks, fallback values, or silent error handling just in case.
-- **No bloat.** Every line, abstraction, and helper must earn its place. Remove anything that does not improve clarity or correctness.
-- **Avoid redundancy.** Remove unnecessary normalization, casting, or fallback logic once you verify the real behavior.
-- **KISS and DRY apply by default.** Keep behavior, data shapes, and control flow as simple as the real requirement allows. Reuse an existing source of truth before introducing a second concept, field, helper, or abstraction that models the same thing.
 - **Prefer direct usage over one-off helpers.** If a helper is only used once and adds no clarity, inline it.
-- **Loose coupling.** Components, modules, and services should have clear boundaries and minimal dependency on each other's internals.
-- **Intelligent organization.** Group related things together, separate unrelated things, and make the codebase structure reflect the domain.
 
 ### Follow Existing Architecture
 
@@ -107,11 +84,6 @@ order: 0
 ### Reuse Existing Components
 
 - Reuse existing classes, methods, and structures to preserve consistency and avoid duplication.
-
-### Control Flow
-
-- Keep conditional logic shallow.
-- Return early when possible to avoid deep nesting and keep intent clear.
 
 ### Keep Logic Simple
 
@@ -139,15 +111,6 @@ order: 0
 - Combine conditions when they lead to the same outcome.
 - Encapsulate fragile third-party integrations behind a small service layer so views, commands, and tasks use a stable interface.
 
-### Parameters and Variables
-
-- Do not add unused parameters to function signatures.
-- Remove unused parameters instead of suppressing warnings.
-
-### ID Generation (If Applicable)
-
-- If you use incremental counters for IDs, make the semantics explicit and use them consistently across the codebase.
-
 ### God Module Prevention
 
 - One responsibility per file.
@@ -173,7 +136,6 @@ order: 0
 
 - Log at boundaries, not every intermediate step.
 - Use one structured line per event.
-- Aim for roughly five log lines per method maximum.
 - Remove development-only logging before merge.
 - Use proper logging frameworks instead of `print()` or `Console.WriteLine` in production code.
 - Do not use joke or placeholder log messages.
@@ -210,27 +172,5 @@ order: 0
 
 - Move feature-level constants and configuration into the appropriate settings system instead of duplicating module-level config.
 - Keep large SQL or query text in code, not in settings.
-
-## Consistency Checklist
-
-### Cross-Stack
-
-- [ ] No secrets or credentials in source code
-- [ ] No god modules introduced or expanded
-- [ ] No commented-out dead code left behind
-- [ ] No unauthenticated endpoints added
-- [ ] Data scoped to the current user or tenant where applicable
-- [ ] All dependencies declared and version-pinned
-- [ ] Logging uses the proper framework, not print or console output
-- [ ] Verification commands ran and results were reported
-- [ ] This file was reviewed for needed updates
-
-## Intent
-
-- Reduce cognitive load.
-- Preserve architectural integrity.
-- Keep the codebase approachable for new contributors.
-- Prevent over-engineering and accidental complexity.
-- Enable confident, fast iteration.
 
 These guidelines are constraints in service of clarity, not bureaucracy. If following a rule would make the code worse, pause and update the rule.

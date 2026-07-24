@@ -1,8 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from agents.agents_builder.constants import ROOT
-from agents.agents_builder.document_types import GuidancePackage, GuidanceTree, MarkdownDocument
+from agents.agents_builder.document_types import GuidancePackage, GuidanceTree
 
 
 def normalize_body(body: str) -> str:
@@ -31,24 +30,86 @@ def sort_key(order: Any, path: Path) -> tuple[bool, int, str]:
     return (order is None, 0 if order is None else int(order), path.as_posix())
 
 
-def render_shared_guidance(guidance_tree: GuidanceTree, *, example_mode: str) -> str:
+def shift_headings(body: str, levels: int) -> str:
+    if levels <= 0:
+        return body
+
+    shifted_lines = []
+    inside_fence = False
+
+    for line in body.splitlines():
+        if line.lstrip().startswith('```'):
+            inside_fence = not inside_fence
+
+        if not inside_fence and line.startswith('#'):
+            line = ('#' * levels) + line
+
+        shifted_lines.append(line)
+
+    return '\n'.join(shifted_lines)
+
+
+def stack_packages(guidance_tree: GuidanceTree) -> list[GuidancePackage]:
+    return [*guidance_tree.language_packages, *guidance_tree.framework_packages]
+
+
+def package_skill_name(package: GuidancePackage) -> str:
+    return f'{package.name}-guidance'
+
+
+def package_description(package: GuidancePackage) -> str:
+    if package.guidance and package.guidance.description:
+        return package.guidance.description
+
+    return f'Guidance for {package.name}.'
+
+
+def render_resident_guidance(guidance_tree: GuidanceTree) -> str:
     sections: list[str] = []
 
     if guidance_tree.global_guidance:
-        sections.append(guidance_tree.global_guidance.body)
+        sections.append(shift_headings(guidance_tree.global_guidance.body, 1))
 
-    if guidance_tree.language_packages:
-        package_sections = [render_package_section(package, example_mode) for package in guidance_tree.language_packages]
-        sections.append('## Languages\n\n' + '\n\n'.join(section for section in package_sections if section))
+    stack_index = render_stack_index(guidance_tree)
+    if stack_index:
+        sections.append(stack_index)
 
-    if guidance_tree.framework_packages:
-        package_sections = [render_package_section(package, example_mode) for package in guidance_tree.framework_packages]
-        sections.append('## Frameworks\n\n' + '\n\n'.join(section for section in package_sections if section))
+    if guidance_tree.project_package and guidance_tree.project_package.guidance:
+        sections.append(shift_headings(guidance_tree.project_package.guidance.body, 1))
+
+    return '\n\n'.join(section.strip() for section in sections if section.strip()).strip()
+
+
+def render_stack_index(guidance_tree: GuidanceTree) -> str:
+    packages = stack_packages(guidance_tree)
+
+    if not packages:
+        return ''
+
+    lines = [
+        '## Stack Guidance',
+        '',
+        'Load the matching skill before stack-specific work. Each one carries its own conventions and worked examples.',
+        '',
+    ]
+
+    for package in packages:
+        lines.append(f'- `{package_skill_name(package)}`: {package_description(package)}')
+
+    return '\n'.join(lines)
+
+
+def render_flat_guidance(guidance_tree: GuidanceTree, *, example_mode: str) -> str:
+    sections: list[str] = []
+
+    if guidance_tree.global_guidance:
+        sections.append(shift_headings(guidance_tree.global_guidance.body, 1))
+
+    for package in stack_packages(guidance_tree):
+        sections.append(render_package_section(package, example_mode))
 
     if guidance_tree.project_package:
-        project_section = render_package_section(guidance_tree.project_package, example_mode)
-        if project_section:
-            sections.append('## Project\n\n' + project_section)
+        sections.append(render_package_section(guidance_tree.project_package, example_mode))
 
     return '\n\n'.join(section.strip() for section in sections if section.strip()).strip()
 
@@ -57,7 +118,7 @@ def render_package_section(package: GuidancePackage, example_mode: str) -> str:
     sections: list[str] = []
 
     if package.guidance:
-        sections.append(package.guidance.body)
+        sections.append(shift_headings(package.guidance.body, 1))
 
     examples = render_examples(package, example_mode)
     if examples:
@@ -67,47 +128,29 @@ def render_package_section(package: GuidancePackage, example_mode: str) -> str:
 
 
 def render_examples(package: GuidancePackage, example_mode: str) -> str:
-    if not package.examples or example_mode == 'none':
+    if not package.examples or example_mode != 'full':
         return ''
 
-    human_name = package.name.replace('_', ' ').replace('-', ' ').title()
-    sections = [f'### Examples For {human_name}']
+    sections = ['### Examples']
 
-    if example_mode == 'full':
-        for example in package.examples:
-            sections.append(f'## Example: {example.title}\n\n{example.body}')
-    else:
-        metadata_lines = [render_example_metadata(example) for example in package.examples]
-        sections.append('\n\n'.join(metadata_lines))
+    for example in package.examples:
+        sections.append(shift_headings(example.body, 3))
 
     return '\n\n'.join(section.strip() for section in sections if section.strip()).strip()
 
 
-def render_example_metadata(example: MarkdownDocument) -> str:
-    tags = 'None'
-
-    if example.tags:
-        tags = ', '.join(f'`{tag}`' for tag in example.tags)
-
-    return '\n'.join(
-        [
-            f'- path: `{example.path.relative_to(ROOT).as_posix()}`',
-            f'  name: `{example.name}`',
-            f'  title: {example.title}',
-            f'  description: {example.description or "None"}',
-            f'  tags: {tags}',
-        ]
-    )
-
-
-def render_document(title: str, guidance_tree: GuidanceTree, *, example_mode: str, preamble: str = '') -> str:
+def render_document(title: str, guidance_tree: GuidanceTree, *, example_mode: str, preamble: str = '', flat: bool = False) -> str:
     parts = [title.strip()]
 
     if preamble.strip():
         parts.append(preamble.strip())
 
-    shared_guidance = render_shared_guidance(guidance_tree, example_mode=example_mode)
-    if shared_guidance:
-        parts.append(shared_guidance)
+    if flat:
+        guidance = render_flat_guidance(guidance_tree, example_mode=example_mode)
+    else:
+        guidance = render_resident_guidance(guidance_tree)
+
+    if guidance:
+        parts.append(guidance)
 
     return '\n\n'.join(part for part in parts if part).strip() + '\n'

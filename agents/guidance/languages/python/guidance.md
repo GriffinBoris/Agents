@@ -26,21 +26,15 @@ order: 1
 
 ### Organization And Imports
 
-- Order imports as standard library, third-party, framework, then project-local.
-- Place imports at the top of the file.
 - Avoid inline imports inside functions unless you are breaking a circular dependency and there is no cleaner option.
-- Avoid wildcard imports.
 - Prefer direct, explicit project import paths over re-exported or indirect paths when the direct module is clearer.
 - Keep `__init__.py` files minimal. Use them only for module declarations or explicit exports when that materially improves imports.
 - Do not put runtime logic, workflow code, view classes, or business logic in `__init__.py` files unless there is a strong, unavoidable reason.
 
 ### Implementation
 
-- Stick to single quotes unless triple quotes are required.
 - Use logical spacing between imports, constants, classes, and function groups.
-- Use one blank line between methods and two blank lines between classes.
 - Keep functions small; extract helpers only when they are reused or materially improve clarity.
-- Prefer explicit, descriptive names over abbreviations.
 - Catch specific exceptions and let unexpected errors surface.
 - Avoid dynamic `getattr` and `setattr` unless they are truly necessary.
 
@@ -83,12 +77,4 @@ order: 1
 - Keep Python tests explicit and readable.
 - Prefer explicit fixture builders and helper methods over catch-all `**kwargs` patterns.
 
-## Consistency Checklist
-
-### Python
-
-- Imports are explicit, ordered, and top-level.
-- `__init__.py` files stay minimal.
-- Typing follows repository conventions.
-- `ruff check` expectations are clear and were followed for modified files.
-- Django-specific behavior is documented in the Django guide instead of being duplicated here.
+Keep Django-specific behavior in the Django guidance package instead of duplicating it here.

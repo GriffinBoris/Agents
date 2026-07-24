@@ -23,24 +23,11 @@ order: 2
 
 ## Frontend Project Structure
 
-- `src/assets` stores static assets such as images and fonts.
-- `src/components` stores reusable UI components and app-shell primitives.
-- Use `src/components/ui/` for low-level shared controls and surfaces.
-- Use `src/components/forms/` for labeled field wrappers that compose `FormField` plus shared input primitives.
-- Use `src/components/layout/` for shell containers, scroll frames, and app-level structural wrappers.
-- Use `src/components/navigation/` for sidebar, tabs, menus, and other shared navigation pieces.
-- Use `src/components/page/` for reusable page-composition blocks such as `PageHeader`, `PageSection`, split layouts, metric cards, and list rows.
-- `src/views` stores route-based folders and route entry views.
 - Each route folder under `src/views/` can own the route component, local subcomponents, a descriptively named local store file, route-specific composables, types, and constants.
 - Keep shared shell-level state under a dedicated shell folder such as `src/views/application/` instead of a top-level catch-all `src/stores/` directory.
 - Prefer one primary route-based feature home such as `src/views/` instead of introducing parallel feature-root trees without a migration plan.
 - If legacy or transitional code still exists under `src/features/`, migrate it toward `src/views/` as you touch that route area instead of expanding the old structure.
 - Keep the canonical API client in one well-known utility or API module instead of adding parallel service directories for the same transport role.
-- `src/composables` stores shared Vue composables used across multiple routes.
-- `src/router` stores Vue Router configuration.
-- `src/types` stores shared global types.
-- `src/core` stores core models and utilities.
-- `src/styles` stores global styles and CSS utilities.
 - Prefer configured import aliases such as `@/views/...`, `@/types/...`, and `@/utils/...` instead of long relative traversal imports when the project supports aliases.
 
 ## Shell And Routing
@@ -303,16 +290,4 @@ order: 2
 - When adding transport helpers, prefer `src/utils/api.ts` and nearby utilities before introducing a new services root.
 - Run the linter and formatter so the new code matches project style.
 
-## Consistency Checklist
-
-### Vue
-
-- Component names and file casing are correct.
-- Existing UI primitives are reused before new ones are created.
-- Spacing and styling align with comparable features.
-- API calls flow through the single canonical client.
-- API boundary types avoid `any` and `unknown`.
-- Components do not mix Options API and Composition API.
-- Form state uses dedicated input types instead of entity models with placeholder IDs.
-- Vue-specific examples live in the Vue `examples/` folder instead of inline guidance blocks.
-- Session-backed auth uses the shared API client, shared shell store, route metadata, and one global router guard instead of route-local bootstrap or redirect logic.
+Keep concrete Vue examples in this package's `examples/` folder instead of inline guidance blocks.

@@ -25,8 +25,7 @@ Read these before judging the scope:
 - `agents/guidance/guidance.md`
 - relevant language, framework, and project guidance
 - nearby named examples under `agents/guidance/**/examples/`
-- `agents/reference/review/architecture-rubric.md`
-- `agents/reference/antipatterns/overview.md`
+- the `guidance-reference` skill, which carries `review/architecture-rubric.md` and `antipatterns/overview.md` (authored at `agents/reference/`)
 
 Use the full-review mindset:
 - inspect every in-scope file or changed area

@@ -3,7 +3,12 @@ from pathlib import Path
 from agents.agents_builder.constants import DEFAULT_CODEX_CONFIG, TOOLS_ROOT
 from agents.agents_builder.document_types import BuildContext
 from agents.agents_builder.file_ops import write_file
-from agents.agents_builder.target_assets import render_agents_document, render_codex_command_skill, render_skill_document
+from agents.agents_builder.target_assets import (
+    emit_guidance_skills,
+    render_agents_document,
+    render_codex_command_skill,
+    render_skill_document,
+)
 from agents.agents_builder.targets.base_target import BaseTarget
 
 
@@ -31,6 +36,8 @@ class CodexTarget(BaseTarget):
                 continue
 
             write_file(out_dir / '.agents' / 'skills' / skill.name / 'SKILL.md', render_skill_document(skill))
+
+        emit_guidance_skills(context, out_dir / '.agents' / 'skills')
 
 
 def load_codex_config() -> str:

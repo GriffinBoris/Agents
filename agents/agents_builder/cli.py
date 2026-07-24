@@ -38,13 +38,13 @@ def parse_args() -> argparse.Namespace:
         dest='include_examples',
         action='store_true',
         default=False,
-        help='Embed full example bodies in generated instruction files.',
+        help='Embed full example bodies in the flattened Copilot instruction files.',
     )
     include_group.add_argument(
         '--metadata-only',
         dest='include_examples',
         action='store_false',
-        help='List example metadata instead of full bodies.',
+        help='Ship examples as skill files only, without embedding their bodies. This is the default.',
     )
     return parser.parse_args()
 

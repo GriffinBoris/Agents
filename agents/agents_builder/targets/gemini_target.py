@@ -3,6 +3,7 @@ from pathlib import Path
 from agents.agents_builder.document_types import BuildContext
 from agents.agents_builder.file_ops import write_file
 from agents.agents_builder.target_assets import (
+    emit_guidance_skills,
     render_gemini_command,
     render_gemini_document,
     render_skill_document,
@@ -31,3 +32,5 @@ class GeminiTarget(BaseTarget):
                 continue
 
             write_file(out_dir / '.gemini' / 'skills' / skill.name / 'SKILL.md', render_skill_document(skill))
+
+        emit_guidance_skills(context, out_dir / '.gemini' / 'skills')

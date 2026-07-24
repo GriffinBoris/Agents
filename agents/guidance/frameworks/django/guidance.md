@@ -250,9 +250,8 @@ order: 1
 - Apply product-specific access checks before calling `login(...)` when an SSO identity can belong to more than one app surface, such as operator and patient portals.
 - Log callback failures at `warning` with provider context and `exc_info=True`, then redirect the browser to a stable frontend error code instead of returning provider details.
 
-## Security Checklist
+## Security
 
-- Do not hardcode secrets in settings files.
 - Do not disable CSRF without explicit justification.
 - Gate admin tools behind `DEBUG=True` or explicit admin-only access.
 - Ensure `.env.secret` files are gitignored.
@@ -313,16 +312,4 @@ order: 1
 - Refresh instances before asserting post-conditions.
 - Call `timezone.now()` once per helper to avoid drift-related failures.
 
-## Consistency Checklist
-
-### Django
-
-- Views inherit from the expected base classes.
-- Serializer field tuples are complete and non-duplicated.
-- URL names follow kebab-case `{model}-{action}` patterns.
-- List endpoints are scoped to the current user or organization.
-- Mutating endpoints return the created or updated resource.
-- Model lifecycle methods do not hide third-party I/O.
-- Tests cover permission-positive, permission-negative, and cross-user isolation paths.
-- Django-specific examples live in the Django `examples/` folder instead of inline guidance blocks.
-- Session-authenticated browser APIs keep CSRF enabled and have a tested bootstrap flow that provides session state and a CSRF token.
+Keep concrete Django examples in this package's `examples/` folder instead of inline guidance blocks.

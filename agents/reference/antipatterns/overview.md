@@ -33,7 +33,6 @@ order: 1
 - Django domain profile separation: `agents/guidance/frameworks/django/examples/django-domain-profile-vs-auth-user.md`
 - Django lifecycle transitions: `agents/guidance/frameworks/django/examples/django-transition-endpoint.md`
 - Django shared-scope validation: `agents/guidance/frameworks/django/examples/django-shared-scope-validation.md`
-- Django model-owned lifecycle rules: `agents/guidance/frameworks/django/examples/django-model-owned-lifecycle-rule.md`
 - Django direct attribute access: `agents/guidance/frameworks/django/examples/django-direct-attribute-access.md`
 
 ## Maintenance Rule

@@ -27,6 +27,7 @@ That OpenCode build writes a packaged output to `dist/opencode/`. If you want th
 ## Repository Layout
 
 - `agents/guidance/`: authored modular guidance packages and examples
+- `agents/reference/`: review rubric, reporting templates, and the anti-pattern catalog
 - `agents/content/commands/`: authored command assets
 - `agents/content/skills/`: authored skill assets
 - `agents/tools/`: target-specific static assets such as OpenCode config
@@ -72,8 +73,8 @@ python3 agents/build_agents.py --target source --out dist --clean
 - `--out <path>`: output directory root, defaults to `dist`; relative paths resolve from the directory where you run the command
 - `--layout packaged|in-place`: `packaged` is the default and writes `dist/<target>/...`; `in-place` writes one non-source target directly into `--out`
 - `--clean`: remove each built target output directory before rebuilding it
-- `--include-examples`: embed full example bodies in generated instruction files
-- `--metadata-only`: include example metadata only, which is the default behavior
+- `--include-examples`: embed full example bodies in the flattened Copilot instruction files
+- `--metadata-only`: ship examples as skill files only, without embedding their bodies, which is the default behavior
 
 ## Targets
 
@@ -98,13 +99,31 @@ python3 agents/build_agents.py --target source --out dist --clean
 - `dist/copilot/.github/copilot-instructions.md`
 - `dist/codex/.agents/AGENTS.md`
 - `dist/codex/.codex/config.toml`
-- `dist/codex/.agents/skills/*/SKILL.md` for command workflows converted to Codex skills
-- `dist/codex/.agents/skills/*/SKILL.md`
+- `dist/codex/.agents/skills/*/SKILL.md` for authored skills and command workflows converted to Codex skills
 - `dist/gemini/.gemini/GEMINI.md`
 - `dist/gemini/.gemini/commands/*.toml` for Gemini-compatible commands
 - `dist/gemini/.gemini/skills/*/SKILL.md`
 
 The same authored guidance is rendered into each harness's target directory. OpenCode reads `.opencode/AGENTS.md` through root `opencode.json`; Claude reads `.claude/CLAUDE.md`; Codex reads `.agents/AGENTS.md` through `.codex/config.toml`; Gemini reads `.gemini/GEMINI.md`.
+
+## Always-Loaded Guidance And On-Demand Skills
+
+The generated instruction file is what an agent loads at the start of every session, so it carries only what applies everywhere:
+
+- global guidance
+- a `## Stack Guidance` index naming the language and framework skills
+- project guidance
+
+Each language and framework package is emitted as its own skill instead, so its rules load only when the agent works in that stack:
+
+- `<skills>/python-guidance/SKILL.md`
+- `<skills>/django-guidance/SKILL.md`
+- `<skills>/vue-guidance/SKILL.md`
+- `<skills>/guidance-reference/SKILL.md`
+
+A package's `examples/` files are copied next to its `SKILL.md`, and `agents/reference/` ships inside `guidance-reference`, so every path those documents cite resolves in an installed target.
+
+Copilot is the exception. It has no skill mechanism, so `AGENTS.md` and `.github/copilot-instructions.md` still receive the whole guidance tree flattened into one document.
 
 ## Install The Source Package
 
@@ -205,7 +224,7 @@ Both installers support:
 - `opencode`: root `opencode.json`, `.opencode/AGENTS.md`, `.opencode/commands/`, `.opencode/skills/`
 - `claude`: `.claude/CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
 - `copilot`: root `AGENTS.md`, `.github/copilot-instructions.md`
-- `codex`: `.agents/AGENTS.md`, `.agents/skills/` containing both authored skills and converted command workflows, and `.codex/config.toml`
+- `codex`: `.agents/AGENTS.md`, `.agents/skills/` containing authored skills, guidance skills, and converted command workflows, and `.codex/config.toml`
 - `gemini`: `.gemini/GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`
 
 Claude and Gemini read the complete generated guidance directly from `.claude/CLAUDE.md` and `.gemini/GEMINI.md`, respectively.

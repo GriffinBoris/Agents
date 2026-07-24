@@ -58,7 +58,7 @@ Use the modular guidance tree as the source of truth:
 - `agents/guidance/guidance.md`
 - relevant language, framework, and project guidance
 - nearby named examples under `agents/guidance/**/examples/`
-- `agents/reference/review/architecture-rubric.md`
+- the `guidance-reference` skill, which carries `review/architecture-rubric.md` (authored at `agents/reference/`)
 
 Use these skills as relevant:
 - `architecture-audit`

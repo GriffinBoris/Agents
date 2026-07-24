@@ -27,7 +27,7 @@ description: >
 - relevant `agents/guidance/frameworks/<name>/guidance.md`
 - `agents/guidance/project/guidance.md`
 - nearby example docs in `agents/guidance/**/examples/`
-- `agents/reference/review/architecture-rubric.md`
+- the `guidance-reference` skill, which carries `review/architecture-rubric.md` (authored at `agents/reference/`)
 
 ## Goals
 - Judge the code against the modular guidance tree, not old monolithic docs
