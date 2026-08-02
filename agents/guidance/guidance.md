@@ -74,6 +74,12 @@ order: 0
 - Always run the relevant linter on modified files before completing a task. Pre-commit hooks and CI enforce lint rules and will reject unclean code.
 - If you cannot run verification, explicitly say why and list the exact commands the user should run.
 
+### External Resource Test Seams
+
+- When a workflow owns a hardware device, operating-system service, network stream, child process, or another resource that is impractical to exercise in ordinary tests, keep the acquire-and-release boundary small and replaceable.
+- Test the workflow's lifecycle with a fake resource: successful start, invalid concurrent start, pause or resume when applicable, cleanup on stop, failed startup, and a subsequent retry.
+- Keep production adapters responsible for the real integration and resource cleanup. Do not introduce a broad abstraction for pure code or a single straightforward call that needs no isolated lifecycle testing.
+
 ### Review Reporting
 
 - Full reviews must report every finding in scope, not only the biggest or most representative ones.
