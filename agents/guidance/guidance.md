@@ -164,10 +164,14 @@ order: 0
 ### Security Rules
 
 - Never commit secrets or credentials.
+- Treat serialized integration configuration as sensitive even when the endpoint is authenticated. A read or list response can leak authorization headers, signing secrets, tokens, or private metadata just as easily as a write path can.
+- Require the same privileged permission used to manage secret-bearing configuration, or use an explicitly redacted output contract for lower-privilege readers. Add negative tests that assert both access denial and the absence of secret fields where redaction is supported.
 - Never ship unauthenticated API endpoints.
 - Scope data to the current user or tenant.
 - Tests must verify ownership boundaries.
 - Avoid wildcard `ALLOWED_HOSTS` in production.
+- Treat requests to user-configurable destinations as an SSRF boundary. Restrict schemes and ports, reject credentials and non-public network ranges, and disable redirects unless every hop is independently validated.
+- Do not validate a hostname and then let the HTTP client resolve it again. Resolve once, validate every returned address, connect to a validated address, and preserve the original hostname for the HTTP `Host` header and TLS SNI/certificate verification. Test literal blocked addresses, DNS-rebinding behavior, redirects, and invalid ports.
 
 ### Logging Discipline
 
