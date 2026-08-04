@@ -1,0 +1,30 @@
+{{ render_imports(imports) }}
+
+
+class {{ spec.model }}({{ base_model_name }}):
+{% if history_log_fields %}
+	history_log_fields = {{ history_log_fields }}
+
+{% endif %}
+{% if meta_lines %}
+	class Meta:
+{% for line in meta_lines %}
+		{{ line }}
+{% endfor %}
+
+{% endif %}
+{% for group in spec.choices %}
+	class {{ group.class_name }}(models.TextChoices):
+{% for member in group.members %}
+		{{ member }} = '{{ member }}', gettext('{{ group.label(member) }}')
+{% endfor %}
+
+{% endfor %}
+{% for declaration in declarations %}
+	{{ declaration }}
+{% endfor %}
+{% if spec.str_field %}
+
+	def __str__(self):
+		return self.{{ spec.str_field }}
+{% endif %}

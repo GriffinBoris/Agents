@@ -63,6 +63,17 @@ description: >
 - permission setup through model permission helpers
 - serializer output comparisons and ownership-boundary coverage
 
+## Check the mechanical rules mechanically
+- If the backend has resource specs and a `.codegen.yaml` profile, run the generator in check mode before reading files by hand:
+
+```bash
+python3 agents/generate_code.py <specs> --check
+```
+
+- That reports drift in the parts that are fully derivable: admin field lists, route names, serializer field tuples, route-owned scope enforcement, and the permission test matrix.
+- Spend your own attention on the judgment half instead: whether the scope is right, whether validation belongs in the serializer or the model, whether a service boundary is missing, and whether the domain rules are actually correct.
+- If the repository has no specs yet, audit by hand as usual and note in the output whether a spec would have caught the deviations you found.
+
 ## Output
 - preferred reference files and why they are the right pattern
 - deviations found and the simplest fixes

@@ -1,0 +1,22 @@
+{{ render_imports(imports) }}
+
+
+class {{ fixtures_name }}:
+	@staticmethod
+	def create_{{ spec.resource }}(
+{% for parameter in parameters %}
+{% if parameter.required %}
+		{{ parameter.name }}: {{ parameter.annotation }},
+{% else %}
+		{{ parameter.name }}: {{ parameter.annotation }} = {{ parameter.default }},
+{% endif %}
+{% endfor %}
+	):
+{% for entry in random_defaults %}
+		{{ entry.name }} = {{ entry.name }} or {{ entry.expression }}
+{% endfor %}
+		return {{ spec.model }}.objects.create(
+{% for parameter in parameters %}
+			{{ parameter.name }}={{ parameter.name }},
+{% endfor %}
+		)

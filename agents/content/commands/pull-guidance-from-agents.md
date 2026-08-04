@@ -69,6 +69,11 @@ Before applying changes, present or record a concise merge plan containing:
 - Review the full diff for lost local guidance, duplicated sections, stale generated output, broken imports, secret material, and changes outside the planned scope.
 - Run the relevant Agents build and any repository checks that validate instruction or configuration files.
 - Confirm that project guidance still appears in the final generated instructions and that newly selected upstream guidance appears exactly once.
+- If the sync updated `agents/codegen/`, treat it as a behavior change, not a docs change. New templates change what every future generated resource looks like.
+  - When the project has resource specs and a `.codegen.yaml`, run `python3 agents/generate_code.py <specs> --check` after the sync.
+  - Reported drift means upstream templates now disagree with the committed generated code. Decide deliberately whether to regenerate those resources, and say so in the PR body rather than regenerating silently.
+  - Regenerating is a separate change from syncing guidance. Prefer reporting the drift and leaving the regeneration to a follow-up unless the user asked for both.
+- If the project has no resource specs, note that the generator updated but nothing consumes it yet.
 - If verification fails, fix the merge or stop before publication with a precise report.
 
 ## 6. Publish through a PR

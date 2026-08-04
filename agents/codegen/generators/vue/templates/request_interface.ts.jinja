@@ -1,0 +1,21 @@
+import { z } from "zod";
+
+{% if request_enums %}
+import { {% for name in request_enums %}{{ name }}{% if not loop.last %}, {% endif %}{% endfor %} } from "./{{ interface_name }}";
+
+{% endif %}
+export const {{ schema_name }} = z.object({
+{% for entry in writable %}
+	{{ entry.name }}: {{ entry.zod }},
+{% endfor %}
+});
+
+export type {{ request_name }} = z.infer<typeof {{ schema_name }}>;
+
+export function {{ defaults_name }}(): {{ request_name }} {
+	return {
+{% for entry in writable %}
+		{{ entry.name }}: {{ entry.default }},
+{% endfor %}
+	};
+}

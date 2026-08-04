@@ -1,0 +1,7 @@
+from django.urls import include, path
+
+app_name = '{{ spec.app }}'
+
+urlpatterns = [
+	path('', include('{{ views_package }}.urls')),
+]

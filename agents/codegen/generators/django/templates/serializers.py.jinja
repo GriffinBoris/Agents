@@ -1,0 +1,35 @@
+{{ render_imports(imports) }}
+
+
+class {{ spec.model }}InputSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = {{ spec.model }}
+		fields = {{ input_fields }}
+		read_only_fields = ('id',)
+{% if blocked or scope_checks %}
+
+	def validate(self, attrs):
+		attrs = super().validate(attrs)
+{% for entry in blocked %}
+
+		if self.instance and '{{ entry.field }}' in attrs:
+			raise serializers.ValidationError({'{{ entry.field }}': '{{ entry.message }}'})
+{% endfor %}
+{% for check in scope_checks %}
+
+		{{ check.field }} = attrs.get('{{ check.field }}') or (self.instance.{{ check.field }} if self.instance else None)
+		{{ check.parent }} = attrs.get('{{ check.parent }}') or (self.instance.{{ check.parent }} if self.instance else None)
+
+		if {{ check.field }} and {{ check.parent }} and {{ check.field }}.{{ check.parent }}_id != {{ check.parent }}.id:
+			raise serializers.ValidationError({'{{ check.field }}': '{{ check.message }}'})
+{% endfor %}
+
+		return attrs
+{% endif %}
+
+
+class {{ spec.model }}OutputSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = {{ spec.model }}
+		fields = {{ output_fields }}
+		read_only_fields = fields

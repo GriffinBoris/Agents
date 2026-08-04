@@ -32,6 +32,9 @@ That OpenCode build writes a packaged output to `dist/opencode/`. If you want th
 - `agents/tools/`: target-specific static assets such as OpenCode config
 - `agents/build_agents.py`: primary build CLI entrypoint
 - `agents/agents_builder/`: shared builder package
+- `agents/generate_code.py`: code generator CLI entrypoint
+- `agents/codegen/`: framework-neutral generator core, example specs, and guidance links
+- `agents/codegen/generators/`: one package per target, each owning its templates and profile section
 - `agents/scripts/install-agents.sh`: shell installer
 - `agents/scripts/install-agents.ps1`: PowerShell installer
 - `dist/`: generated output
@@ -217,7 +220,120 @@ Target paths are case-sensitive and follow the tools' documented discovery conve
 - Codex reads `.agents/AGENTS.md` through the fallback configured in `.codex/config.toml`; `.agents/skills/` contains repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory.
 - Gemini supports `.gemini/GEMINI.md` for project guidance; its commands and skills also remain under `.gemini/`.
 
+## Code Generator
+
+`agents/generate_code.py` turns one framework-neutral YAML resource spec into the files the guidance examples describe, for every configured target.
+
+- `django`: model, admin registration, input and output serializers, views, feature and app URL modules, a fixture builder, and the full permission test matrix
+- `vue`: the returned resource interface, the request interface with its zod schema and defaults factory, and the API client segment
+
+Both sides come from the same spec, so a field name, a route, or the set of fields a form may submit cannot drift between them.
+
+It reads two files. A project profile declares repository conventions once, with a section per target; a resource spec declares domain facts per resource.
+
+```bash
+python3 agents/generate_code.py --init-profile .
+python3 agents/generate_code.py backend/item/item.yaml --diff
+python3 agents/generate_code.py backend/item/item.yaml
+python3 agents/generate_code.py backend/item/item.yaml --target vue
+```
+
+`--init-profile` writes a commented starter `.codegen.yaml`. Every value in it is a placeholder that must be replaced with the repository's real helper names before generating.
+
+The generator ships with the `source` target only. A repository that installed a built target such as `claude` or `opencode` gets the guidance but not the generator.
+
+### Example Spec
+
+```yaml
+app: item
+model: Item
+scope: catalog_entry
+
+choices:
+  status:
+    - ACTIVE
+    - INACTIVE
+
+fields:
+  catalog_entry: fk catalog_entry.CatalogEntry
+  name: text
+  code: text
+  status: choice status
+  summary: text blank
+  sort_order: positive_int default=0
+
+unique:
+  - catalog_entry
+  - code
+
+filters:
+  - search=name
+  - status
+
+actions:
+  archive: status=INACTIVE
+```
+
+Verbose names, choice labels, related names, route names, admin configuration, serializer field tuples, TypeScript types, zod schemas, and the 403/404 isolation tests are all derived. Working examples live in `agents/codegen/examples/`.
+
+`actions: {archive: status=INACTIVE}` is the clearest case. On the backend it generates the action view, its route, `history_log_fields`, the guard blocking that field in the generic update serializer, and the test proving the guard holds. On the frontend it generates the API method and omits `status` from the editable form contract, because that field is no longer the form's to set.
+
+### Modes
+
+- default: write files that do not exist, leave everything else alone
+- `--diff`: print a unified diff for every file that differs, write nothing
+- `--check`: exit non-zero on any drift, for use as a CI conformance gate
+- `--force`: overwrite existing generated files; merge targets such as `admin.py`, `urls.py`, and `tests/fixtures.py` are still left alone
+
+### Options
+
+- `--profile <path>`: project profile, defaults to the nearest `.codegen.yaml`
+- `--target <name>`: repeatable; defaults to the targets the spec or profile declares. `--target all` runs every registered generator
+- `--out <path>`: output root, defaults to each target's own root from the profile
+
+### Working On The Generator
+
+```bash
+python3 -m unittest tests.test_codegen
+python3 agents/scripts/update_codegen_golden.py
+```
+
+Golden files under `tests/golden/codegen/` are the reviewable record of what the generator emits. Regenerate them and review the diff whenever a template or derivation rule changes.
+
+### Adding A Target
+
+A generator is a subclass of `BaseGenerator` under `agents/codegen/generators/<name>/` with its own templates, its own profile section, and its own output root. Register it in `agents/codegen/generators/__init__.py`. The shared core holds the resource description and the route facts; nothing target-specific belongs there.
+
+### Guidance And Templates Are Linked
+
+`agents/codegen/guidance_links.yaml` records which guidance example defines the shape of which template, for which target, along with a digest of each example.
+
+Editing a linked example fails the test suite with a message naming the templates to re-check:
+
+```
+django-view.md changed since the generator templates were last reviewed against it.
+  Review these templates and confirm they still match the example: views.py.jinja, urls.py.jinja
+  Then record the new baseline with: python3 agents/scripts/update_codegen_golden.py --accept-guidance
+```
+
+Review the named templates, update them if the shape actually changed, then record the new baseline:
+
+```bash
+python3 agents/scripts/update_codegen_golden.py --accept-guidance
+```
+
+Accepting a digest is a claim that the templates still match the guidance. It is not a way to silence the failure.
+
+Conformance tests additionally assert that literal snippets from `django-view.md`, `django-model.md`, and `django-admin.md` appear in generated output, and that the Vue output matches the shapes in `vue-type-interface-pattern.md` and `vue-api-client.md`. The digests catch that guidance moved; the snippets catch that the output is wrong.
+
 ## Typical Workflows
+
+### Generate A Django Resource
+
+1. Run `python3 agents/generate_code.py --init-profile .` and replace every placeholder with this repository's real names
+2. Write a resource spec beside the app it belongs to
+3. Run `python3 agents/generate_code.py <spec> --diff` to preview
+4. Run it without `--diff` to write, then add business logic by hand
 
 ### Authoring And Building In This Repo
 

@@ -1,0 +1,16 @@
+{% for enum in enums %}
+export enum {{ enum.name }} {
+{% for member in enum.members %}
+	{{ member }} = "{{ member }}",
+{% endfor %}
+}
+
+{% endfor %}
+export interface {{ interface_name }} {
+{% for entry in readable %}
+	{{ entry.name }}: {{ entry.type }};
+{% endfor %}
+	createdTs: string;
+	updatedTs: string;
+	id: number;
+}
