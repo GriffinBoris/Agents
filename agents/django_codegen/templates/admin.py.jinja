@@ -1,0 +1,16 @@
+{{ render_imports(imports) }}
+
+
+@admin.register({{ spec.model }})
+class {{ spec.model }}Admin(admin.ModelAdmin):
+	list_display = {{ list_display }}
+	readonly_fields = {{ readonly_fields }}
+{% if search_fields %}
+	search_fields = {{ search_fields }}
+{% endif %}
+{% if list_filter %}
+	list_filter = {{ list_filter }}
+{% endif %}
+{% if raw_id_fields %}
+	raw_id_fields = {{ raw_id_fields }}
+{% endif %}

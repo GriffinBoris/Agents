@@ -1,0 +1,34 @@
+import pytest
+{{ render_imports(imports) }}
+
+
+@pytest.mark.django_db
+class Test{{ spec.model }}Model:
+	def setup_method(self):
+{% for line in chain_setup %}
+		{{ line }}
+{% endfor %}
+		self.{{ spec.resource }} = {{ fixtures_name }}.create_{{ spec.resource }}({{ parent_argument }})
+{% if spec.str_field %}
+
+	def test_str_returns_{{ spec.str_field }}(self):
+		assert str(self.{{ spec.resource }}) == self.{{ spec.resource }}.{{ spec.str_field }}
+{% endif %}
+{% for group in spec.choices %}
+
+	def test_{{ group.field_name }}_defaults_to_{{ group.first|lower }}(self):
+		assert self.{{ spec.resource }}.{{ group.field_name }} == {{ spec.model }}.{{ group.class_name }}.{{ group.first }}
+{% endfor %}
+{% if unique_kwargs %}
+
+	def test_{{ spec.unique_name }}_is_enforced(self):
+		{{ fixtures_name }}.create_{{ spec.resource }}({{ parent_argument }}, {{ unique_kwargs }})
+
+		with pytest.raises(IntegrityError):
+			{{ fixtures_name }}.create_{{ spec.resource }}({{ parent_argument }}, {{ unique_kwargs }})
+{% endif %}
+{% if spec.history_log_fields or spec.blocked_fields %}
+
+	def test_history_log_fields_cover_action_driven_state(self):
+		assert {{ spec.model }}.history_log_fields == {{ history_log_fields }}
+{% endif %}

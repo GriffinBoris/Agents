@@ -32,6 +32,8 @@ That OpenCode build writes a packaged output to `dist/opencode/`. If you want th
 - `agents/tools/`: target-specific static assets such as OpenCode config
 - `agents/build_agents.py`: primary build CLI entrypoint
 - `agents/agents_builder/`: shared builder package
+- `agents/generate_django.py`: Django code generator CLI entrypoint
+- `agents/django_codegen/`: Django code generator package, templates, and example specs
 - `agents/scripts/install-agents.sh`: shell installer
 - `agents/scripts/install-agents.ps1`: PowerShell installer
 - `dist/`: generated output
@@ -217,7 +219,79 @@ Target paths are case-sensitive and follow the tools' documented discovery conve
 - Codex reads `.agents/AGENTS.md` through the fallback configured in `.codex/config.toml`; `.agents/skills/` contains repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory.
 - Gemini supports `.gemini/GEMINI.md` for project guidance; its commands and skills also remain under `.gemini/`.
 
+## Django Code Generator
+
+`agents/generate_django.py` turns one YAML resource spec into the Django files the guidance examples describe: model, admin registration, input and output serializers, views, feature and app URL modules, a fixture builder, and the full permission test matrix.
+
+It reads two files. A project profile declares repository conventions once; a resource spec declares domain facts per resource.
+
+```bash
+python3 agents/generate_django.py backend/item/item.yaml
+```
+
+### Example Spec
+
+```yaml
+app: item
+model: Item
+scope: catalog_entry
+
+choices:
+  status:
+    - ACTIVE
+    - INACTIVE
+
+fields:
+  catalog_entry: fk catalog_entry.CatalogEntry
+  name: text
+  code: text
+  status: choice status
+  summary: text blank
+  sort_order: positive_int default=0
+
+unique:
+  - catalog_entry
+  - code
+
+filters:
+  - search=name
+  - status
+
+actions:
+  archive: status=INACTIVE
+```
+
+Verbose names, choice labels, related names, route names, admin configuration, serializer field tuples, and the 403/404 isolation tests are all derived. Working examples live in `agents/django_codegen/examples/`.
+
+### Modes
+
+- default: write files that do not exist, leave everything else alone
+- `--diff`: print a unified diff for every file that differs, write nothing
+- `--check`: exit non-zero on any drift, for use as a CI conformance gate
+- `--force`: overwrite existing generated files; merge targets such as `admin.py`, `urls.py`, and `tests/fixtures.py` are still left alone
+
+### Options
+
+- `--profile <path>`: project profile, defaults to the nearest `.django-codegen.yaml`
+- `--out <path>`: output root, defaults to the profile's `backend_root`
+
+### Working On The Generator
+
+```bash
+python3 -m unittest tests.test_django_codegen
+python3 agents/scripts/update_codegen_golden.py
+```
+
+Golden files under `tests/golden/django_codegen/` are the reviewable record of what the generator emits. Conformance tests assert that literal snippets from `django-view.md`, `django-model.md`, and `django-admin.md` appear in generated output, so guidance and generator cannot drift apart silently.
+
 ## Typical Workflows
+
+### Generate A Django Resource
+
+1. Copy `agents/django_codegen/examples/.django-codegen.yaml` to the backend root and adjust the dotted paths
+2. Write a resource spec beside the app it belongs to
+3. Run `python3 agents/generate_django.py <spec> --diff` to preview
+4. Run it without `--diff` to write, then add business logic by hand
 
 ### Authoring And Building In This Repo
 

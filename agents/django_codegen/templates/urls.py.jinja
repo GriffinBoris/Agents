@@ -1,0 +1,20 @@
+{{ render_imports(imports) }}
+{% if spec.layout == 'flat' %}
+
+app_name = '{{ spec.app }}'
+{% endif %}
+
+urlpatterns = [
+{% if 'list' in spec.endpoints %}
+	path('list/', views.{{ spec.model }}ListView.as_view(), name='{{ spec.route_name('list') }}'),
+{% endif %}
+{% if 'create' in spec.endpoints %}
+	path('create/', views.{{ spec.model }}CreateView.as_view(), name='{{ spec.route_name('create') }}'),
+{% endif %}
+{% if 'detail' in spec.endpoints %}
+	path('<int:{{ spec.id_kwarg }}>/', views.{{ spec.model }}DetailView.as_view(), name='{{ spec.route_name('detail') }}'),
+{% endif %}
+{% for action in actions %}
+	path('<int:{{ spec.id_kwarg }}>/{{ action.kebab }}/', views.{{ spec.model }}{{ action.class_fragment }}View.as_view(), name='{{ spec.route_name(action.kebab) }}'),
+{% endfor %}
+]

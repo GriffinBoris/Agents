@@ -209,6 +209,15 @@ order: 1
 - Structure commands around argument parsing, focused helper methods, and early guard clauses so `handle()` stays readable.
 - Use `call_command` for programmatic management command execution.
 
+## Code Generation
+
+- For a new CRUD resource that follows the standard scope, permission, serializer, and test conventions, prefer generating the scaffolding from a resource spec instead of copying another app by hand. See the codegen spec example.
+- Keep repository conventions in one checked-in `.django-codegen.yaml` profile and keep per-resource specs limited to domain facts.
+- Generate first, then write business logic by hand. Do not express serializer validation, service workflows, or lifecycle rules in a spec.
+- Never let generation overwrite hand-edited files. Use the generator's diff and check modes to review changes.
+- Run the generator in check mode in CI once specs exist so convention drift fails a job instead of a review.
+- Do not generate migrations. Let Django derive them from the generated models.
+
 ## Background Tasks (Celery)
 
 - Use Celery for background work that does not need to complete synchronously.

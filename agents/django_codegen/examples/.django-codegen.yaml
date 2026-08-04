@@ -1,0 +1,66 @@
+# Project profile for the Django code generator.
+#
+# This declares the repository conventions once so resource specs stay small.
+# Copy this file to the backend repository root and adjust the dotted paths.
+
+backend_root: backend
+api_prefix: /api/
+
+base_view: common.access.base_views.AuthenticatedAccessAPIView
+base_model: core.base_models.BaseModel
+fixtures: tests.fixtures.FixtureFactory
+permission_module: common.permissions
+default_permission: WORKSPACE_MANAGE
+permission_scope: workspace
+
+on_delete: DO_NOTHING
+indent: tab
+layout: feature_package
+model_layout: module
+detail_lookup: resource_resolver
+
+# Each scope names the URL kwargs that resolve_<scope>_scope(...) consumes,
+# in order. A resource declares one scope and inherits the whole chain.
+scopes:
+  organization:
+    - organization_id
+  workspace:
+    - organization_id
+    - workspace_id
+  catalog_entry:
+    - organization_id
+    - workspace_id
+    - catalog_entry_id
+
+# Route namespace prefix contributed by each scope. The resource appends its app.
+namespaces:
+  organization: ''
+  workspace: workspace
+  catalog_entry: workspace:catalog_entry
+
+membership_models:
+  organization: tenancy.models.OrganizationMembership
+  workspace: workspace.models.WorkspaceMembership
+
+# The permission matrix every generated view test proves.
+# expect is the status a role should get from a mutating endpoint:
+#   200 allowed, 403 in scope but unauthorized, 404 outside the scope boundary.
+roles:
+  organization_admin:
+    memberships:
+      - organization:ADMIN
+    expect: 200
+  workspace_admin:
+    memberships:
+      - organization:MEMBER
+      - workspace:ADMIN
+    expect: 200
+  workspace_operator:
+    memberships:
+      - organization:MEMBER
+      - workspace:OPERATOR
+    expect: 403
+  other_organization_admin:
+    memberships:
+      - other_organization:ADMIN
+    expect: 404

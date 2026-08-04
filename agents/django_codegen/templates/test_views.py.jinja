@@ -1,0 +1,193 @@
+import pytest
+{{ render_imports(imports) }}
+
+
+@pytest.mark.django_db
+class Test{{ spec.model }}Views:
+	def setup_method(self):
+{% for role in roles %}
+		self.{{ role.name }} = {{ fixtures_name }}.create_user(email='{{ role.email }}'{% if role.is_superuser %}, is_superuser=True{% endif %})
+{% endfor %}
+
+{% for line in chain_setup %}
+		{{ line }}
+{% endfor %}
+
+{% for line in membership_setup %}
+		{{ line }}
+{% endfor %}
+
+		self.{{ spec.resource }} = {{ fixtures_name }}.create_{{ spec.resource }}({{ parent_argument }})
+		self.other_{{ spec.resource }} = {{ fixtures_name }}.create_{{ spec.resource }}({{ other_parent_argument }})
+
+{% if 'list' in spec.endpoints %}
+		self.list_url = reverse('{{ spec.full_route_name('list') }}', kwargs={{ reverse_kwargs }})
+{% endif %}
+{% if 'create' in spec.endpoints %}
+		self.create_url = reverse('{{ spec.full_route_name('create') }}', kwargs={{ reverse_kwargs }})
+{% endif %}
+{% if 'detail' in spec.endpoints %}
+		self.detail_url = reverse('{{ spec.full_route_name('detail') }}', kwargs={{ detail_reverse_kwargs }})
+{% endif %}
+{% for action in actions %}
+		self.{{ action.name }}_url = reverse('{{ spec.full_route_name(action.kebab) }}', kwargs={{ detail_reverse_kwargs }})
+{% endfor %}
+
+	def test_{{ spec.resource }}_routes_follow_contract(self):
+{% if 'list' in spec.endpoints %}
+		assert self.list_url == f'{{ spec.url_prefix }}list/'
+{% endif %}
+{% if 'create' in spec.endpoints %}
+		assert self.create_url == f'{{ spec.url_prefix }}create/'
+{% endif %}
+{% if 'detail' in spec.endpoints %}
+		assert self.detail_url == f'{{ spec.url_prefix }}{self.{{ spec.resource }}.id}/'
+{% endif %}
+{% for action in actions %}
+		assert self.{{ action.name }}_url == f'{{ spec.url_prefix }}{self.{{ spec.resource }}.id}/{{ action.kebab }}/'
+{% endfor %}
+{% if 'list' in spec.endpoints and allowed_role %}
+
+	def test_{{ allowed_role.name }}_only_lists_in_scope_{{ spec.resource|plural_snake }}(self, client):
+		client.force_login(self.{{ allowed_role.name }})
+
+		response = client.get(self.list_url, content_type='application/json')
+
+		expected = {{ spec.model }}OutputSerializer([self.{{ spec.resource }}], many=True, context={'request': response.wsgi_request}).data
+		assert response.status_code == status.HTTP_200_OK
+		assert response.json() == expected
+{% endif %}
+{% if 'detail' in spec.endpoints %}
+{% for role in hidden_roles %}
+
+	def test_{{ role.name }}_cannot_read_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ role.name }})
+
+		response = client.get(self.detail_url, content_type='application/json')
+
+		assert response.status_code == status.{{ role.status_constant }}
+{% endfor %}
+{% endif %}
+{% if 'create' in spec.endpoints and allowed_role %}
+
+	def test_{{ allowed_role.name }}_can_create_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ allowed_role.name }})
+
+		response = client.post(
+			self.create_url,
+			{
+{% for line in payload_lines %}
+				{{ line }}
+{% endfor %}
+			},
+			content_type='application/json',
+		)
+
+		instance = {{ spec.model }}.objects.get({{ create_lookup }})
+		expected = {{ spec.model }}OutputSerializer(instance, context={'request': response.wsgi_request}).data
+		assert response.status_code == status.HTTP_201_CREATED
+		assert response.json() == expected
+{% if spec.scope %}
+
+	def test_create_keeps_route_{{ spec.scope }}_scope_when_payload_includes_other_{{ spec.scope }}(self, client):
+		client.force_login(self.{{ allowed_role.name }})
+
+		response = client.post(
+			self.create_url,
+			{
+{% for line in payload_lines %}
+				{{ line }}
+{% endfor %}
+				'{{ spec.scope }}': self.other_{{ spec.scope }}.id,
+			},
+			content_type='application/json',
+		)
+
+		instance = {{ spec.model }}.objects.get({{ create_lookup }})
+		assert response.status_code == status.HTTP_201_CREATED
+		assert instance.{{ spec.scope }}_id == self.{{ spec.scope }}.id
+{% endif %}
+{% for role in denied_roles %}
+
+	def test_{{ role.name }}_cannot_create_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ role.name }})
+
+		response = client.post(
+			self.create_url,
+			{
+{% for line in payload_lines %}
+				{{ line }}
+{% endfor %}
+			},
+			content_type='application/json',
+		)
+
+		assert response.status_code == status.{{ role.status_constant }}
+{% endfor %}
+{% endif %}
+{% if 'detail' in spec.endpoints and allowed_role %}
+
+	def test_{{ allowed_role.name }}_can_update_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ allowed_role.name }})
+
+		response = client.put(
+			self.detail_url,
+			{{ update_payload }},
+			content_type='application/json',
+		)
+
+		self.{{ spec.resource }}.refresh_from_db()
+		expected = {{ spec.model }}OutputSerializer(self.{{ spec.resource }}, context={'request': response.wsgi_request}).data
+		assert response.status_code == status.HTTP_200_OK
+		assert response.json() == expected
+{% for role in denied_roles %}
+
+	def test_{{ role.name }}_cannot_update_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ role.name }})
+
+		response = client.put(
+			self.detail_url,
+			{{ update_payload }},
+			content_type='application/json',
+		)
+
+		assert response.status_code == status.{{ role.status_constant }}
+{% endfor %}
+{% for entry in blocked %}
+
+	def test_generic_update_cannot_change_{{ entry.field }}(self, client):
+		client.force_login(self.{{ allowed_role.name }})
+
+		response = client.put(
+			self.detail_url,
+			{'{{ entry.field }}': {{ entry.other_value }}},
+			content_type='application/json',
+		)
+
+		assert response.status_code == status.HTTP_400_BAD_REQUEST
+{% endfor %}
+{% endif %}
+{% for action in actions %}
+{% if allowed_role %}
+
+	def test_{{ allowed_role.name }}_can_{{ action.name }}_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ allowed_role.name }})
+
+		response = client.post(self.{{ action.name }}_url, content_type='application/json')
+
+		self.{{ spec.resource }}.refresh_from_db()
+		assert response.status_code == status.HTTP_200_OK
+{% for assignment in action.assignments %}
+		assert self.{{ spec.resource }}.{{ assignment.field }} == {{ assignment.value }}
+{% endfor %}
+{% endif %}
+{% for role in denied_roles %}
+
+	def test_{{ role.name }}_cannot_{{ action.name }}_{{ spec.resource }}(self, client):
+		client.force_login(self.{{ role.name }})
+
+		response = client.post(self.{{ action.name }}_url, content_type='application/json')
+
+		assert response.status_code == status.{{ role.status_constant }}
+{% endfor %}
+{% endfor %}

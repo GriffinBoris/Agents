@@ -1,0 +1,33 @@
+# A deliberately different resource from item.yaml: organization-scoped instead of
+# catalog-entry-scoped, a flat app layout instead of a feature package, no lifecycle
+# actions, and a wider spread of field types. It exists to keep the generator honest
+# about resources that are not shaped like Item.
+
+app: contact
+model: Contact
+scope: organization
+layout: flat
+
+choices:
+  status:
+    - ACTIVE
+    - INACTIVE
+
+fields:
+  organization: fk tenancy.Organization
+  email: email unique
+  first_name: text blank
+  last_name: text blank
+  phone: text blank
+  status: choice status
+  is_primary: bool default=false
+  notes: text blank
+
+filters:
+  - search=email,first_name,last_name
+  - status
+
+search:
+  - email
+  - first_name
+  - last_name

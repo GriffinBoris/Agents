@@ -1,0 +1,74 @@
+import pytest
+{{ render_imports(imports) }}
+
+
+@pytest.mark.django_db
+class Test{{ spec.model }}InputSerializer:
+	def setup_method(self):
+{% for line in chain_setup %}
+		{{ line }}
+{% endfor %}
+		self.payload = {
+{% for line in payload_lines %}
+			{{ line }}
+{% endfor %}
+{% if spec.scope %}
+			'{{ spec.scope }}': self.{{ spec.scope }}.id,
+{% endif %}
+		}
+
+	def test_valid_payload_creates_{{ spec.resource }}(self):
+		serializer = {{ spec.model }}InputSerializer(data=self.payload)
+
+		assert serializer.is_valid(), serializer.errors
+
+		instance = serializer.save()
+{% if spec.scope %}
+		assert instance.{{ spec.scope }}_id == self.{{ spec.scope }}.id
+{% endif %}
+{% for entry in required %}
+		assert instance.{{ entry.name }} == {{ entry.value }}
+{% endfor %}
+
+{% for entry in required %}
+	def test_{{ entry.name }}_is_required(self):
+		payload = dict(self.payload)
+		payload.pop('{{ entry.name }}')
+
+		serializer = {{ spec.model }}InputSerializer(data=payload)
+
+		assert not serializer.is_valid()
+		assert '{{ entry.name }}' in serializer.errors
+
+{% endfor %}
+{% for entry in blocked %}
+	def test_{{ entry.field }}_cannot_change_through_generic_update(self):
+		instance = {{ fixtures_name }}.create_{{ spec.resource }}({{ parent_argument }})
+
+		serializer = {{ spec.model }}InputSerializer(instance, data={'{{ entry.field }}': {{ entry.other_value }}}, partial=True)
+
+		assert not serializer.is_valid()
+		assert '{{ entry.field }}' in serializer.errors
+
+{% endfor %}
+
+@pytest.mark.django_db
+class Test{{ spec.model }}OutputSerializer:
+	def setup_method(self):
+{% for line in chain_setup %}
+		{{ line }}
+{% endfor %}
+		self.{{ spec.resource }} = {{ fixtures_name }}.create_{{ spec.resource }}({{ parent_argument }})
+
+	def test_output_shape_is_exact(self):
+		data = {{ spec.model }}OutputSerializer(self.{{ spec.resource }}).data
+
+		assert set(data.keys()) == {
+{% for name in output_fields %}
+			'{{ name }}',
+{% endfor %}
+		}
+		assert data['id'] == self.{{ spec.resource }}.id
+{% for entry in required %}
+		assert data['{{ entry.name }}'] == self.{{ spec.resource }}.{{ entry.name }}
+{% endfor %}
