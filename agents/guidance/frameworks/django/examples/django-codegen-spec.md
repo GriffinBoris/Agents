@@ -183,12 +183,31 @@ That single line generates the action view, the action route, `history_log_field
 ### Running The Generator
 
 ```bash
-python3 agents/generate_django.py backend/item/item.yaml
+python3 agents/generate_django.py --init-profile backend
 python3 agents/generate_django.py backend/item/item.yaml --diff
+python3 agents/generate_django.py backend/item/item.yaml
 python3 agents/generate_django.py backend/**/*.yaml --check
 ```
 
+`--init-profile` writes a commented starter profile. Every value in it is a placeholder; replace each one by reading the repository's real base view, base model, fixture factory, and scope resolvers before generating anything.
+
 The default mode writes files that do not exist and leaves everything else alone. `--diff` prints a unified diff for each file that differs. `--check` exits non-zero on any drift, which makes it usable in CI as a conformance gate.
+
+### Guidance Examples Are Linked To Templates
+
+`guidance_links.yaml` records which example defines the shape of which template, with a digest of each example at the time the templates were last reviewed against it.
+
+```yaml
+django-view.md:
+  digest: 7398f4d0515c86cdbc02863a6f51fae83dbb3cbc033704166450e8e37a46277c
+  templates:
+    - views.py.jinja
+    - urls.py.jinja
+```
+
+Editing a linked example fails the generator test suite and names the templates to re-check. Review them, update what actually changed, then record the new baseline with `--accept-guidance`. Accepting a digest is a claim that the templates still match the guidance, not a way to silence the failure.
+
+This is the mechanism that stops the guidance and the generated code from drifting apart. Without it, an example can be improved and every future generated resource silently keeps the old shape.
 
 ## Things To Notice
 
@@ -199,6 +218,7 @@ The default mode writes files that do not exist and leaves everything else alone
 - The generated view tests create out-of-scope records on purpose so isolation is actually exercised.
 - The generated create test and the spoofed-payload test both look the resource up by scope, so a route-scope regression fails the test rather than silently passing.
 - The generator is not a framework. Its output is ordinary Django code that a reviewer reads and edits like any other file.
+- The generator ships with the Agents `source` target only. A repository that installed a built target has the guidance but not the tool.
 
 ## Rules To Follow
 
@@ -209,6 +229,8 @@ The default mode writes files that do not exist and leaves everything else alone
 - Run `--check` in CI once specs exist so convention drift shows up as a failing job.
 - Re-run the generator with `--diff` after changing a template so the effect on every resource is visible before it lands.
 - Update the golden files and review them whenever a template or derivation rule changes.
+- When editing a Django guidance example, review the templates it governs before recording a new digest. A guidance change is also a question about the generator.
+- Add a `guidance_links.yaml` entry for every new template so it cannot escape the drift check.
 - Do not generate migrations. Let Django produce them from the generated models.
 - Treat the generated permission tests as the floor, not the ceiling. Add domain-specific cases beside them.
 

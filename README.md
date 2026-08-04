@@ -226,8 +226,14 @@ Target paths are case-sensitive and follow the tools' documented discovery conve
 It reads two files. A project profile declares repository conventions once; a resource spec declares domain facts per resource.
 
 ```bash
+python3 agents/generate_django.py --init-profile backend
+python3 agents/generate_django.py backend/item/item.yaml --diff
 python3 agents/generate_django.py backend/item/item.yaml
 ```
+
+`--init-profile` writes a commented starter `.django-codegen.yaml`. Every value in it is a placeholder that must be replaced with the repository's real helper names before generating.
+
+The generator ships with the `source` target only. A repository that installed a built target such as `claude` or `opencode` gets the guidance but not the generator.
 
 ### Example Spec
 
@@ -282,7 +288,29 @@ python3 -m unittest tests.test_django_codegen
 python3 agents/scripts/update_codegen_golden.py
 ```
 
-Golden files under `tests/golden/django_codegen/` are the reviewable record of what the generator emits. Conformance tests assert that literal snippets from `django-view.md`, `django-model.md`, and `django-admin.md` appear in generated output, so guidance and generator cannot drift apart silently.
+Golden files under `tests/golden/django_codegen/` are the reviewable record of what the generator emits. Regenerate them and review the diff whenever a template or derivation rule changes.
+
+### Guidance And Templates Are Linked
+
+`agents/django_codegen/guidance_links.yaml` records which Django guidance example defines the shape of which template, along with a digest of each example.
+
+Editing a linked example fails the test suite with a message naming the templates to re-check:
+
+```
+django-view.md changed since the generator templates were last reviewed against it.
+  Review these templates and confirm they still match the example: views.py.jinja, urls.py.jinja
+  Then record the new baseline with: python3 agents/scripts/update_codegen_golden.py --accept-guidance
+```
+
+Review the named templates, update them if the shape actually changed, then record the new baseline:
+
+```bash
+python3 agents/scripts/update_codegen_golden.py --accept-guidance
+```
+
+Accepting a digest is a claim that the templates still match the guidance. It is not a way to silence the failure.
+
+Conformance tests additionally assert that literal snippets from `django-view.md`, `django-model.md`, and `django-admin.md` appear in generated output. The digests catch that guidance moved; the snippets catch that the output is wrong.
 
 ## Typical Workflows
 

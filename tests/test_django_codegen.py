@@ -3,10 +3,17 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from agents.django_codegen.cli import main as cli_main
 from agents.django_codegen.fields import SpecError, parse_field, render_declaration
 from agents.django_codegen.generator import generate
+from agents.django_codegen.guidance_links import (
+    TEMPLATES_ROOT,
+    drifted_links,
+    linked_template_names,
+    load_links,
+)
 from agents.django_codegen.naming import class_case, kebab_case, plural_snake, snake_case, title_case
-from agents.django_codegen.profile import load_profile
+from agents.django_codegen.profile import PROFILE_FILENAME, load_profile
 from agents.django_codegen.spec import build_spec, load_spec
 from agents.django_codegen.writer import MATCHES, WRITTEN, apply_files
 
@@ -443,6 +450,56 @@ class FlatLayoutTest(unittest.TestCase):
         self.assertNotIn("'notes'", self.generated['contact/admin.py'])
 
 
+class GuidanceLinkTest(unittest.TestCase):
+    """Guidance examples and generator templates must not drift apart silently."""
+
+    def setUp(self) -> None:
+        self.links = load_links()
+
+    def test_linked_guidance_examples_match_their_recorded_digest(self) -> None:
+        for link in self.links:
+            with self.subTest(example=link.example):
+                self.assertFalse(link.has_drifted, link.drift_message())
+
+    def test_every_linked_example_exists(self) -> None:
+        for link in self.links:
+            with self.subTest(example=link.example):
+                self.assertTrue(link.example_path.is_file(), f'{link.example} is linked but missing')
+
+    def test_every_linked_template_exists(self) -> None:
+        for link in self.links:
+            for template_path in link.template_paths():
+                with self.subTest(template=template_path.name):
+                    self.assertTrue(template_path.is_file(), f'{template_path.name} is linked but missing')
+
+    def test_every_template_is_governed_by_a_guidance_example(self) -> None:
+        templates = {path.name for path in TEMPLATES_ROOT.glob('*.jinja')}
+        self.assertEqual(
+            set(),
+            templates - linked_template_names(self.links),
+            'these templates have no guidance example recorded in guidance_links.yaml',
+        )
+
+    def test_recorded_digests_are_populated(self) -> None:
+        for link in self.links:
+            with self.subTest(example=link.example):
+                self.assertEqual(64, len(link.digest), f'{link.example} has no recorded digest')
+
+    def test_drift_is_detected_when_an_example_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            links_path = Path(temporary_directory) / 'guidance_links.yaml'
+            stale_digest = '0' * 64
+            links_path.write_text(
+                f'django-view.md:\n  digest: {stale_digest}\n  templates:\n    - views.py.jinja\n',
+                encoding='utf-8',
+            )
+            links = load_links(links_path)
+
+        self.assertEqual(1, len(drifted_links(links)))
+        self.assertIn('views.py.jinja', drifted_links(links)[0].drift_message())
+        self.assertIn('--accept-guidance', drifted_links(links)[0].drift_message())
+
+
 class GoldenOutputTest(unittest.TestCase):
     """Checked-in golden files make template drift visible in review."""
 
@@ -482,6 +539,97 @@ class GoldenOutputTest(unittest.TestCase):
             for path, content in generated_by_path(name).items():
                 with self.subTest(spec=name, path=path):
                     ast.parse(content)
+
+
+class CliTest(unittest.TestCase):
+    def test_init_profile_writes_a_loadable_starter(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            self.assertEqual(0, cli_main(['--init-profile', temporary_directory]))
+
+            profile = load_profile(Path(temporary_directory) / PROFILE_FILENAME)
+
+        self.assertIn('organization', profile.scopes)
+        self.assertTrue(any(role.expect == 403 for role in profile.roles))
+        self.assertTrue(any(role.expect == 404 for role in profile.roles))
+
+    def test_init_profile_refuses_to_clobber_an_existing_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            target = Path(temporary_directory) / PROFILE_FILENAME
+            target.write_text('backend_root: kept\n', encoding='utf-8')
+
+            self.assertEqual(1, cli_main(['--init-profile', temporary_directory]))
+            self.assertEqual('backend_root: kept\n', target.read_text(encoding='utf-8'))
+
+    def test_starter_profile_generates_working_code(self) -> None:
+        spec = {
+            'app': 'note',
+            'model': 'Note',
+            'scope': 'workspace',
+            'choices': {'status': ['DRAFT', 'PUBLISHED']},
+            'fields': {'workspace': 'fk workspace.Workspace', 'title': 'text', 'status': 'choice status'},
+            'actions': {'publish': 'status=PUBLISHED'},
+        }
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            cli_main(['--init-profile', temporary_directory])
+            profile = load_profile(Path(temporary_directory) / PROFILE_FILENAME)
+
+        for generated in generate(build_spec(spec, profile)):
+            with self.subTest(path=generated.path):
+                ast.parse(generated.content)
+
+    def test_scoped_queryset_lookup_scopes_before_fetching(self) -> None:
+        """The default detail lookup must never reach an object outside the resolved parent."""
+        spec = {
+            'app': 'note',
+            'model': 'Note',
+            'scope': 'workspace',
+            'fields': {'workspace': 'fk workspace.Workspace', 'title': 'text'},
+        }
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            cli_main(['--init-profile', temporary_directory])
+            profile = load_profile(Path(temporary_directory) / PROFILE_FILENAME)
+
+        views = next(
+            item.content for item in generate(build_spec(spec, profile)) if item.path.endswith('views.py')
+        )
+        self.assertEqual('scoped_queryset', profile.detail_lookup)
+        self.assertIn('note = get_object_or_404(workspace.notes, id=note_id)', views)
+        self.assertNotIn('Note.objects.get', views)
+
+    def test_no_specs_is_an_error_rather_than_a_silent_success(self) -> None:
+        self.assertEqual(2, cli_main([]))
+
+    def test_check_mode_exits_non_zero_on_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            exit_code = cli_main(
+                [
+                    str(EXAMPLES_ROOT / 'item.yaml'),
+                    '--profile',
+                    str(EXAMPLES_ROOT / '.django-codegen.yaml'),
+                    '--out',
+                    temporary_directory,
+                    '--check',
+                ]
+            )
+
+        self.assertEqual(1, exit_code)
+
+    def test_generate_then_check_is_clean(self) -> None:
+        arguments = [
+            str(EXAMPLES_ROOT / 'item.yaml'),
+            '--profile',
+            str(EXAMPLES_ROOT / '.django-codegen.yaml'),
+            '--out',
+        ]
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            self.assertEqual(0, cli_main([*arguments, temporary_directory]))
+            self.assertEqual(0, cli_main([*arguments, temporary_directory, '--check']))
+
+    def test_unreadable_spec_is_reported_rather_than_raised(self) -> None:
+        self.assertEqual(2, cli_main([str(EXAMPLES_ROOT / 'does-not-exist.yaml')]))
 
 
 class WriterTest(unittest.TestCase):

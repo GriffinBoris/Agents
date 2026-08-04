@@ -1,0 +1,75 @@
+# Which Django guidance example defines the shape of which generator template.
+#
+# The digest is the sha256 of the example at the time the templates were last
+# reviewed against it. When an example changes, the generator test suite fails and
+# names the templates to re-check, so guidance edits cannot silently outrun the
+# code they are supposed to produce.
+#
+# After reviewing the listed templates, record the new baseline with:
+#   python3 agents/scripts/update_codegen_golden.py --accept-guidance
+
+django-action-view.md:
+  digest: 6087c831ce390ce50dc856f604051a6a545361f57cdcb3bd1d359b0e3bc0fe91
+  templates:
+  - views.py.jinja
+  - urls.py.jinja
+django-admin.md:
+  digest: b061171c2ed20b94e46eae98b052a0dbb7e57896b82a017c142192ffdc942845
+  templates:
+  - admin.py.jinja
+django-app-layout.md:
+  digest: 44452515d3e50a8d235b05ff44a25c8013275001528904f242e2b96ab718a29c
+  templates:
+  - app_urls.py.jinja
+  - model.py.jinja
+django-app-url-hub.md:
+  digest: b40dbda5784eb12fc6f988af9f9de9c3c00509666a854d3d0b5cdef0ab3fe0d4
+  templates:
+  - app_urls.py.jinja
+django-feature-url-module.md:
+  digest: f3c6d3f678951712986ffee94366669c04f04ccbf2761b7fe820fd14e336336d
+  templates:
+  - urls.py.jinja
+  - app_urls.py.jinja
+django-model-tests.md:
+  digest: d3e0053e1a204181027620823b7923b67dfd761f7c92e3d98aedccfdf98ea663
+  templates:
+  - test_models.py.jinja
+django-model.md:
+  digest: c078992f95f81fbe5bc9647374c0a24de80a7f46890dc82728c99867079c12fb
+  templates:
+  - model.py.jinja
+django-query-params.md:
+  digest: 672e574702f08b940eadec579c0b9ce80bc4ce1886c1e6b68ed2228723c1ea70
+  templates:
+  - views.py.jinja
+django-serializer-tests.md:
+  digest: 115211c2b953b236330f35694a696404238bd8e2ec659561140da83cf2315b7c
+  templates:
+  - test_serializers.py.jinja
+django-serializer.md:
+  digest: 05966958d782a1902bc15fad880c61584e86d1041e6db5642b6e646c444e4bef
+  templates:
+  - serializers.py.jinja
+django-shared-scope-validation.md:
+  digest: 7a2c411824991179ad767e3f04f814c5cdff4b4ccd27d91083b74fa2d54b1a88
+  templates:
+  - serializers.py.jinja
+django-shared-test-fixtures.md:
+  digest: 41eba365cf7322065a658b592e9cad71a66303b1aed0d9bb99aeca8f530a8dad
+  templates:
+  - fixture.py.jinja
+django-transition-endpoint.md:
+  digest: ad705d14f354bf53c55b183577f187b5031762c406533b136de015f32e4d0d0e
+  templates:
+  - serializers.py.jinja
+  - views.py.jinja
+django-view-tests.md:
+  digest: ab8003dc16518da27814e352c2316077517d8ba7376d2628f4e81fa6df228787
+  templates:
+  - test_views.py.jinja
+django-view.md:
+  digest: 7398f4d0515c86cdbc02863a6f51fae83dbb3cbc033704166450e8e37a46277c
+  templates:
+  - views.py.jinja
+  - urls.py.jinja

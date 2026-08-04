@@ -44,6 +44,91 @@ SUPPORTED_LAYOUTS = frozenset({'feature_package', 'flat'})
 SUPPORTED_MODEL_LAYOUTS = frozenset({'module', 'package'})
 
 
+STARTER_PROFILE = """# Django code generator profile.
+#
+# This declares repository conventions once so resource specs stay small.
+# Every value below is a placeholder taken from the bundled example. Replace each
+# one with the real name from this repository before generating anything, then
+# check this file in.
+#
+# The fastest way to fill it in: open an existing feature package and read one
+# list view, one create view, and one view test.
+
+# Where generated files land, and the URL prefix your API hub mounts under.
+backend_root: backend
+api_prefix: /api/
+
+# Dotted paths to the shared helpers generated code will call.
+# base_view must expose the resolve_<scope>_scope, require_permission, and
+# build_serializer_data helpers the generated views use.
+base_view: common.access.base_views.AuthenticatedAccessAPIView
+base_model: core.base_models.BaseModel
+fixtures: tests.fixtures.FixtureFactory
+random_string: core.utility.random_string
+permission_module: common.permissions
+default_permission: WORKSPACE_MANAGE
+
+# The scope that owns permission checks, such as workspace or organization.
+permission_scope: workspace
+
+on_delete: DO_NOTHING
+
+# tab or space. Match whatever the existing backend uses.
+indent: tab
+
+# feature_package puts views, serializers, urls, and tests in views/<feature>/.
+# flat keeps them at the app root.
+layout: feature_package
+
+# module writes app/models.py. package writes app/models/<Model>.py.
+model_layout: module
+
+# resource_resolver generates self.resolve_<resource>_scope(...) and requires that
+# helper to exist. scoped_queryset generates get_object_or_404 against the scoped
+# parent queryset instead, which works without per-resource resolvers.
+detail_lookup: scoped_queryset
+
+# Each scope lists the URL kwargs its resolve_<scope>_scope(...) helper consumes,
+# in order. A resource names one scope and inherits the whole chain. This drives
+# view signatures, reverse() kwargs in tests, and the nested route prefix.
+scopes:
+  organization:
+    - organization_id
+  workspace:
+    - organization_id
+    - workspace_id
+
+# Route namespace prefix contributed by each scope. The resource appends its app.
+namespaces:
+  organization: ''
+  workspace: workspace
+
+# Dotted paths to the membership models whose RoleChoices the tests reference.
+membership_models:
+  organization: tenancy.models.OrganizationMembership
+  workspace: workspace.models.WorkspaceMembership
+
+# The permission matrix every generated view test proves.
+# expect is the status a role should get from a mutating endpoint:
+#   200 allowed, 403 in scope but unauthorized, 404 outside the ownership boundary.
+# Include at least one 403 role and one 404 role or the isolation tests are hollow.
+roles:
+  organization_admin:
+    memberships:
+      - organization:ADMIN
+    expect: 200
+  workspace_operator:
+    memberships:
+      - organization:MEMBER
+      - workspace:OPERATOR
+    expect: 403
+  other_organization_admin:
+    memberships:
+      - other_organization:ADMIN
+    expect: 404
+"""
+
+
 @dataclass(frozen=True)
 class Membership:
     target: str
