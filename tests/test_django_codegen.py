@@ -95,6 +95,64 @@ class FieldDeclarationTest(unittest.TestCase):
             self.render('sort_order', 'positive_int default=0'),
         )
 
+    def test_decimal_declaration_keeps_field_specific_arguments_first(self) -> None:
+        self.assertEqual(
+            "unit_price_amount = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False, "
+            "verbose_name=gettext('Unit Price Amount'))",
+            self.render('unit_price_amount', 'decimal max_digits=10 decimal_places=2'),
+        )
+
+    def test_json_declaration(self) -> None:
+        self.assertEqual(
+            "metadata = models.JSONField(default=dict, null=False, blank=True, verbose_name=gettext('Metadata'))",
+            self.render('metadata', 'json blank default=dict'),
+        )
+
+    def test_datetime_declaration(self) -> None:
+        self.assertEqual(
+            "expires_ts = models.DateTimeField(null=False, blank=False, verbose_name=gettext('Expires Ts'))",
+            self.render('expires_ts', 'datetime'),
+        )
+
+    def test_nullable_relation_keeps_explicit_null(self) -> None:
+        self.assertEqual(
+            "parent_node = models.ForeignKey('survey.ComponentNode', related_name='child_nodes', null=True, "
+            "blank=True, verbose_name=gettext('Parent Node'), on_delete=models.DO_NOTHING)",
+            self.render(
+                'parent_node',
+                {'type': 'fk', 'to': 'survey.ComponentNode', 'related_name': 'child_nodes', 'null': True, 'blank': True},
+            ),
+        )
+
+    def test_one_to_one_declaration_sets_on_delete(self) -> None:
+        self.assertIn('on_delete=models.DO_NOTHING', self.render('user', 'o2o auth.User'))
+
+    def test_many_to_many_declaration_omits_null_and_on_delete(self) -> None:
+        declaration = self.render('tags', 'm2m catalog.Tag')
+        self.assertNotIn('null=', declaration)
+        self.assertNotIn('on_delete=', declaration)
+
+    def test_slug_and_uuid_declarations(self) -> None:
+        self.assertIn('models.SlugField(', self.render('stable_key', 'slug'))
+        self.assertIn('models.UUIDField(', self.render('external_id', 'uuid'))
+
+    def test_on_delete_override_is_honored(self) -> None:
+        self.assertIn('on_delete=models.CASCADE', self.render('catalog_entry', 'fk catalog.Entry on_delete=CASCADE'))
+
+    def test_raw_escape_hatch_passes_through_untouched(self) -> None:
+        self.assertEqual(
+            "legacy = models.TextField(db_column='legacy', null=True)",
+            self.render('legacy', {'type': 'text', 'raw': "models.TextField(db_column='legacy', null=True)"}),
+        )
+
+    def test_decimal_without_precision_is_rejected(self) -> None:
+        with self.assertRaises(SpecError):
+            parse_field('amount', 'decimal')
+
+    def test_unsupported_field_option_is_rejected(self) -> None:
+        with self.assertRaises(SpecError):
+            parse_field('name', {'type': 'text', 'nonsense': True})
+
     def test_unknown_type_is_rejected(self) -> None:
         with self.assertRaises(SpecError):
             parse_field('name', 'stringy')
