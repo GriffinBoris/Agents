@@ -1,0 +1,80 @@
+# Project profile for the code generator.
+#
+# Repository conventions live here once so resource specs stay small.
+# Copy this file to the repository root and adjust the names.
+
+targets:
+  - django
+  - vue
+
+api_prefix: /api/
+indent: tab
+
+# Each scope names the URL identifiers its resolver consumes, in order. A resource
+# declares one scope and inherits the whole chain. This lives in the shared core
+# because both the backend route and the frontend API path are built from it.
+scopes:
+  organization:
+    - organization_id
+  workspace:
+    - organization_id
+    - workspace_id
+  catalog_entry:
+    - organization_id
+    - workspace_id
+    - catalog_entry_id
+
+# Route namespace prefix contributed by each scope. The resource appends its app.
+namespaces:
+  organization: ''
+  workspace: workspace
+  catalog_entry: workspace:catalog_entry
+
+django:
+  backend_root: backend
+  base_view: common.access.base_views.AuthenticatedAccessAPIView
+  base_model: core.base_models.BaseModel
+  fixtures: tests.fixtures.FixtureFactory
+  random_string: core.utility.random_string
+  permission_module: common.permissions
+  default_permission: WORKSPACE_MANAGE
+  permission_scope: workspace
+  on_delete: DO_NOTHING
+  layout: feature_package
+  model_layout: module
+  detail_lookup: resource_resolver
+
+  membership_models:
+    organization: tenancy.models.OrganizationMembership
+    workspace: workspace.models.WorkspaceMembership
+
+  # The permission matrix every generated view test proves.
+  # expect is the status a role should get from a mutating endpoint:
+  #   200 allowed, 403 in scope but unauthorized, 404 outside the scope boundary.
+  roles:
+    organization_admin:
+      memberships:
+        - organization:ADMIN
+      expect: 200
+    workspace_admin:
+      memberships:
+        - organization:MEMBER
+        - workspace:ADMIN
+      expect: 200
+    workspace_operator:
+      memberships:
+        - organization:MEMBER
+        - workspace:OPERATOR
+      expect: 403
+    other_organization_admin:
+      memberships:
+        - other_organization:ADMIN
+      expect: 404
+
+vue:
+  frontend_root: frontend
+  # TypeScript is conventionally two spaces, so this target overrides the default.
+  indent: space2
+  types_dir: src/types
+  api_client: src/utils/api.ts
+  api_client_name: apiClient

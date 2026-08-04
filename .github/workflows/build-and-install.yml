@@ -30,11 +30,11 @@ jobs:
         run: python -m pip install --upgrade pip jinja2 pyyaml
 
       - name: Run tests
-        run: python -m unittest tests.test_build_targets tests.test_django_codegen
+        run: python -m unittest tests.test_build_targets tests.test_codegen
 
       - name: Check generated Django code matches the golden files
         run: |
-          python agents/generate_django.py agents/django_codegen/examples/item.yaml agents/django_codegen/examples/contact.yaml --profile agents/django_codegen/examples/.django-codegen.yaml --out dist/codegen-smoke
+          python agents/generate_code.py agents/codegen/examples/item.yaml agents/codegen/examples/contact.yaml --profile agents/codegen/examples/.codegen.yaml --out dist/codegen-smoke
 
       - name: Build all targets
         run: python agents/build_agents.py --target all --out dist --clean

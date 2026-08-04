@@ -25,14 +25,14 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-from agents.django_codegen.generator import generate  # noqa: E402
-from agents.django_codegen.guidance_links import drifted_links, load_links, record_digests  # noqa: E402
-from agents.django_codegen.profile import load_profile  # noqa: E402
-from agents.django_codegen.spec import load_spec  # noqa: E402
+from agents.codegen.generators import available_targets, get_generator  # noqa: E402
+from agents.codegen.guidance_links import drifted_links, load_links, record_digests  # noqa: E402
+from agents.codegen.profile import load_profile  # noqa: E402
+from agents.codegen.resource import load_spec  # noqa: E402
 
 
-EXAMPLES_ROOT = PROJECT_ROOT / 'agents' / 'django_codegen' / 'examples'
-GOLDEN_ROOT = PROJECT_ROOT / 'tests' / 'golden' / 'django_codegen'
+EXAMPLES_ROOT = PROJECT_ROOT / 'agents' / 'codegen' / 'examples'
+GOLDEN_ROOT = PROJECT_ROOT / 'tests' / 'golden' / 'codegen'
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    profile = load_profile(EXAMPLES_ROOT / '.django-codegen.yaml')
+    profile = load_profile(EXAMPLES_ROOT / '.codegen.yaml')
 
     if GOLDEN_ROOT.exists():
         shutil.rmtree(GOLDEN_ROOT)
@@ -57,15 +57,19 @@ def main() -> int:
     for spec_path in sorted(path for path in EXAMPLES_ROOT.glob('*.yaml') if not path.name.startswith('.')):
         spec = load_spec(spec_path, profile)
 
-        for generated in generate(spec):
-            if not generated.content.strip():
+        for target_name in available_targets():
+            if target_name not in spec.targets:
                 continue
 
-            target = GOLDEN_ROOT / spec_path.stem / generated.path
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(generated.content, encoding='utf-8')
-            written += 1
-            print(f'wrote {target.relative_to(PROJECT_ROOT)}')
+            for generated in get_generator(target_name).generate(spec):
+                if not generated.content.strip():
+                    continue
+
+                destination = GOLDEN_ROOT / spec_path.stem / target_name / generated.path
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_text(generated.content, encoding='utf-8')
+                written += 1
+                print(f'wrote {destination.relative_to(PROJECT_ROOT)}')
 
     print(f'\n{written} golden files refreshed.')
 

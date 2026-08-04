@@ -64,10 +64,10 @@ description: >
 - serializer output comparisons and ownership-boundary coverage
 
 ## Check the mechanical rules mechanically
-- If the backend has resource specs and a `.django-codegen.yaml` profile, run the generator in check mode before reading files by hand:
+- If the backend has resource specs and a `.codegen.yaml` profile, run the generator in check mode before reading files by hand:
 
 ```bash
-python3 agents/generate_django.py <specs> --check
+python3 agents/generate_code.py <specs> --check
 ```
 
 - That reports drift in the parts that are fully derivable: admin field lists, route names, serializer field tuples, route-owned scope enforcement, and the permission test matrix.

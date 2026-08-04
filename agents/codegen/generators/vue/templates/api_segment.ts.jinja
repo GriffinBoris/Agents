@@ -1,0 +1,36 @@
+import type { {{ interface_name }} } from "@/types/{{ spec.domain }}/{{ interface_name }}";
+import type { {{ request_name }} } from "@/types/{{ spec.domain }}/{{ request_name }}";
+
+const {{ spec.plural_camel }} = {
+{% if 'list' in spec.endpoints %}
+	list: ({{ scope_arguments|join(', ') }}) =>
+		{{ api_client_name }}.get<{{ interface_name }}[]>(
+			`{{ url }}list/`
+		),
+{% endif %}
+{% if 'create' in spec.endpoints %}
+	create: ({% for argument in scope_arguments %}{{ argument }}, {% endfor %}payload: {{ request_name }}) =>
+		{{ api_client_name }}.post<{{ interface_name }}, {{ request_name }}>(
+			`{{ url }}create/`,
+			payload
+		),
+{% endif %}
+{% if 'detail' in spec.endpoints %}
+	detail: ({% for argument in scope_arguments %}{{ argument }}, {% endfor %}{{ id_argument }}: number) =>
+		{{ api_client_name }}.get<{{ interface_name }}>(
+			`{{ url }}${% raw %}{{% endraw %}{{ id_argument }}}/`
+		),
+	update: ({% for argument in scope_arguments %}{{ argument }}, {% endfor %}{{ id_argument }}: number, payload: Partial<{{ request_name }}>) =>
+		{{ api_client_name }}.put<{{ interface_name }}, Partial<{{ request_name }}>>(
+			`{{ url }}${% raw %}{{% endraw %}{{ id_argument }}}/`,
+			payload
+		),
+{% endif %}
+{% for action in spec.actions %}
+	{{ action.camel }}: ({% for argument in scope_arguments %}{{ argument }}, {% endfor %}{{ id_argument }}: number) =>
+		{{ api_client_name }}.post<{{ interface_name }}, undefined>(
+			`{{ url }}${% raw %}{{% endraw %}{{ id_argument }}}/{{ action.kebab }}/`,
+			undefined
+		),
+{% endfor %}
+};

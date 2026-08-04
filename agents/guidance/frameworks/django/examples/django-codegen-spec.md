@@ -38,7 +38,7 @@ order: 20
 
 ### Project Profile
 
-The profile declares repository conventions once so resource specs stay small. It lives at the backend root as `.django-codegen.yaml`.
+The profile declares repository conventions once so resource specs stay small. It lives at the backend root as `.codegen.yaml`.
 
 ```yaml
 backend_root: backend
@@ -183,10 +183,10 @@ That single line generates the action view, the action route, `history_log_field
 ### Running The Generator
 
 ```bash
-python3 agents/generate_django.py --init-profile backend
-python3 agents/generate_django.py backend/item/item.yaml --diff
-python3 agents/generate_django.py backend/item/item.yaml
-python3 agents/generate_django.py backend/**/*.yaml --check
+python3 agents/generate_code.py --init-profile backend
+python3 agents/generate_code.py backend/item/item.yaml --diff
+python3 agents/generate_code.py backend/item/item.yaml
+python3 agents/generate_code.py backend/**/*.yaml --check
 ```
 
 `--init-profile` writes a commented starter profile. Every value in it is a placeholder; replace each one by reading the repository's real base view, base model, fixture factory, and scope resolvers before generating anything.
@@ -249,7 +249,7 @@ This is the mechanism that stops the guidance and the generated code from drifti
 - Run the generator test suite after changing templates or derivation rules:
 
 ```bash
-python3 -m unittest tests.test_django_codegen
+python3 -m unittest tests.test_codegen
 ```
 
 - Refresh and review the golden files when output changes on purpose:

@@ -57,8 +57,8 @@ If no candidate passes, stop without creating a branch or PR. Report which candi
 ## 4. Verify and self-review
 
 - Build all targets with `python3 agents/build_agents.py --target all --out dist --clean`.
-- Run the repository's tests: `python3 -m unittest tests.test_build_targets tests.test_django_codegen`.
-- If the change touches a Django guidance example, expect the codegen suite to fail with a drift message naming the generator templates that example governs. That failure is the point: the templates in `agents/django_codegen/templates/` produce code shaped by those examples, so a guidance change is also a question about the generator.
+- Run the repository's tests: `python3 -m unittest tests.test_build_targets tests.test_codegen`.
+- If the change touches a Django guidance example, expect the codegen suite to fail with a drift message naming the generator templates that example governs. That failure is the point: the templates in `agents/codegen/templates/` produce code shaped by those examples, so a guidance change is also a question about the generator.
   - Review each named template against the edited example.
   - Update the template when the shape actually changed, then refresh the golden files and review the resulting diff.
   - Record the new baseline with `python3 agents/scripts/update_codegen_golden.py --accept-guidance` once, at the end, after the review.
