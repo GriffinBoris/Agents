@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Generation Patterns"
+  short_description: "Safe backend AI generation patterns"
+  default_prompt: "Use $ai-generation-patterns to design a safe backend AI generation workflow."

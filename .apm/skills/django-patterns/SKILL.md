@@ -33,6 +33,7 @@ description: Apply the repository's Django, DRF, Celery, API, authorization, ser
 - Tests must verify ownership boundaries. If an endpoint is scoped to user A, add a test proving user B cannot see user A's data.
 - When multi-organization middleware exists, keep queries flowing through that boundary instead of re-implementing organization selection ad hoc.
 - When repeated scoping depends on a request-owned domain object such as `request.employee` or `request.member`, attach it once in middleware and let views and serializers reuse that shared boundary.
+- When one auth user can hold roles in multiple organizations, model authorization with membership records. Do not treat a tenant-specific auth-user table or a request header alone as the authorization boundary.
 
 ## Views And APIs
 
@@ -51,6 +52,7 @@ description: Apply the repository's Django, DRF, Celery, API, authorization, ser
 - Use direct conversion for common params, such as `int(request.query_params.get('page', 1))`.
 - Skip local try-except wrappers for routine query-param parsing unless you need a standardized DRF validation error.
 - When you need a standardized `400`, use a DRF field converter and let `ValidationError` bubble up.
+- When re-raising converter validation for a named query parameter, attach it to that concrete parameter key so standardized error responses identify the field correctly.
 - For comma-separated lists, parse them with straightforward splitting and trimming.
 - Prefer passing defaults into `request.query_params.get(...)` directly.
 - Backend query params must be snake_case. Do not add new camelCase query params.
@@ -246,6 +248,7 @@ description: Apply the repository's Django, DRF, Celery, API, authorization, ser
 - Gate admin tools behind `DEBUG=True` or explicit admin-only access.
 - Ensure `.env.secret` files are gitignored.
 - Use encrypted fields for sensitive credentials when the project already supports them.
+- Classify uploaded files before serving them. Expose only genuinely public files from a public media path; serve sensitive or tenant-owned uploads through authorized views or private storage with signed, expiring URLs. Never treat an unguessable path as access control.
 
 ## Services And Shared Helpers
 

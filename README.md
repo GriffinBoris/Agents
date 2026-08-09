@@ -68,7 +68,7 @@ task ai:install
 | Change | Source |
 | --- | --- |
 | Always-on cross-stack guidance | `.apm/instructions/engineering-baseline.instructions.md` |
-| Shared Python, Django, or Vue conventions | `.apm/skills/<skill-name>/SKILL.md` |
+| Shared Python, Django, Vue, or AI-generation conventions | `.apm/skills/<skill-name>/SKILL.md` |
 | Long examples and review references | The owning skill's `references/` directory |
 | Reusable commands | `.apm/prompts/` |
 | Consumer Task and ignore templates | `templates/` |
