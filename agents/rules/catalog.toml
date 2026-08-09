@@ -1,0 +1,140 @@
+version = 1
+
+[[rules]]
+id = "AGPY001"
+title = "Do not postpone annotations"
+engine = "libcst"
+severity = "error"
+status = "active"
+fix = "none"
+guidance = "agents/guidance/languages/python/guidance.md#types-and-readability"
+message = "Do not use from __future__ import annotations. Use runtime-safe explicit annotations."
+
+[[rules]]
+id = "AGPY002"
+title = "Use Optional and Union annotations"
+engine = "libcst"
+severity = "warning"
+status = "planned"
+fix = "unsafe"
+guidance = "agents/guidance/languages/python/guidance.md#types-and-readability"
+message = "Use typing.Optional and typing.Union instead of the vertical-bar union syntax."
+
+[[rules]]
+id = "AGPY003"
+title = "Avoid dynamic attribute access"
+engine = "libcst"
+severity = "warning"
+status = "experimental"
+fix = "none"
+guidance = "agents/guidance/languages/python/guidance.md#implementation"
+example = "agents/guidance/frameworks/django/examples/django-direct-attribute-access.md"
+message = "Prefer direct attribute access over dynamic getattr or setattr calls."
+
+[[rules]]
+id = "AGPY004"
+title = "Keep package initializers declarative"
+engine = "libcst"
+severity = "warning"
+status = "planned"
+fix = "none"
+guidance = "agents/guidance/languages/python/guidance.md#organization-and-imports"
+message = "Do not put runtime workflows or business logic in __init__.py."
+
+[[rules]]
+id = "AGPY005"
+title = "Use concrete requests verb helpers"
+engine = "libcst"
+severity = "warning"
+status = "active"
+fix = "safe"
+guidance = "agents/guidance/languages/python/guidance.md#http-adapters-and-debugging"
+message = "Use requests.get, requests.post, and other concrete helpers when the HTTP method is already known."
+
+[[rules]]
+id = "AGDJ001"
+title = "Keep network I/O out of model persistence hooks"
+engine = "libcst"
+severity = "error"
+status = "planned"
+fix = "none"
+guidance = "agents/guidance/frameworks/django/guidance.md#models"
+example = "agents/guidance/frameworks/django/examples/django-model.md"
+message = "Model save and delete methods must not perform network I/O."
+
+[[rules]]
+id = "AGDJ002"
+title = "Order output serializer identity fields first"
+engine = "libcst"
+severity = "warning"
+status = "planned"
+fix = "safe"
+guidance = "agents/guidance/frameworks/django/guidance.md#serializers"
+example = "agents/guidance/frameworks/django/examples/django-serializer.md"
+message = "Output serializer fields should begin with id and end with audit timestamps."
+
+[[rules]]
+id = "AGDJ003"
+title = "Expose audit fields in Django admin"
+engine = "django-checks"
+severity = "error"
+status = "active"
+fix = "none"
+guidance = "agents/guidance/frameworks/django/guidance.md#admin-configuration"
+example = "agents/guidance/frameworks/django/examples/django-admin.md"
+message = "Registered admin classes for audited models must display id, created_ts, and updated_ts."
+
+[[rules]]
+id = "AGDJ004"
+title = "Keep URL namespaces and names consistent"
+engine = "django-checks"
+severity = "warning"
+status = "planned"
+fix = "none"
+guidance = "agents/guidance/frameworks/django/guidance.md#url-patterns"
+example = "agents/guidance/frameworks/django/examples/django-feature-url-module.md"
+message = "Feature URL modules must declare app_name and use repository route naming conventions."
+
+[[rules]]
+id = "AGVUE001"
+title = "Restrict direct Axios imports"
+engine = "eslint"
+severity = "error"
+status = "active"
+fix = "none"
+guidance = "agents/guidance/frameworks/vue/guidance.md#single-api-client-rule"
+example = "agents/guidance/frameworks/vue/examples/vue-api-client.md"
+message = "Axios may only be imported by the canonical API client."
+
+[[rules]]
+id = "AGVUE002"
+title = "Keep shared components route-agnostic"
+engine = "eslint"
+severity = "error"
+status = "active"
+fix = "none"
+guidance = "agents/guidance/frameworks/vue/guidance.md#shared-ui"
+example = "agents/guidance/frameworks/vue/examples/vue-route-folder.md"
+message = "Shared components must not import route-local stores, views, or domain APIs."
+
+[[rules]]
+id = "AGVUE003"
+title = "Keep casing conversion at API boundaries"
+engine = "eslint"
+severity = "warning"
+status = "experimental"
+fix = "none"
+guidance = "agents/guidance/frameworks/vue/guidance.md#casing-helpers"
+example = "agents/guidance/frameworks/vue/examples/vue-api-client.md"
+message = "Components, views, and stores must not import API casing helpers directly."
+
+[[rules]]
+id = "AGVUE004"
+title = "Use script setup with TypeScript"
+engine = "eslint"
+severity = "warning"
+status = "experimental"
+fix = "none"
+guidance = "agents/guidance/frameworks/vue/guidance.md#component-paradigms"
+example = "agents/guidance/frameworks/vue/examples/vue-view-pattern.md"
+message = "New Vue SFCs must use a script setup block with lang=ts."

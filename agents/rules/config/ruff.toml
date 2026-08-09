@@ -1,0 +1,25 @@
+line-length = 120
+target-version = "py313"
+
+[lint]
+select = [
+    "B",
+    "DJ",
+    "E",
+    "F",
+    "I",
+    "PT",
+    "S",
+    "SIM",
+]
+# UP is intentionally omitted: its union rewrites conflict with the repository's
+# typing.Optional and typing.Union convention.
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["PT009", "S101"]
+
+[format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
