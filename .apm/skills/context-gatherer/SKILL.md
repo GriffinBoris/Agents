@@ -5,23 +5,19 @@ description: Use when learning a feature, component, subsystem, or codebase area
 
 # Context Gatherer
 
-## When to use
+## Scope
+
 - Learning how a feature works before changing it
 - Mapping data flow through backend and frontend code
 - Understanding route structure, APIs, services, or background jobs
 - Creating onboarding notes or implementation context for future work
 
-## Boundary
+### Boundaries
+
 - This skill gathers context; it does not replace a review or rewrite workflow.
 - Use `full-review` for the final comprehensive scoped review workflow.
 
-## Goals
-- Build a clear map of the area before drawing conclusions
-- Show both structure and behavior
-- Use concrete file paths everywhere
-- Separate durable patterns from repo-specific quirks
-
-## Suggested workflow
+## Workflow
 
 ### 1. Define the scope
 - What is being investigated?
@@ -44,6 +40,22 @@ description: Use when learning a feature, component, subsystem, or codebase area
 ### 5. Compare to guidance
 - Note where the code matches modular guidance and examples
 - Note missing guidance coverage or example gaps worth promoting later
+
+## Reference Selection
+
+- Read the [engineering baseline](../../instructions/engineering-baseline.instructions.md).
+- Read the relevant language and framework guidance skills.
+- Read the consumer-owned `project-architecture` skill when repository-specific structure or behavior matters.
+- Open only examples that match the feature, component, or workflow being mapped.
+
+## Review Criteria
+
+### Goals
+
+- Build a clear map of the area before drawing conclusions
+- Show both structure and behavior
+- Use concrete file paths everywhere
+- Separate durable patterns from repo-specific quirks
 
 ## Output
 
@@ -72,5 +84,6 @@ description: Use when learning a feature, component, subsystem, or codebase area
 ### Open Questions
 - anything unclear, inconsistent, or lightly checked
 
-## Living document note
+## Completion Checklist
+
 - If context gathering reveals missing or misplaced guidance, update the relevant `.apm/` source file.

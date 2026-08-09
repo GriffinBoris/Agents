@@ -8,7 +8,7 @@ description: Apply Vue 3, TypeScript, Pinia, Vue Router, API-client, session-aut
 ## Scope
 
 - Capture Vue, TypeScript, Pinia, and frontend API conventions.
-- Keep item- and repository-specific shell, workspace, branding, and organization architecture in the `project-architecture` guidance skill.
+- Keep product- and repository-specific shell, workspace, branding, and organization architecture in the `project-architecture` guidance skill.
 
 When the consuming repository provides `project-architecture`, load it before choosing local paths, components, commands, migration behavior, branding, or product decisions.
 
@@ -20,7 +20,7 @@ When the consuming repository provides `project-architecture`, load it before ch
 4. Reuse the repository's existing UI, API, state, and validation infrastructure.
 5. Run the repository's linter, typecheck, tests, and build checks appropriate to the change.
 
-## Required References
+## Reference Selection
 
 | Work being performed | Read |
 | --- | --- |
@@ -42,9 +42,7 @@ Read every reference whose row matches the task. For cross-cutting changes, load
 
 Open an example only when its pattern matches the task. For a long example, read its scenario and heading list first, then load only the relevant section instead of the entire file. Treat examples as structural references, not mandatory boilerplate.
 
-## Consistency Checklist
-
-### Vue
+## Completion Checklist
 
 - Component names and file casing are correct.
 - Existing UI primitives are reused before new ones are created.

@@ -5,25 +5,39 @@ description: Use when adding or reviewing Django backend code and comparing view
 
 # Backend Homogeneity Audit
 
-## When to use
+## Scope
+
 - Adding or reviewing Django views, serializers, URLs, services, management commands, or tasks
 - Checking whether a backend change matches existing repository patterns
 - Looking for reusable backend structure before creating something new
 
-## Boundary
+### Boundaries
+
 - Use this as the backend pattern-matching audit for Django and Python code.
 - Pair it with `architecture-audit` when file, folder, or code structure also needs review.
 - Use `full-review` for the final comprehensive scoped review workflow.
 
-## Read first
-- `.apm/instructions/engineering-baseline.instructions.md`
-- `.apm/skills/python-conventions/SKILL.md`
-- `.apm/skills/django-patterns/SKILL.md`
+## Workflow
+
+1. State the exact backend scope and any blind spots.
+2. Load the applicable baseline, Python, Django, project, and example guidance.
+3. Inspect the closest comparable backend modules before judging the change.
+4. Compare every relevant concern below and record each verifiable deviation.
+5. Report the preferred patterns, simplest fixes, or explicitly state that no deviations were found.
+
+## Reference Selection
+
+- [Engineering baseline](../../instructions/engineering-baseline.instructions.md)
+- [Python conventions](../python-conventions/SKILL.md)
+- [Django patterns](../django-patterns/SKILL.md)
 - the consumer-owned `project-architecture` skill
 - relevant docs in `.apm/skills/python-conventions/references/examples/`
 - relevant docs in `.apm/skills/django-patterns/references/examples/`
 
-## Where to look
+## Review Criteria
+
+### Inspection Targets
+
 - `backend/*/views/**/*.py`
 - `backend/api/**/*.py`
 - `backend/*/urls.py`
@@ -31,8 +45,6 @@ description: Use when adding or reviewing Django backend code and comparing view
 - `backend/*/management/commands/`
 - `backend/*/tests/`
 - `backend/core/test_fixtures.py`
-
-## What to compare
 
 ### App structure
 - flat app files versus `models/`, `views/`, or `api/` packages
@@ -66,5 +78,6 @@ description: Use when adding or reviewing Django backend code and comparing view
 - every verifiable in-scope guidance deviation, or an explicit statement that none were found
 - blind spots and unverified areas
 
-## Living document note
+## Completion Checklist
+
 - If you find a durable backend pattern missing from the guidance skills, update the relevant `.apm/skills/` source or add a named example under its `references/examples/` directory.

@@ -47,6 +47,11 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 - Follow the project's established coding style, naming conventions, and architectural patterns.
 - Reference similar existing code before implementing new features.
 
+### Tool Use
+
+- If the repository exposes web-search, docs, or context tools, use them only when needed and within repository rules.
+- If the repository provides custom CLI tooling, prefer it over ad hoc scripts.
+
 ### Verification Required
 
 - Verify changes for each task when there is any reasonable local option.
@@ -135,6 +140,10 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 - Do not add unused parameters to function signatures.
 - Remove unused parameters instead of suppressing warnings.
+
+### ID Generation (If Applicable)
+
+- If you use incremental counters for IDs, make the semantics explicit and use them consistently across the codebase.
 
 ### God Module Prevention
 

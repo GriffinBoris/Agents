@@ -21,7 +21,7 @@ Always apply `python-conventions` alongside this skill. When the consuming repos
 4. Implement consistently with the local repository and the loaded rules.
 5. Read the testing reference when tests change, then run the repository's targeted verification.
 
-## Required References
+## Reference Selection
 
 | Work being performed | Read |
 | --- | --- |
@@ -46,9 +46,7 @@ Read every reference whose row matches the task. For cross-cutting changes, load
 
 Open an example only when its pattern matches the task. For a long example, read its scenario and heading list first, then load only the relevant section instead of the entire file. Treat examples as structural references, not mandatory boilerplate.
 
-## Consistency Checklist
-
-### Django
+## Completion Checklist
 
 - Views inherit from the expected base classes.
 - Serializer field tuples are complete and non-duplicated.

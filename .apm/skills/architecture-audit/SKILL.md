@@ -5,7 +5,8 @@ description: Use when reviewing or planning changes to file structure, module bo
 
 # Architecture Audit
 
-## When to use
+## Scope
+
 - Reviewing a PR or diff that changes structure, layering, or responsibilities
 - Checking whether a module, route, service, or workflow has become too complex
 - Reviewing whether files, folders, packages, or feature boundaries are organized clearly
@@ -13,44 +14,13 @@ description: Use when reviewing or planning changes to file structure, module bo
 - Preparing a refactor plan
 - Doing a final readability and maintainability pass before merge
 
-## Boundary
+### Boundaries
+
 - Use this as the primary structure and readability audit for files, folders, modules, and code shape.
 - Pair it with backend or frontend homogeneity audits when stack-specific patterns matter.
 - Use `full-review` for the final comprehensive scoped review workflow.
 
-## Read first
-- `.apm/instructions/engineering-baseline.instructions.md`
-- the relevant language and framework guidance skills
-- the consumer-owned `project-architecture` skill
-- the matching `references/examples/` file inside those skills
-- `references/architecture-rubric.md`
-
-## Goals
-- Judge the code against the modular guidance tree, not old monolithic docs
-- Compare new structure to the closest existing in-repo pattern before calling it a problem
-- Report all verifiable in-scope guidance deviations, not just the top few
-- Prefer the simplest fix that restores clarity, boundaries, and consistency
-
-## What to inspect
-
-### File and folder structure
-- whether responsibilities are split across the right files and folders
-- whether names describe purpose clearly
-- whether a feature is flat, feature-foldered, or over-nested for its real size
-- whether growth signals suggest a split or consolidation
-
-### Module and code structure
-- whether each module has one clear responsibility
-- whether functions, methods, and classes are sized and named clearly
-- whether public surface area is justified by real callers
-- whether control flow, state changes, and side effects stay obvious
-
-### Boundaries and layering
-- whether UI, transport, domain, persistence, and integration boundaries stay clear
-- whether dependencies point the right direction
-- whether helpers and abstractions are justified by real reuse
-
-## Audit workflow
+## Workflow
 
 ### 1. State the scope
 - Name the exact scope: diff, files, folder, feature, route, app, or full repo
@@ -79,6 +49,40 @@ For each applicable guidance or example source, record:
 - List every verifiable guidance deviation in scope
 - Tie each finding to a file, a rule or example, and the simplest fix
 - If no deviations are found, say that explicitly
+
+## Reference Selection
+
+- [Engineering baseline](../../instructions/engineering-baseline.instructions.md)
+- the relevant language and framework guidance skills
+- the consumer-owned `project-architecture` skill
+- the matching `references/examples/` file inside those skills
+- [Architecture rubric](../review-workflows/references/architecture-rubric.md)
+
+## Review Criteria
+
+### Goals
+
+- Judge the code against the modular guidance tree, not old monolithic docs
+- Compare new structure to the closest existing in-repo pattern before calling it a problem
+- Report all verifiable in-scope guidance deviations, not just the top few
+- Prefer the simplest fix that restores clarity, boundaries, and consistency
+
+### File and folder structure
+- whether responsibilities are split across the right files and folders
+- whether names describe purpose clearly
+- whether a feature is flat, feature-foldered, or over-nested for its real size
+- whether growth signals suggest a split or consolidation
+
+### Module and code structure
+- whether each module has one clear responsibility
+- whether functions, methods, and classes are sized and named clearly
+- whether public surface area is justified by real callers
+- whether control flow, state changes, and side effects stay obvious
+
+### Boundaries and layering
+- whether UI, transport, domain, persistence, and integration boundaries stay clear
+- whether dependencies point the right direction
+- whether helpers and abstractions are justified by real reuse
 
 ## Output
 
@@ -109,5 +113,6 @@ For each applicable guidance or example source, record:
 - what was not verified
 - any blind spots affecting confidence
 
-## Living document note
+## Completion Checklist
+
 - If you discover a durable rule, example gap, or better review heuristic, update the relevant `.apm/` source file instead of generated output.

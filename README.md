@@ -73,6 +73,17 @@ task ai:install
 | Reusable commands | `.apm/prompts/` |
 | Consumer Task and ignore templates | `templates/` |
 
+### Skill structure
+
+Keep skill frontmatter limited to `name` and a trigger-focused `description`. Use one of these top-level section orders so skills remain predictable:
+
+| Skill family | Section order |
+| --- | --- |
+| Implementation guidance | `Scope` → `Workflow` → `Reference Selection` → `Example Selection` → `Completion Checklist` |
+| Reviews, audits, and context gathering | `Scope` → `Workflow` → `Reference Selection` → `Review Criteria` → `Output` → `Completion Checklist` |
+
+Keep selection and procedural instructions in `SKILL.md`. Put detailed rules and long examples in directly linked `references/` files, and tell the agent exactly when each reference should be read. Preserve specialized minimal skills only when their purpose genuinely does not fit either family.
+
 Do not edit generated output. Validate a package change with:
 
 ```bash

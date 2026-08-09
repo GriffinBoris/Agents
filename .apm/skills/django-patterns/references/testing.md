@@ -1,5 +1,12 @@
 # Django Testing
 
+## Contents
+
+- Shared test fixtures and permissions
+- Serializer tests
+- View tests
+- Model tests
+
 ## Testing Guidelines
 
 - Add reusable object builders to the repository's shared test-fixture helpers, usually `tests/fixtures.py` or an equivalent shared module, instead of creating ad hoc builders inside test modules.

@@ -5,31 +5,43 @@ description: Use when adding or reviewing Vue frontend code and comparing routes
 
 # Frontend Homogeneity Audit
 
-## When to use
+## Scope
+
 - Adding or reviewing a Vue route, route-local component set, store, composable, or API call
 - Checking whether a frontend change matches the established shell, route, and UI patterns
 - Looking for reusable UI and route-folder patterns before creating something new
 
-## Boundary
+### Boundaries
+
 - Use this as the frontend pattern-matching audit for Vue and TypeScript code.
 - Pair it with `architecture-audit` when file, folder, or code structure also needs review.
 - Use `full-review` for the final comprehensive scoped review workflow.
 
-## Read first
-- `.apm/instructions/engineering-baseline.instructions.md`
-- `.apm/skills/vue-patterns/SKILL.md`
+## Workflow
+
+1. State the exact frontend scope and any blind spots.
+2. Load the applicable baseline, Vue, project, and example guidance.
+3. Inspect the closest comparable route, component, store, composable, and API module before judging the change.
+4. Compare every relevant concern below and record each verifiable deviation.
+5. Report reused patterns, simplest fixes, or explicitly state that no deviations were found.
+
+## Reference Selection
+
+- [Engineering baseline](../../instructions/engineering-baseline.instructions.md)
+- [Vue patterns](../vue-patterns/SKILL.md)
 - the consumer-owned `project-architecture` skill
 - relevant docs in `.apm/skills/vue-patterns/references/examples/`
 
-## Where to look
+## Review Criteria
+
+### Inspection Targets
+
 - `frontend/src/views/`
 - `frontend/src/components/`
 - `frontend/src/composables/`
 - `frontend/src/services/`
 - `frontend/src/stores/`
 - nearby route folders similar to the work in scope
-
-## What to compare
 
 ### Route structure
 - route folder layout under `src/views/`
@@ -62,5 +74,6 @@ description: Use when adding or reviewing Vue frontend code and comparing routes
 - every verifiable in-scope guidance deviation, or an explicit statement that none were found
 - blind spots and unverified areas
 
-## Living document note
+## Completion Checklist
+
 - If you find a durable frontend pattern missing from the guidance skills, update `.apm/skills/vue-patterns/`, the consumer's `project-architecture` skill, or add a named example under `vue-patterns/references/examples/`.
