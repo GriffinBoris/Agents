@@ -80,15 +80,17 @@ apm compile --validate --local-only
 apm audit
 ```
 
-To release it, update `version` in `apm.yml`, regenerate the lockfile, validate, pack, commit, and create the matching Git tag:
+To release it, update `version` in `apm.yml`, validate, commit, and create the matching Git tag. Consumer repositories install and pin that tag directly.
 
 ```bash
-apm lock --target claude,codex,opencode,copilot,gemini
-apm pack --archive --output dist
+apm compile --validate --local-only
+apm audit
 ```
 
-## Current migration status
+`apm pack` bundles installed dependencies; it is not the release mechanism for this source package.
 
-The package is deliberately parity-first: the always-on instruction contains the complete historical generated `AGENTS.md`, so no existing rule was dropped during the move from the custom builder. Skills, examples, prompts, and review references are already in native APM locations. After an explicit parity review, the baseline can be reduced to only global rules and a skill router for more lazy loading.
+## Guidance loading
 
-The immutable pre-APM aggregate is retained at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`).
+The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django and Vue guidance use small routing skills that load detailed references and examples only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
+
+No migration data was discarded. The immutable pre-APM aggregate is retained at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`) for parity audits.

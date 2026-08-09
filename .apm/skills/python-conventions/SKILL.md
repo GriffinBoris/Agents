@@ -72,6 +72,14 @@ description: Apply the repository's Python implementation, typing, testing, and 
 - Keep Python tests explicit and readable.
 - Prefer explicit fixture builders and helper methods over catch-all `**kwargs` patterns.
 
+## Example Selection
+
+- Read [stateful service class](references/examples/python-stateful-service-class.md) when several operations share client, identity, or configuration state.
+- Read [segmented API client](references/examples/python-segmented-api-client.md) when organizing a client with several endpoint groups.
+- Read [pytest class setup](references/examples/python-pytest-class-setup.md) when tests share explicit per-test setup.
+
+Open an example only when its pattern matches the task. Treat examples as structural references, not mandatory boilerplate.
+
 ## Consistency Checklist
 
 ### Python
