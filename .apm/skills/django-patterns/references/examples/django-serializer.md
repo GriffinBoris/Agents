@@ -1,22 +1,3 @@
----
-id: framework-django-example-serializer
-title: Django Serializer Example
-description: Example input/output serializer split with context-owned scope, related-object validation, lifecycle-action protection, and exact output shape.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - serializer
-  - validation
-  - organization-scope
-applies_to:
-  - django
-status: active
-order: 3
----
-
 # Django Serializer Example
 
 ## Scenario

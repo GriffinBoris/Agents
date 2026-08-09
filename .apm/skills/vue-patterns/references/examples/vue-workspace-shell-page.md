@@ -1,21 +1,3 @@
----
-id: framework-vue-example-workspace-shell-page
-title: Vue Workspace Shell And Page Example
-description: Example shared workspace shell and scoped page composition using app-owned wrappers, a shell store, and route-level page sections.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - shell
-  - layout
-applies_to:
-  - vue
-status: active
-order: 19
----
-
 # Vue Workspace Shell And Page Example
 
 ## Scenario

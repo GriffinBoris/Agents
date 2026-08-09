@@ -1,20 +1,3 @@
----
-id: framework-django-example-concrete-model-meta
-title: Concrete Model Meta
-description: Prefer plain concrete Django model Meta classes unless inheriting abstract Meta is an intentional model-options contract.
-kind: example
-scope: framework
-name: django
-tags:
-  - django
-  - models
-  - antipatterns
-applies_to:
-  - django
-status: active
-order: 20
----
-
 # Concrete Model Meta
 
 ## Scenario

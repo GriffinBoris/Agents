@@ -1,20 +1,3 @@
----
-id: framework-vue-example-notification-system
-title: Vue Notification System Example
-description: Example shared application notification pattern with one root-mounted viewport, a shell-owned store, and route-safe feedback rules.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - notifications
-applies_to:
-  - vue
-status: active
-order: 16
----
-
 # Vue Notification System Example
 
 ## Scenario

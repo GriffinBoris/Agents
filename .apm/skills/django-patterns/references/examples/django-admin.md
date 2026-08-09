@@ -1,20 +1,3 @@
----
-id: framework-django-example-admin
-title: Django Admin Example
-description: Example app-local Django admin configuration with safe ModelAdmin registration, relationship handling, and shallow custom actions.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - admin
-applies_to:
-  - django
-status: active
-order: 18
----
-
 # Django Admin Example
 
 ## Scenario

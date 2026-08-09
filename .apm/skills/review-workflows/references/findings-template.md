@@ -1,19 +1,3 @@
----
-id: reference-review-findings-template
-title: Review Findings Template
-description: Template for recording architecture or code-review findings.
-kind: reference
-scope: global
-name: review-findings-template
-tags:
-  - reference
-  - review
-  - template
-applies_to: []
-status: active
-order: 2
----
-
 # Review Findings Template
 
 ```markdown

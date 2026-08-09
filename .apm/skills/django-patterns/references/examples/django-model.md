@@ -1,21 +1,3 @@
----
-id: framework-django-example-model
-title: Django Model Example
-description: Example Django model standards for field layout, choices, relations, lifecycle invariants, audit history, and side-effect boundaries.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - model
-  - lifecycle
-applies_to:
-  - django
-status: active
-order: 1
----
-
 # Django Model Example
 
 ## Scenario

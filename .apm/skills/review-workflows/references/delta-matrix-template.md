@@ -1,19 +1,3 @@
----
-id: reference-review-delta-matrix-template
-title: Review Delta Matrix Template
-description: Template for mapping discovered review rules against existing guidance.
-kind: reference
-scope: global
-name: review-delta-matrix-template
-tags:
-  - reference
-  - review
-  - template
-applies_to: []
-status: active
-order: 3
----
-
 # Review Delta Matrix Template
 
 ```markdown

@@ -1,20 +1,3 @@
----
-id: framework-django-example-app-layout
-title: Django App Layout Example
-description: North-star Django app layout standards for flat apps, feature packages, model packages, services, commands, and API boundaries.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - structure
-applies_to:
-  - django
-status: active
-order: 5
----
-
 # Django App Layout Example
 
 ## Scenario

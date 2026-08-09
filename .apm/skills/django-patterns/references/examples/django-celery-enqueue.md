@@ -1,21 +1,3 @@
----
-id: framework-django-example-celery-enqueue
-title: Django Celery Enqueue Example
-description: Example Celery configuration and task wrappers that schedule work, delegate to model-backed tasks, and keep business logic out of worker functions.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - celery
-  - tasks
-applies_to:
-  - django
-status: active
-order: 12
----
-
 # Django Celery Enqueue Example
 
 ## Scenario

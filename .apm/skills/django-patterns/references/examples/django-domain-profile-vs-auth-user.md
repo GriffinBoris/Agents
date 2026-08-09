@@ -1,22 +1,3 @@
----
-id: framework-django-example-domain-profile-vs-auth-user
-title: Domain Profile Versus Auth User
-description: Keep authentication users, organization operators, and contact domain profiles separate so ownership, history, and permissions stay auditable.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - models
-  - organization-scope
-  - permissions
-applies_to:
-  - django
-status: active
-order: 21
----
-
 # Domain Profile Versus Auth User
 
 ## Scenario

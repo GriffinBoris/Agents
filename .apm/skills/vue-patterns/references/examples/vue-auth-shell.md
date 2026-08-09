@@ -1,23 +1,3 @@
----
-id: framework-vue-example-auth-shell
-title: Vue Auth-Aware Shell Example
-description: Example session-backed frontend auth shell with bootstrap state, route guards, login, logout, and CSRF-aware API client behavior.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - shell
-  - auth
-  - sessions
-  - csrf
-applies_to:
-  - vue
-status: active
-order: 3
----
-
 # Vue Auth-Aware Shell Example
 
 ## Scenario

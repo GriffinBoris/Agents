@@ -1,20 +1,3 @@
----
-id: framework-vue-example-view-pattern
-title: Vue View Pattern Example
-description: Example view pattern for simple route-owned fetches, computed collections, and stale-request guards.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - view
-applies_to:
-  - vue
-status: active
-order: 5
----
-
 # Vue View Pattern Example
 
 ## Scenario

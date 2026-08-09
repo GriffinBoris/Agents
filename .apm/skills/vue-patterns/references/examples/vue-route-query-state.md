@@ -1,21 +1,3 @@
----
-id: framework-vue-example-route-query-state
-title: Vue Route Query State Example
-description: Standards for URL query driven filters, sort, pagination, tabs, and API filter handoff in Vue route views.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - routing
-  - query-state
-applies_to:
-  - vue
-status: active
-order: 10
----
-
 # Vue Route Query State Example
 
 ## Scenario

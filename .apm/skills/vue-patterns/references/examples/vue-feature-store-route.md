@@ -1,21 +1,3 @@
----
-id: framework-vue-example-feature-store-route
-title: Vue Feature Store Route Example
-description: Example route-local Pinia store that owns shared business state while the route view and local components stay UI-focused.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - stores
-  - route
-applies_to:
-  - vue
-status: active
-order: 6
----
-
 # Vue Feature Store Route Example
 
 ## Scenario

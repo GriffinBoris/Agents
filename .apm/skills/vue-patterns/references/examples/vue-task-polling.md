@@ -1,21 +1,3 @@
----
-id: framework-vue-example-task-polling
-title: Vue Task Polling Example
-description: Example task polling standard for backend task IDs, centralized completion helpers, progress UI, failure handling, and notifications.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - tasks
-  - polling
-applies_to:
-  - vue
-status: active
-order: 12
----
-
 # Vue Task Polling Example
 
 ## Scenario

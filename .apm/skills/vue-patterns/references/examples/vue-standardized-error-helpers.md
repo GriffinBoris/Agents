@@ -1,20 +1,3 @@
----
-id: framework-vue-example-standardized-error-helpers
-title: Vue Standardized Error Helpers Example
-description: Example shared helpers for parsing DRF standardized errors once and reusing them across forms and toasts.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - errors
-applies_to:
-  - vue
-status: active
-order: 9
----
-
 # Vue Standardized Error Helpers Example
 
 ## Scenario

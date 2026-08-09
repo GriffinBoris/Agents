@@ -1,20 +1,3 @@
----
-id: framework-django-example-app-url-hub
-title: Django App URL Hub Example
-description: Example app-root URL module that stays thin and delegates to feature URL packages.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - urls
-applies_to:
-  - django
-status: active
-order: 6
----
-
 # Django App URL Hub Example
 
 ## Scenario

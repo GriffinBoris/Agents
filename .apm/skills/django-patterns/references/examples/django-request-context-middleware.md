@@ -1,20 +1,3 @@
----
-id: framework-django-example-request-context-middleware
-title: Django Request Context Middleware Example
-description: Example middleware that attaches a domain-scoped request context for reuse across views and serializers.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - middleware
-applies_to:
-  - django
-status: active
-order: 13
----
-
 # Django Request Context Middleware Example
 
 ## Scenario

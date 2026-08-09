@@ -1,20 +1,3 @@
----
-id: framework-vue-example-polling
-title: Vue Polling Example
-description: Example component-scoped polling with lifecycle cleanup, explicit start and stop ownership, and guarded refresh callbacks.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - polling
-applies_to:
-  - vue
-status: active
-order: 11
----
-
 # Vue Polling Example
 
 ## Scenario

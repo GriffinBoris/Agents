@@ -1,21 +1,3 @@
----
-id: framework-vue-example-form-validation
-title: Vue Form Validation Example
-description: Example form flow that keeps Zod request validation, frontend field state, and DRF server errors aligned.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - forms
-  - validation
-applies_to:
-  - vue
-status: active
-order: 7
----
-
 # Vue Form Validation Example
 
 ## Scenario

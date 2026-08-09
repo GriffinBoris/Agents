@@ -1,20 +1,3 @@
----
-id: language-python-example-pytest-class-setup
-title: Python Pytest Class Setup Example
-description: Example shared setup and helper methods for readable pytest test classes.
-kind: example
-scope: language
-name: python
-tags:
-  - example
-  - python
-  - pytest
-applies_to:
-  - python
-status: active
-order: 1
----
-
 # Python Pytest Class Setup Example
 
 ## Scenario

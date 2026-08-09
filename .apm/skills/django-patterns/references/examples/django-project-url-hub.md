@@ -1,20 +1,3 @@
----
-id: framework-django-example-project-url-hub
-title: Django Project URL Hub Example
-description: Example project-root URL module that keeps only top-level site, admin, docs, and include hubs.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - urls
-applies_to:
-  - django
-status: active
-order: 4
----
-
 # Django Project URL Hub Example
 
 ## Scenario

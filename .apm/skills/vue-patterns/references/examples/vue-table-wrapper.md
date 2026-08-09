@@ -1,20 +1,3 @@
----
-id: framework-vue-example-table-wrapper
-title: Vue Table Wrapper Example
-description: Standards for shared Vue table and list wrappers with loading, empty, retry, row keys, actions, and route-owned state.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - tables
-applies_to:
-  - vue
-status: active
-order: 17
----
-
 # Vue Table Wrapper Example
 
 ## Scenario

@@ -1,15 +1,14 @@
 ---
 name: frontend-homogeneity-audit
-description: Use when adding or reviewing Vue frontend code and comparing routes, components, composables, stores, or API usage to established patterns.
+description: Audit Vue and TypeScript frontend code against established route, component, composable, store, shell, API, form, and UI patterns. Use when explicitly reviewing or comparing frontend consistency; do not trigger for ordinary implementation that only needs Vue guidance.
 ---
 
 # Frontend Homogeneity Audit
 
 ## Scope
 
-- Adding or reviewing a Vue route, route-local component set, store, composable, or API call
-- Checking whether a frontend change matches the established shell, route, and UI patterns
-- Looking for reusable UI and route-folder patterns before creating something new
+- Compare Vue and TypeScript frontend code with the closest established repository patterns.
+- Report reusable pieces, verified deviations, and the simplest fixes within the declared review scope.
 
 ### Boundaries
 
@@ -75,5 +74,11 @@ description: Use when adding or reviewing Vue frontend code and comparing routes
 - blind spots and unverified areas
 
 ## Completion Checklist
+
+- The exact frontend scope and any unverified areas are stated.
+- The closest comparable route, component, store, composable, and API patterns were reviewed where applicable.
+- Every verified deviation or an explicit no-findings result is reported.
+
+## Maintenance
 
 - If you find a durable frontend pattern missing from the guidance skills, update `.apm/skills/vue-patterns/`, the consumer's `project-architecture` skill, or add a named example under `vue-patterns/references/examples/`.

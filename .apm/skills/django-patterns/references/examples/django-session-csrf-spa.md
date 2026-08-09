@@ -1,23 +1,3 @@
----
-id: framework-django-example-session-csrf-spa
-title: Django Session CSRF SPA Example
-description: Example session-authenticated Django API setup for split local frontend/backend development and Django-served production SPA assets.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - sessions
-  - csrf
-  - security
-  - frontend
-applies_to:
-  - django
-status: active
-order: 19
----
-
 # Django Session CSRF SPA Example
 
 ## Scenario

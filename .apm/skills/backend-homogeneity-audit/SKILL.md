@@ -1,15 +1,14 @@
 ---
 name: backend-homogeneity-audit
-description: Use when adding or reviewing Django backend code and comparing views, serializers, services, URLs, app layout, or tests to established patterns.
+description: Audit Django and Python backend code against established app, view, serializer, service, URL, task, and test patterns. Use when explicitly reviewing or comparing backend consistency; do not trigger for ordinary implementation that only needs Python or Django guidance.
 ---
 
 # Backend Homogeneity Audit
 
 ## Scope
 
-- Adding or reviewing Django views, serializers, URLs, services, management commands, or tasks
-- Checking whether a backend change matches existing repository patterns
-- Looking for reusable backend structure before creating something new
+- Compare Django and Python backend code with the closest established repository patterns.
+- Report reusable structures, verified deviations, and the simplest fixes within the declared review scope.
 
 ### Boundaries
 
@@ -79,5 +78,11 @@ description: Use when adding or reviewing Django backend code and comparing view
 - blind spots and unverified areas
 
 ## Completion Checklist
+
+- The exact backend scope and any unverified areas are stated.
+- The closest comparable backend implementation and applicable guidance were reviewed.
+- Every verified deviation or an explicit no-findings result is reported.
+
+## Maintenance
 
 - If you find a durable backend pattern missing from the guidance skills, update the relevant `.apm/skills/` source or add a named example under its `references/examples/` directory.

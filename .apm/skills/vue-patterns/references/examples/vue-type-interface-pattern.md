@@ -1,20 +1,3 @@
----
-id: framework-vue-example-type-interface-pattern
-title: Vue Type Interface Pattern Example
-description: Example domain-foldered interface and input-type files under src/types using explicit filenames and optional Zod schemas.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - types
-applies_to:
-  - vue
-status: active
-order: 20
----
-
 # Vue Type Interface Pattern Example
 
 ## Scenario

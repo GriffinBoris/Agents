@@ -1,16 +1,14 @@
 ---
 name: context-gatherer
-description: Use when learning a feature, component, subsystem, or codebase area before changing it, reviewing it, or documenting it.
+description: Build an evidence-backed map of an unfamiliar feature, component, subsystem, or codebase area. Use when explicitly asked to gather context, explain data flow, create onboarding or implementation context, or when a named review workflow requires context gathering; do not trigger for ordinary implementation.
 ---
 
 # Context Gatherer
 
 ## Scope
 
-- Learning how a feature works before changing it
-- Mapping data flow through backend and frontend code
-- Understanding route structure, APIs, services, or background jobs
-- Creating onboarding notes or implementation context for future work
+- Map relevant structure, behavior, data flow, dependencies, and integration points with concrete file references.
+- Separate durable patterns, repository-specific quirks, and unresolved questions without turning the context pass into a review or rewrite.
 
 ### Boundaries
 
@@ -85,5 +83,11 @@ description: Use when learning a feature, component, subsystem, or codebase area
 - anything unclear, inconsistent, or lightly checked
 
 ## Completion Checklist
+
+- The investigated scope and depth are explicit.
+- Structure, key components, data flow, integration points, and open questions are covered where applicable.
+- Concrete file references support the context map.
+
+## Maintenance
 
 - If context gathering reveals missing or misplaced guidance, update the relevant `.apm/` source file.

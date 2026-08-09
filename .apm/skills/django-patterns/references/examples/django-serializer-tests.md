@@ -1,20 +1,3 @@
----
-id: framework-django-example-serializer-tests
-title: Django Serializer Tests Example
-description: Example input and output serializer tests with exact field assertions.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - testing
-applies_to:
-  - django
-status: active
-order: 16
----
-
 # Django Serializer Tests Example
 
 ## Scenario

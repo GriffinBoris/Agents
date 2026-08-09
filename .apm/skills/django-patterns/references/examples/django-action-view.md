@@ -1,23 +1,3 @@
----
-id: framework-django-example-action-view
-title: Django Action View Example
-description: Example non-CRUD DRF action endpoints with scoped lookup, explicit validation, delegated domain work, serializer-backed responses, and focused tests.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - drf
-  - actions
-  - permissions
-  - organization-scope
-applies_to:
-  - django
-status: active
-order: 10
----
-
 # Django Action View Example
 
 ## Scenario

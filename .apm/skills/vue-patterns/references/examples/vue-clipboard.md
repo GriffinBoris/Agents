@@ -1,20 +1,3 @@
----
-id: framework-vue-example-clipboard
-title: Vue Clipboard Example
-description: Example centralized clipboard composable with caller-owned success feedback, empty-text handling, and reviewable copy-button rules.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - clipboard
-applies_to:
-  - vue
-status: active
-order: 13
----
-
 # Vue Clipboard Example
 
 ## Scenario

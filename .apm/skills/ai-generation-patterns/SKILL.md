@@ -7,31 +7,37 @@ description: Design, implement, or review backend AI or LLM generation workflows
 
 ## Scope
 
-- Apply backend-owned provider boundaries, typed generation contracts, validation, persistence, and testing rules to AI or LLM generation workflows.
+- Apply backend-owned provider boundaries, typed generation contracts, validation, persistence, and testing rules to AI or LLM workflows.
 - Keep provider- and product-specific configuration in the consuming repository's `project-architecture` skill or backend settings.
 - Apply `python-conventions` and `django-patterns` alongside this skill when their scopes affect the implementation.
 
 ## Workflow
 
 1. Inspect the repository's existing provider services, domain contracts, persistence flow, and tests.
-2. Identify the affected concerns and read every matching reference below.
-3. Define the provider boundary and output contract before implementing persistence.
-4. Treat generated output as untrusted input and validate it at the service boundary.
+2. Define the provider boundary and output contract before implementing persistence.
+3. Treat generated output as untrusted input and validate it at the service boundary.
+4. Persist only complete, validated results.
 5. Test valid output and representative invalid provider responses.
 
-## Reference Selection
+## Core Guidance
 
-| Work being performed | Read |
-| --- | --- |
-| Provider credentials, configuration, calls, backend ownership, or trust boundaries | [provider-boundary.md](references/provider-boundary.md) |
-| Typed schemas, enums, allowed values, draft models, or structured provider responses | [structured-output-contracts.md](references/structured-output-contracts.md) |
-| Generated-data validation, persistence, invalid output, or generation tests | [validation-and-persistence.md](references/validation-and-persistence.md) |
+### Provider Boundary
 
-Read every reference whose row matches the task. Most end-to-end generation workflows require all three.
+- Keep provider credentials and provider configuration in backend-owned settings or secret stores. Never expose them to browser code.
+- Put provider calls behind a focused backend service boundary. Keep views, serializers, and UI components responsible for request handling and presentation rather than provider orchestration.
+- Treat provider output as untrusted input. Do not persist, execute, or publish it until it passes the same domain validation as human-authored input.
 
-## Example Selection
+### Structured Output Contracts
 
-No packaged AI-generation examples currently exist. Inspect the closest repository-owned provider service, generated-output contract, persistence workflow, and tests before introducing a new pattern.
+- Define bounded, typed output schemas that the provider can express reliably. Prefer explicit nested models, primitives, and enums over arbitrary `object` or free-form dictionary fields.
+- Derive allowed values and output constraints from backend-owned sources—such as domain enums, Django choices, registries, or typed draft models—rather than duplicating a second schema in prompts.
+- Keep model-output contracts separate from persisted models when generation needs a draft or review step.
+
+### Validation And Persistence
+
+- Validate every generated draft at the service boundary before persistence. Reject empty output, unsupported types, invalid parent references, invalid overrides, duplicate keys, and cross-scope relationships.
+- Persist only a complete, validated result. Do not save partial or best-effort generated records merely because a provider returned some usable fields.
+- Add focused tests for valid output and representative invalid provider output, including unknown enum values, malformed nested data, invalid references, and duplicate identifiers.
 
 ## Completion Checklist
 

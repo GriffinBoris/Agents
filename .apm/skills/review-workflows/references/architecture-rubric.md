@@ -1,19 +1,3 @@
----
-id: reference-review-architecture-rubric
-title: Architecture Review Rubric
-description: Reusable rubric for auditing code quality, structure, and maintainability.
-kind: reference
-scope: global
-name: review-rubric
-tags:
-  - reference
-  - review
-  - architecture
-applies_to: []
-status: active
-order: 1
----
-
 # Architecture Review Rubric
 
 ## How To Use This Rubric

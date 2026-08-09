@@ -1,20 +1,3 @@
----
-id: framework-django-example-crud-view
-title: Django CRUD View Example
-description: Example DRF list, create, and detail/update views with scoped querysets and serializer-driven responses.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - view
-applies_to:
-  - django
-status: active
-order: 2
----
-
 # Django CRUD View Example
 
 ## Scenario

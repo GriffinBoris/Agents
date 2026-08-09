@@ -1,20 +1,3 @@
----
-id: framework-vue-example-loading-error-states
-title: Vue Loading And Error States Example
-description: Example shared loading, error, and retry UI for page-level fetch states.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - ui
-applies_to:
-  - vue
-status: active
-order: 8
----
-
 # Vue Loading And Error States Example
 
 ## Scenario

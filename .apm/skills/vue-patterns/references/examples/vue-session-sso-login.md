@@ -1,23 +1,3 @@
----
-id: framework-vue-example-session-sso-login
-title: Vue Session SSO Login Example
-description: Example frontend pattern for session-backed SSO buttons, auth-method bootstrap state, redirect preservation, and callback error display.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - sso
-  - sessions
-  - auth
-  - routing
-applies_to:
-  - vue
-status: active
-order: 21
----
-
 # Vue Session SSO Login Example
 
 ## Scenario

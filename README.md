@@ -63,6 +63,18 @@ export GITHUB_APM_PAT="<token>"
 task ai:install
 ```
 
+### Migrate an older repository
+
+Keep the legacy `agents/` sources and any existing `AGENTS.md` available until the migration is verified. If `AGENTS.md` is the only remaining copy, preserve it outside the generated output path before installing.
+
+After installing the package, ask the agent:
+
+```text
+Use migration-baseline to port every repository-owned or locally changed rule from the legacy agents/ sources and preserved AGENTS.md into .apm/skills/project-architecture/SKILL.md and linked references. Do not copy shared guidance or delete the legacy files. Produce a complete parity map.
+```
+
+Review the parity map, then run `task ai:generate` and `task ai:check`. Remove the legacy layout only after every old section has a current shared owner or a verified local destination.
+
 ## Edit this package
 
 | Change | Source |
@@ -75,14 +87,14 @@ task ai:install
 
 ### Skill structure
 
-Keep skill frontmatter limited to `name` and a trigger-focused `description`. Use one of these top-level section orders so skills remain predictable:
+Keep skill frontmatter limited to `name` and a trigger-focused `description`. Use only the sections a skill needs, in this relative order:
 
 | Skill family | Section order |
 | --- | --- |
-| Implementation guidance | `Scope` → `Workflow` → `Reference Selection` → `Example Selection` → `Completion Checklist` |
-| Reviews, audits, and context gathering | `Scope` → `Workflow` → `Reference Selection` → `Review Criteria` → `Output` → `Completion Checklist` |
+| Implementation guidance | `Scope` → `Workflow` → `Core Guidance` or `Reference Selection` → `Example Selection` → `Completion Checklist` |
+| Reviews, audits, and context gathering | `Scope` → `Workflow` → `Reference Selection` → `Review Criteria` → `Output` → `Completion Checklist` → `Maintenance` |
 
-Keep selection and procedural instructions in `SKILL.md`. Put detailed rules and long examples in directly linked `references/` files, and tell the agent exactly when each reference should be read. Preserve specialized minimal skills only when their purpose genuinely does not fit either family.
+Do not add empty sections merely for uniformity. Keep short, cohesive guidance directly in `SKILL.md`; put detailed rules and long examples in directly linked `references/` files, and tell the agent exactly when each reference should be read. Keep selection and procedural instructions in `SKILL.md`.
 
 Do not edit generated output. Validate a package change with:
 
@@ -104,4 +116,4 @@ apm audit
 
 The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django and Vue guidance use small routing skills that load detailed references and examples only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
 
-No migration data was discarded. The immutable pre-APM aggregate is retained at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`) for parity audits.
+The immutable pre-APM aggregate remains at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`) only to distinguish former shared content from repository-owned guidance during a legacy port.

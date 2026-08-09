@@ -1,21 +1,3 @@
----
-id: framework-vue-example-app-owned-wrapper-component
-title: Vue App-Owned Wrapper Component Example
-description: Standards for app-owned Vue wrappers around unstyled PrimeVue primitives and plain HTML controls.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - components
-  - primevue
-applies_to:
-  - vue
-status: active
-order: 18
----
-
 # Vue App-Owned Wrapper Component Example
 
 ## Scenario

@@ -1,24 +1,3 @@
----
-id: framework-django-example-session-sso
-title: Django Session SSO Example
-description: Example backend pattern for OAuth or OIDC SSO that keeps provider secrets and session creation on the Django side.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - sso
-  - sessions
-  - security
-  - oauth
-  - oidc
-applies_to:
-  - django
-status: active
-order: 26
----
-
 # Django Session SSO Example
 
 ## Scenario

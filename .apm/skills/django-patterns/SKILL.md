@@ -7,11 +7,9 @@ description: Apply Django, Django REST Framework, Celery, backend API, authoriza
 
 ## Scope
 
-- Capture Django, DRF, and Celery conventions.
-- Keep Python-wide conventions in the `python-conventions` guidance skill.
-- Keep product- and repository-specific domain architecture in the `project-architecture` guidance skill.
-
-Always apply `python-conventions` alongside this skill. When the consuming repository provides `project-architecture`, load it before choosing local base classes, paths, commands, settings, or product behavior.
+- Apply these conventions to Django, DRF, Celery, backend API, and backend-test work.
+- Always load `python-conventions` alongside this skill.
+- When available, load the consuming repository's `project-architecture` skill before choosing local base classes, paths, commands, settings, or product behavior.
 
 ## Workflow
 
@@ -55,5 +53,4 @@ Open an example only when its pattern matches the task. For a long example, read
 - Mutating endpoints return the created or updated resource.
 - Model lifecycle methods do not hide third-party I/O.
 - Tests cover permission-positive, permission-negative, and cross-user isolation paths.
-- Django-specific examples live in this skill's `references/examples/` directory instead of inline guidance blocks.
 - Session-authenticated browser APIs keep CSRF enabled and have a tested bootstrap flow that provides session state and a CSRF token.

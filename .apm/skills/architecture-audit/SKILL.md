@@ -1,18 +1,14 @@
 ---
 name: architecture-audit
-description: Use when reviewing or planning changes to file structure, module boundaries, readability, and clean architecture.
+description: Audit file, folder, module, responsibility, layering, readability, and maintainability choices. Use when explicitly reviewing structural changes, assessing complexity, planning a refactor, or performing a final architecture pass; do not trigger for ordinary implementation.
 ---
 
 # Architecture Audit
 
 ## Scope
 
-- Reviewing a PR or diff that changes structure, layering, or responsibilities
-- Checking whether a module, route, service, or workflow has become too complex
-- Reviewing whether files, folders, packages, or feature boundaries are organized clearly
-- Reviewing whether function, class, and module shape stays readable and proportional to the problem
-- Preparing a refactor plan
-- Doing a final readability and maintainability pass before merge
+- Evaluate structure, responsibilities, boundaries, readability, and proportionality against applicable guidance and the closest local patterns.
+- Produce evidence-backed findings or a focused refactor plan without expanding the review beyond its declared scope.
 
 ### Boundaries
 
@@ -114,5 +110,12 @@ For each applicable guidance or example source, record:
 - any blind spots affecting confidence
 
 ## Completion Checklist
+
+- The exact review scope and any blind spots are stated.
+- Applicable guidance and comparable local patterns are recorded.
+- Every verified deviation is tied to evidence, an applicable rule or pattern, and the simplest appropriate fix.
+- If no deviations were found, that result is stated explicitly.
+
+## Maintenance
 
 - If you discover a durable rule, example gap, or better review heuristic, update the relevant `.apm/` source file instead of generated output.

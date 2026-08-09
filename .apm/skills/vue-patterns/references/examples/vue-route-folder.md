@@ -1,20 +1,3 @@
----
-id: framework-vue-example-route-folder
-title: Vue Route Folder Example
-description: Example route-based `src/views/` structure where each route folder owns its local pieces.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - structure
-applies_to:
-  - vue
-status: active
-order: 19
----
-
 # Vue Route Folder Example
 
 ## Scenario

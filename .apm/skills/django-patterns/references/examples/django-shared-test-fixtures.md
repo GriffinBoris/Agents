@@ -1,20 +1,3 @@
----
-id: framework-django-example-shared-test-fixtures
-title: Django Shared Test Fixtures Example
-description: Example shared object builders that keep API tests explicit without repeating setup in each module.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - testing
-applies_to:
-  - django
-status: active
-order: 17
----
-
 # Django Shared Test Fixtures Example
 
 ## Scenario

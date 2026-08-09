@@ -7,10 +7,8 @@ description: Apply Vue 3, TypeScript, Pinia, Vue Router, API-client, session-aut
 
 ## Scope
 
-- Capture Vue, TypeScript, Pinia, and frontend API conventions.
-- Keep product- and repository-specific shell, workspace, branding, and organization architecture in the `project-architecture` guidance skill.
-
-When the consuming repository provides `project-architecture`, load it before choosing local paths, components, commands, migration behavior, branding, or product decisions.
+- Apply these conventions to Vue, TypeScript, Pinia, Vue Router, frontend API, component, form, and frontend-test work.
+- When available, load the consuming repository's `project-architecture` skill before choosing local paths, components, commands, migration behavior, branding, or product decisions.
 
 ## Workflow
 
@@ -51,5 +49,4 @@ Open an example only when its pattern matches the task. For a long example, read
 - API boundary types avoid `any` and `unknown`.
 - Components do not mix Options API and Composition API.
 - Form state uses dedicated input types instead of entity models with placeholder IDs.
-- Vue-specific examples live in this skill's `references/examples/` directory instead of inline guidance blocks.
 - Session-backed auth uses the shared API client, shared shell store, route metadata, and one global router guard instead of route-local bootstrap or redirect logic.

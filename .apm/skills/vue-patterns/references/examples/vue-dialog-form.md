@@ -1,21 +1,3 @@
----
-id: framework-vue-example-dialog-form
-title: Vue Dialog Form Example
-description: Example self-contained dialog pattern for form submission and success handling.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - dialog
-  - form
-applies_to:
-  - vue
-status: active
-order: 2
----
-
 # Vue Dialog Form Example
 
 ## Scenario

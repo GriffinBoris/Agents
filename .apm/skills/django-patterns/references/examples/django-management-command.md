@@ -1,20 +1,3 @@
----
-id: framework-django-example-management-command
-title: Django Management Command Example
-description: Example management command structure for first-class operational entrypoints with safe CLI contracts, cleanup, transactions, and tests.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - management-command
-applies_to:
-  - django
-status: active
-order: 9
----
-
 # Django Management Command Example
 
 ## Scenario

@@ -1,22 +1,3 @@
----
-id: framework-django-example-shared-scope-validation
-title: Shared Scope Validation
-description: Validate route-owned scope and related-object links at the serializer boundary so cross-organization, cross-workspace, and cross-parent combinations cannot be saved.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - serializers
-  - validation
-  - organization-scope
-applies_to:
-  - django
-status: active
-order: 23
----
-
 # Shared Scope Validation
 
 ## Scenario

@@ -220,4 +220,4 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 - Load `vue-patterns` for Vue, TypeScript, Pinia, frontend API, routing, form, component, or frontend-test work.
 - Load `ai-generation-patterns` for backend AI or LLM generation workflows.
 - Load the consuming repository's `project-architecture` skill for repository-specific structure, commands, architecture, and product conventions.
-- Load `migration-baseline` only when auditing historical migration parity or deciding where a legacy rule belongs.
+- Load `migration-baseline` only when porting repository-owned or locally modified guidance from a legacy `agents/` or `AGENTS.md` layout into the consumer's local APM guidance.

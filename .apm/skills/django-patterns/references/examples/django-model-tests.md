@@ -1,21 +1,3 @@
----
-id: framework-django-example-model-tests
-title: Django Model Tests Example
-description: Example model tests for base-model behavior, lifecycle helpers, relation invariants, persisted state, and model-owned task behavior.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - testing
-  - models
-applies_to:
-  - django
-status: active
-order: 14
----
-
 # Django Model Tests Example
 
 ## Scenario

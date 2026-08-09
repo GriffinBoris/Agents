@@ -1,21 +1,3 @@
----
-id: framework-django-example-direct-attribute-access
-title: Direct Attribute Access
-description: Prefer explicit branching and direct attribute access over fail-soft getattr fallbacks for required fields.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - serializers
-  - antipatterns
-applies_to:
-  - django
-status: active
-order: 25
----
-
 # Direct Attribute Access
 
 ## Scenario

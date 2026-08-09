@@ -1,20 +1,3 @@
----
-id: framework-vue-example-api-client
-title: Vue API Client Example
-description: Example API module shape using the repository's single-client pattern.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - api
-applies_to:
-  - vue
-status: active
-order: 1
----
-
 # Vue API Client Example
 
 ## Scenario

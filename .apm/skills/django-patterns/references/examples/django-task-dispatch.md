@@ -1,22 +1,3 @@
----
-id: framework-django-example-task-dispatch
-title: Django Task Dispatch Example
-description: Example model-backed task dispatch with named tasks, lifecycle state, progress reporting, failure handling, and focused tests.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - tasks
-  - celery
-  - lifecycle
-applies_to:
-  - django
-status: active
-order: 11
----
-
 # Django Task Dispatch Example
 
 ## Scenario

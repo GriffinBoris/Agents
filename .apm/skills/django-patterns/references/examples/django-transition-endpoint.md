@@ -1,24 +1,3 @@
----
-id: framework-django-example-transition-endpoint
-title: Transition Endpoint
-description: Use dedicated transition endpoints, transition input serializers, and domain transition functions for lifecycle changes instead of generic partial updates.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - views
-  - serializers
-  - services
-  - testing
-  - lifecycle
-applies_to:
-  - django
-status: active
-order: 22
----
-
 # Transition Endpoint
 
 ## Scenario

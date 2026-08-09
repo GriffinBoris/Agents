@@ -1,20 +1,3 @@
----
-id: framework-vue-example-composable-reactivity
-title: Vue Composable Reactivity Example
-description: Standards for readable reactive aliases, computed view models, and safe store or composable access in Vue.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - reactivity
-applies_to:
-  - vue
-status: active
-order: 4
----
-
 # Vue Composable Reactivity Example
 
 ## Scenario

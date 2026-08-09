@@ -1,20 +1,3 @@
----
-id: framework-vue-example-multi-step-form
-title: Vue Multi-Step Form Example
-description: Standards for parent-owned multi-step Vue forms with step-local validation, preflight checks, and final submit ownership.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - forms
-applies_to:
-  - vue
-status: active
-order: 18
----
-
 # Vue Multi-Step Form Example
 
 ## Scenario

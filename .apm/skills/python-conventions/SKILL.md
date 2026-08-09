@@ -7,9 +7,9 @@ description: Apply the repository's Python implementation, typing, testing, and 
 
 ## Scope
 
-- Capture Python-specific conventions that apply across backend and agent code.
-- Keep Django, DRF, and Celery rules in the `django-patterns` guidance skill.
-- Keep repository- or product-specific architecture decisions in the `project-architecture` guidance skill.
+- Apply these Python-wide conventions to modules, tooling, and tests.
+- Load `django-patterns` for Django, DRF, and Celery work.
+- Load the consuming repository's `project-architecture` skill for local architecture and product decisions.
 
 ## Workflow
 
@@ -42,4 +42,3 @@ Open an example only when its pattern matches the task. For a long example, read
 - `__init__.py` files stay minimal.
 - Typing follows repository conventions.
 - `ruff check` expectations are clear and were followed for modified files.
-- Django-specific behavior is documented in the Django guide instead of being duplicated here.

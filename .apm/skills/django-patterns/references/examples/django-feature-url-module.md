@@ -1,20 +1,3 @@
----
-id: framework-django-example-feature-url-module
-title: Django Feature URL Module Example
-description: Example feature-local URL module with predictable REST-style and action routes.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - urls
-applies_to:
-  - django
-status: active
-order: 7
----
-
 # Django Feature URL Module Example
 
 ## Scenario

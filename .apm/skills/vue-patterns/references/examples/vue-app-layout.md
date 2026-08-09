@@ -1,20 +1,3 @@
----
-id: framework-vue-example-app-layout
-title: Vue App Layout Example
-description: Example small-app and workspace-route layout shapes for Vue repositories using src/views as the main modern frontend boundary.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - structure
-applies_to:
-  - vue
-status: active
-order: 18
----
-
 # Vue App Layout Example
 
 ## Scenario

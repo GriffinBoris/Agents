@@ -1,22 +1,3 @@
----
-id: framework-vue-example-route-auth-guard
-title: Vue Route Auth Guard Example
-description: Example route metadata, app shell bootstrap, and one global router guard for session-backed Vue auth.
-kind: example
-scope: framework
-name: vue
-tags:
-  - example
-  - vue
-  - routing
-  - auth
-  - shell
-applies_to:
-  - vue
-status: active
-order: 6
----
-
 # Vue Route Auth Guard Example
 
 ## Scenario

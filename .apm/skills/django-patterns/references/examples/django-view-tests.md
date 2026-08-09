@@ -1,23 +1,3 @@
----
-id: framework-django-example-view-tests
-title: Django View Tests Example
-description: Example permission-aware API tests for nested organization and workspace routes with serializer-backed expectations and ownership-boundary coverage.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - testing
-  - views
-  - permissions
-  - organization-scope
-applies_to:
-  - django
-status: active
-order: 15
----
-
 # Django View Tests Example
 
 ## Scenario

@@ -1,20 +1,3 @@
----
-id: framework-django-example-query-params
-title: Django Query Param Parsing Example
-description: Example direct query param parsing with optional filters and shared validator helpers.
-kind: example
-scope: framework
-name: django
-tags:
-  - example
-  - django
-  - query-params
-applies_to:
-  - django
-status: active
-order: 8
----
-
 # Django Query Param Parsing Example
 
 ## Scenario

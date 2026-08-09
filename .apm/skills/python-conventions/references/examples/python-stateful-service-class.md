@@ -1,20 +1,3 @@
----
-id: language-python-example-stateful-service-class
-title: Python Stateful Service Class Example
-description: Example class that stores shared dependencies and workflow state instead of scattering related functions.
-kind: example
-scope: language
-name: python
-tags:
-  - example
-  - python
-  - classes
-applies_to:
-  - python
-status: active
-order: 4
----
-
 # Python Stateful Service Class Example
 
 ## Scenario

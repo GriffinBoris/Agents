@@ -1,20 +1,3 @@
----
-id: language-python-example-segmented-api-client
-title: Python Segmented API Client Example
-description: Example shared requests session with focused endpoint segments layered on top.
-kind: example
-scope: language
-name: python
-tags:
-  - example
-  - python
-  - clients
-applies_to:
-  - python
-status: active
-order: 5
----
-
 # Python Segmented API Client Example
 
 ## Scenario
