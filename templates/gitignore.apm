@@ -1,0 +1,17 @@
+# APM-generated agent output. Regenerate it with `task ai:generate`; do not edit it.
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/opencode.json
+/.agents/
+/.codex/
+/.claude/
+/.claude-plugin/
+/.gemini/
+/.opencode/
+/.github/copilot-instructions.md
+/.github/instructions/
+/.github/prompts/
+/.github/plugin/plugin.json
+/apm_modules/
+/dist/

@@ -177,6 +177,18 @@ docker_data/
 
 
 /AGENTS.md
+/CLAUDE.md
+/GEMINI.md
 /opencode.json
-/.opencode
+/.agents/
+/.codex/
+/.claude/
+/.claude-plugin/
+/.gemini/
+/.opencode/
+/.github/copilot-instructions.md
+/.github/instructions/
+/.github/prompts/
+/.github/plugin/plugin.json
+/apm_modules/
 /dist/

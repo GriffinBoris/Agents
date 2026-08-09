@@ -1,260 +1,94 @@
 # Agents
 
-This repo builds installable guidance packages for multiple coding agents.
+Shared engineering guidance for Codex, Claude Code, OpenCode, Copilot, and Gemini. Install a pinned release with [APM](https://github.com/microsoft/apm); use skills and examples when a task needs them.
 
-Authored content, the builder, and installer scripts live in `agents/`.
+## Use it in a project
 
-## Quick Start
+Install APM **v0.28.0+** and [Task](https://taskfile.dev), then keep repository-only guidance in a local skill before installing the shared package:
 
-macOS:
+```text
+.apm/skills/project-architecture/SKILL.md
+```
+
+Give that file Agent Skills frontmatter with `name: project-architecture`, followed by the project's architecture, commands, and tooling guidance. This prevents package upgrades from overwriting project-specific rules.
+
+Download the two ready-made templates from a tagged release. Append the ignore snippet once; do not replace the project's existing `.gitignore`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/main/agents/scripts/install-agents.sh | bash -s -- --target source --dest .
-python3 agents/build_agents.py --target opencode --out dist --clean
+mkdir -p tasks
+curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/tasks/ai.yml -o tasks/ai.yml
+curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/gitignore.apm >> .gitignore
 ```
 
-Windows:
+Add the Task namespace to the project's `Taskfile.yml`:
 
-```powershell
-$script = Join-Path $env:TEMP 'install-agents.ps1'
-Invoke-WebRequest https://raw.githubusercontent.com/GriffinBoris/Agents/main/agents/scripts/install-agents.ps1 -OutFile $script
-pwsh -File $script -Target source -Dest .
-python agents/build_agents.py --target opencode --out dist --clean
+```yaml
+includes:
+  ai:
+    taskfile: ./tasks/ai.yml
+    dir: .
 ```
 
-That OpenCode build writes a packaged output to `dist/opencode/`. If you want the OpenCode files written directly into the current working directory, use `--out . --layout in-place` instead.
-
-## Repository Layout
-
-- `agents/guidance/`: authored modular guidance packages and examples
-- `agents/content/commands/`: authored command assets
-- `agents/content/skills/`: authored skill assets
-- `agents/tools/`: target-specific static assets such as OpenCode config
-- `agents/build_agents.py`: primary build CLI entrypoint
-- `agents/agents_builder/`: shared builder package
-- `agents/scripts/install-agents.sh`: shell installer
-- `agents/scripts/install-agents.ps1`: PowerShell installer
-- `dist/`: generated output
-
-## Build Locally
-
-Build one target:
+Then run:
 
 ```bash
-python3 agents/build_agents.py --target opencode --out dist --clean
+task ai:install
+task ai:check
 ```
 
-That default uses the packaged layout, so OpenCode output lands in `dist/opencode/...`.
+The included task file provides these commands:
 
-Build all generated targets:
+| Command | Purpose |
+| --- | --- |
+| `task ai:install` | Initialize APM if needed, install the pinned guidance package, and compile outputs. |
+| `task ai:generate` | Rebuild generated harness files after a local guidance change. |
+| `task ai:check` | Validate local guidance and detect installed-package drift. |
+| `task ai:setup` | Alias for `install`. |
+
+Generated `AGENTS.md`, harness directories, and `apm_modules/` stay ignored. Commit the consumer's `apm.yml`, `apm.lock.yaml`, and local `.apm/skills/project-architecture/` source instead.
+
+The template defaults to Codex, Claude Code, and OpenCode. Override its package or targets when needed:
 
 ```bash
-python3 agents/build_agents.py --target all --out dist --clean
+AGENTS_PACKAGE=GriffinBoris/Agents#v0.2.0 task ai:install  # upgrade to a reviewed release
+APM_TARGETS=claude,codex,opencode,copilot,gemini task ai:install
 ```
 
-Write a single target directly into the output root instead of `dist/<target>/...`:
+There is no separate pull or merge command. `task ai:install` resolves the chosen package version, recompiles generated files, and `task ai:check` verifies the result.
+
+For a private package, authenticate with a GitHub token that has repository read access:
 
 ```bash
-python3 agents/build_agents.py --target opencode --out dist --layout in-place --clean
+export GITHUB_APM_PAT="<token>"
+task ai:install
 ```
 
-That produces `dist/.opencode`, `dist/AGENTS.md`, and any other root-level files for the selected target.
+## Edit this package
 
-Build the source package snapshot:
+| Change | Source |
+| --- | --- |
+| Always-on cross-stack guidance | `.apm/instructions/engineering-baseline.instructions.md` |
+| Shared Python, Django, or Vue conventions | `.apm/skills/<skill-name>/SKILL.md` |
+| Long examples and review references | The owning skill's `references/` directory |
+| Reusable commands | `.apm/prompts/` |
+| Consumer Task and ignore templates | `templates/` |
+
+Do not edit generated output. Validate a package change with:
 
 ```bash
-python3 agents/build_agents.py --target source --out dist --clean
+apm compile --validate --local-only
+apm audit
 ```
 
-### CLI Options
-
-- `--target source|opencode|claude|copilot|codex|gemini|all`
-- `--out <path>`: output directory root, defaults to `dist`; relative paths resolve from the directory where you run the command
-- `--layout packaged|in-place`: `packaged` is the default and writes `dist/<target>/...`; `in-place` writes one non-source target directly into `--out`
-- `--clean`: remove each built target output directory before rebuilding it
-- `--include-examples`: embed full example bodies in generated instruction files
-- `--metadata-only`: include example metadata only, which is the default behavior
-
-## Targets
-
-- `source`
-- `opencode`
-- `claude`
-- `copilot`
-- `codex`
-- `gemini`
-
-## Generated Outputs
-
-- `dist/source/agents/`
-- `dist/opencode/.opencode/AGENTS.md`
-- `dist/opencode/opencode.json`
-- `dist/opencode/.opencode/commands/*.md`
-- `dist/opencode/.opencode/skills/*/SKILL.md`
-- `dist/claude/.claude/CLAUDE.md`
-- `dist/claude/.claude/commands/*.md` for Claude-compatible commands
-- `dist/claude/.claude/skills/*/SKILL.md`
-- `dist/copilot/AGENTS.md`
-- `dist/copilot/.github/copilot-instructions.md`
-- `dist/codex/.agents/AGENTS.md`
-- `dist/codex/.codex/config.toml`
-- `dist/codex/.agents/skills/*/SKILL.md` for command workflows converted to Codex skills
-- `dist/codex/.agents/skills/*/SKILL.md`
-- `dist/gemini/.gemini/GEMINI.md`
-- `dist/gemini/.gemini/commands/*.toml` for Gemini-compatible commands
-- `dist/gemini/.gemini/skills/*/SKILL.md`
-
-The same authored guidance is rendered into each harness's target directory. OpenCode reads `.opencode/AGENTS.md` through root `opencode.json`; Claude reads `.claude/CLAUDE.md`; Codex reads `.agents/AGENTS.md` through `.codex/config.toml`; Gemini reads `.gemini/GEMINI.md`.
-
-## Install The Source Package
-
-Use this when you want the authored guidance plus the local builder so you can generate targets in another repo.
-
-This installs:
-
-- `agents/`
-
-The installer copies only the `agents/` tree directly from the repo. It does not depend on `dist/source`.
-
-### Shell
-
-Install from GitHub:
+To release it, update `version` in `apm.yml`, regenerate the lockfile, validate, pack, commit, and create the matching Git tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/main/agents/scripts/install-agents.sh | bash -s -- --target source --dest .
+apm lock --target claude,codex,opencode,copilot,gemini
+apm pack --archive --output dist
 ```
 
-Install from a local checkout:
+## Current migration status
 
-```bash
-bash agents/scripts/install-agents.sh --target source --dest /path/to/project --repo /path/to/Agents
-```
+The package is deliberately parity-first: the always-on instruction contains the complete historical generated `AGENTS.md`, so no existing rule was dropped during the move from the custom builder. Skills, examples, prompts, and review references are already in native APM locations. After an explicit parity review, the baseline can be reduced to only global rules and a skill router for more lazy loading.
 
-Then build a target in the destination repo:
-
-```bash
-python3 agents/build_agents.py --target codex --out dist --clean
-```
-
-### PowerShell
-
-Install from GitHub:
-
-```powershell
-$script = Join-Path $env:TEMP 'install-agents.ps1'
-Invoke-WebRequest https://raw.githubusercontent.com/GriffinBoris/Agents/main/agents/scripts/install-agents.ps1 -OutFile $script
-pwsh -File $script -Target source -Dest .
-```
-
-Install from a local checkout:
-
-```powershell
-pwsh -File agents/scripts/install-agents.ps1 -Target source -Dest C:\path\to\project -Repo C:\path\to\Agents
-```
-
-Then build a target in the destination repo:
-
-```powershell
-python agents/build_agents.py --target codex --out dist --clean
-```
-
-## Install A Built Target
-
-Use this when you want to copy a prebuilt target package into another repo without installing the full source builder.
-
-Installers merge into the destination by default. Matching file paths are overwritten, and unrelated existing files are left in place.
-
-Build the target first:
-
-```bash
-python3 agents/build_agents.py --target opencode --out dist --clean
-```
-
-### Shell
-
-```bash
-bash agents/scripts/install-agents.sh --target opencode --dest /path/to/project --repo /path/to/Agents
-```
-
-Supported built-target values are:
-
-- `opencode`
-- `claude`
-- `copilot`
-- `codex`
-- `gemini`
-
-### PowerShell
-
-```powershell
-pwsh -File agents/scripts/install-agents.ps1 -Target opencode -Dest C:\path\to\project -Repo C:\path\to\Agents
-```
-
-## Installer Options
-
-Both installers support:
-
-- `--target` or `-Target`: required target name
-- `--dest` or `-Dest`: destination root, defaults to the current directory
-- `--ref` or `-Ref`: Git ref to download, defaults to `main`
-- `--repo` or `-Repo`: GitHub repo slug, GitHub URL, or local checkout path
-- `--force` or `-Force`: accepted for compatibility; installs already overwrite matching files by default
-
-## Target Layouts
-
-- `opencode`: root `opencode.json`, `.opencode/AGENTS.md`, `.opencode/commands/`, `.opencode/skills/`
-- `claude`: `.claude/CLAUDE.md`, `.claude/commands/`, `.claude/skills/`
-- `copilot`: root `AGENTS.md`, `.github/copilot-instructions.md`
-- `codex`: `.agents/AGENTS.md`, `.agents/skills/` containing both authored skills and converted command workflows, and `.codex/config.toml`
-- `gemini`: `.gemini/GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`
-
-Claude and Gemini read the complete generated guidance directly from `.claude/CLAUDE.md` and `.gemini/GEMINI.md`, respectively.
-
-Target paths are case-sensitive and follow the tools' documented discovery conventions:
-
-- Claude supports `.claude/CLAUDE.md` for project guidance and `.claude/` for project commands and skills. Custom subagents, when authored, belong in `.claude/agents/`.
-- OpenCode reads `.opencode/AGENTS.md` through the `instructions` entry in root `opencode.json`; `.opencode/` also contains commands, skills, and custom agents.
-- Codex reads `.agents/AGENTS.md` through the fallback configured in `.codex/config.toml`; `.agents/skills/` contains repository skills. The builder converts authored command workflows into Codex skills because Codex does not document a repository custom-command directory.
-- Gemini supports `.gemini/GEMINI.md` for project guidance; its commands and skills also remain under `.gemini/`.
-
-## Typical Workflows
-
-### Authoring And Building In This Repo
-
-1. Edit content under `agents/`
-2. Run `python3 agents/build_agents.py --target all --out dist --clean`
-3. Inspect the generated files in `dist/`
-
-### Reusing The Builder In Another Repo
-
-1. Install `source`
-2. Run `python3 agents/build_agents.py --target <target> --out dist --clean` in that repo
-
-### Shipping A Ready-Made Target
-
-1. Build a target in this repo
-2. Install that target into the destination repo with one of the installer scripts
-
-### Refresh Guidance In Place
-
-1. Pick one target such as `opencode` or `claude`
-2. Run `python3 agents/build_agents.py --target <target> --out . --layout in-place --clean`
-3. Commit the refreshed root files and dot-folder content
-
-Examples using `dist` as the output root:
-
-```bash
-python3 agents/build_agents.py --target opencode --out dist --layout in-place --clean
-python3 agents/build_agents.py --target claude --out dist --layout in-place --clean
-python3 agents/build_agents.py --target copilot --out dist --layout in-place --clean
-python3 agents/build_agents.py --target codex --out dist --layout in-place --clean
-python3 agents/build_agents.py --target gemini --out dist --layout in-place --clean
-```
-
-These produce layouts like:
-
-- OpenCode: `dist/.opencode`, `dist/opencode.json`
-- Claude: `dist/.claude`
-- Copilot: `dist/.github/copilot-instructions.md`, `dist/AGENTS.md`
-- Codex: `dist/.agents`, `dist/.codex`
-- Gemini: `dist/.gemini`
+The immutable pre-APM aggregate is retained at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`).

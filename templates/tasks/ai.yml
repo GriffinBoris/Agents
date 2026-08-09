@@ -1,0 +1,42 @@
+version: '3'
+
+# Copy this file to the consuming repository as tasks/ai.yml.
+# Before task ai:install, create .apm/skills/project-architecture/SKILL.md
+# for guidance that belongs only to that repository.
+
+vars:
+  AGENTS_PACKAGE: '{{default "GriffinBoris/Agents#v0.1.0" .AGENTS_PACKAGE}}'
+  APM_TARGETS: '{{default "claude,codex,opencode" .APM_TARGETS}}'
+
+tasks:
+  default:
+    desc: Show agent tooling tasks
+    cmds:
+      - task --taskfile "{{.TASKFILE_DIR}}/ai.yml" --list --sort alphanumeric
+    silent: true
+
+  install:
+    desc: Install the pinned shared guidance package and deploy it locally
+    cmds:
+      - |
+        if [ ! -f apm.yml ]; then
+          apm init --yes --target "{{.APM_TARGETS}}"
+        fi
+        apm install "{{.AGENTS_PACKAGE}}" --target "{{.APM_TARGETS}}"
+        apm compile --target "{{.APM_TARGETS}}"
+
+  generate:
+    desc: Recompile committed APM sources into harness guidance
+    cmds:
+      - apm compile --target "{{.APM_TARGETS}}"
+
+  check:
+    desc: Validate local guidance and installed-package integrity
+    cmds:
+      - apm compile --validate --local-only
+      - apm audit --ci --no-policy
+
+  setup:
+    desc: Install and compile the shared guidance package
+    cmds:
+      - task: install
