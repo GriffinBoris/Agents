@@ -313,14 +313,6 @@ Route tests are valuable when nested includes are deep, when route order matters
 - When route ordering matters, import the local URL module and assert the relevant `pattern.name` or `pattern.pattern._route` sequence.
 - When adding a same-origin SPA catch-all, test that `/api/...`, `/admin/...`, schema, and docs URLs still resolve to backend views before the index fallback.
 - When moving schema or docs routes, test `reverse('schema')`, `reverse('swagger-ui')`, and any docs route names that the project exposes.
-- When changing a guidance-only Markdown example, inspect frontmatter, heading order, and fenced code blocks instead of running backend test suites.
-- Run the guidance builder when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
-- Before review, confirm the generated guidance metadata still lists this example under Django URL examples and that the document does not conflict with the app URL hub, feature URL module, session-CSRF-SPA, or view-test examples.
 
 ## Why It Helps
 

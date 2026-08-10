@@ -174,14 +174,14 @@ Serializer `Meta` inheritance is acceptable when a derived serializer intentiona
 
 ## Verification
 
-- For a guidance-only edit, check that Markdown frontmatter remains valid and code fences are balanced.
 - When changing real model code, run `python manage.py makemigrations --check --dry-run` or the project's equivalent task to confirm whether `Meta` option changes create migrations.
 - Run targeted model tests for changed constraints, ordering, permissions, or reverse relation behavior.
 - For constraint changes, add tests that prove duplicate records fail at the intended scope.
 - For ordering changes, assert the returned order in model, serializer, or view tests that depend on it.
 - For permission changes, verify the generated permission codename and any group or access tests that grant it.
 - For `default_related_name` changes, verify reverse relation names from the related model and check migrations if relation metadata changed.
-- Run `ruff check` on modified Python files. For Markdown-only guidance changes, run the guidance builder when practical.
+- Run `ruff check` on modified Python files.
+
 
 ## Why It Helps
 

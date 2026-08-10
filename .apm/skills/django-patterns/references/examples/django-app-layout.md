@@ -370,7 +370,6 @@ Commands can orchestrate helpers, write user-facing command output, and own CLI 
 
 ## Verification
 
-- For guidance-only changes, check the Markdown structure and code fences for the changed example.
 - When refactoring app layout, run `ruff check` on modified Python files and targeted tests for the affected app or feature package.
 - When moving models into a `models/` package, run `python manage.py makemigrations --check` or the project's equivalent migration check to confirm Django still discovers the same models.
 - When moving URLs, run targeted view tests that use `reverse(...)` and verify old route names still resolve or are deliberately migrated.

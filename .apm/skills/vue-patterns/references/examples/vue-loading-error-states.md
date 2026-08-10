@@ -444,7 +444,6 @@ Do not also push a blank assistant message before the response arrives if `Assis
 - Add or update store tests when changing stale-request guards. Prove a late response from an old organization, workspace, route param, filter, or request id does not overwrite the current state.
 - Manually verify shell bootstrap failure by forcing the bootstrap endpoint to fail and confirming the shell shows one centered retry state instead of partially rendering route content.
 - Manually verify route refresh failure with existing rows and confirm the rows remain visible with one inline warning and one retry action.
-- For guidance-only edits, check Markdown frontmatter and code fences, then run the guidance builder when practical.
 
 ## Why It Helps
 

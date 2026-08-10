@@ -410,12 +410,6 @@ cd frontend
 npm run lint
 ```
 
-- When editing guidance examples, also check the Markdown fences and rebuild generated guidance when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 - Manual review should confirm there are no component/store `AxiosError` imports, no direct `error.response` parsing outside the API/helper boundary, and no stale field errors after dialog reopen or resubmit.
 
 ## Why It Helps

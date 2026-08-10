@@ -244,7 +244,8 @@ pytest backend/survey/tests/test_component_models.py
 	  - history logging when those base-model hooks are involved
   - task progress, dispatch, and failure state for model-backed tasks
 
-- Run `ruff check` on modified Python files. For guidance-only Markdown edits, inspect headings and code fences, and run the guidance builder.
+- Run `ruff check` on modified Python files.
+
 
 ## Why It Helps
 

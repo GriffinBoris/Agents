@@ -177,7 +177,8 @@ pytest backend/task/tests/test_models.py::TestTaskModel
   - schedule registration when `DEBUG = False`
   - schedule suppression when `DEBUG = True`
 
-- Run `ruff check` on modified Python files. For guidance-only Markdown edits, inspect headings and code fences, and run the guidance builder.
+- Run `ruff check` on modified Python files.
+
 
 ## Why It Helps
 

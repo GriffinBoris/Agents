@@ -569,7 +569,6 @@ Route-local stores can derive organization or workspace scope from `useAppShellS
 - Inspect `frontend/src/router/routeMeta.d.ts`, `frontend/src/router/guestRoutes.ts`, `frontend/src/router/organizationRoutes.ts`, `frontend/src/router/workspaceRoutes.ts`, and `frontend/src/router/index.ts` when adding or changing route access behavior.
 - Run `npm run type-check` and `npm run lint` from `frontend/` for frontend code changes.
 - For route or shell behavior changes, add or update route-guard, store, or component tests when the local test structure exists.
-- For guidance-only edits, run `apm compile --target all --root /tmp/guidance-examples-build --clean` and confirm the generated output includes this example.
 
 ## Why It Helps
 

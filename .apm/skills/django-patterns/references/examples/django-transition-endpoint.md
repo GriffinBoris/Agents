@@ -384,12 +384,6 @@ Tests should prove the happy path, disallowed state movement, lower-permission a
 - Run serializer tests for the generic input serializer and transition input serializer.
 - Run view tests for the transition endpoint, including allowed transition, disallowed transition, permission-negative, ownership-negative, and generic-update-rejection cases.
 - Run service or model tests for the transition graph when lifecycle rules live outside the view.
-- For guidance-only edits, inspect the Markdown frontmatter, heading order, and code fences, and build generated guidance when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-rg -n '^## |^### |^`{3}' .apm/skills/django-patterns/references/examples/django-transition-endpoint.md
-```
 
 ## Why It Helps
 

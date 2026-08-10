@@ -344,11 +344,6 @@ View tests should prove the HTTP boundary preserves the same scope rules and exp
 - Run the focused serializer test class when changing serializer relationship rules, for example `pytest backend/contact/tests/test_serializers.py::TestProjectEnrollmentInputSerializer`.
 - Run the focused view test class or method when route-owned scope or standardized errors change, for example `pytest backend/contact/tests/test_views.py::TestProjectEnrollmentViews::test_workspace_route_rejects_create_for_catalog_entry_outside_route_workspace`.
 - Run `ruff check` on modified Python files when implementation code changes.
-- For guidance-only edits, inspect frontmatter, headings, and fenced code blocks, and run the guidance builder when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

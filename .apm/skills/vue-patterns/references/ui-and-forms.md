@@ -39,7 +39,7 @@
 - Use the repository's shared clipboard helper instead of direct `navigator.clipboard` calls when one exists.
 - Prefer extracting sizable UI blocks into subcomponents so pages stay readable.
 - When a route view or shell view starts mixing several distinct sections, split those sections into local subcomponents so the parent reads like a page outline.
-- Prefer route-local subcomponents under `src/views/<route>/components/` for route-specific panels, summaries, drawers, and list sections before promoting them into shared `src/components/`.
+- Prefer route-local subcomponents under the repository's route root for route-specific panels, summaries, drawers, and list sections before promoting them into shared `src/components/`.
 - When one component contains both desktop and mobile versions of the same UI, prefer small focused subcomponents when that split makes the responsive behavior easier to scan.
 - Prefer shared UI inputs and keep spacing consistent with existing utility classes.
 - Prefer page-composition wrappers for repeated screen structure so route views can read as page outlines instead of piles of low-level surface markup.
@@ -56,7 +56,7 @@
 - Avoid ad hoc hex colors for surfaces, borders, hover states, and selected states.
 - Promote repeated UI into reusable shared components only when reuse is real; otherwise keep composition view-local.
 - Keep radii restrained and consistent across shells, cards, and controls.
-- Use the same radius family across the workspace by default unless a component has a clear reason to deviate.
+- Use the same radius family across the application by default unless a component has a clear reason to deviate.
 - Avoid introducing new global styles when shared utility patterns already exist.
 - Align error and retry UI with shared patterns: shared error messages, warn-toned retry buttons, and minimal centered loading states.
 - Prefer small shared PrimeVue wrappers for repeated control styling.

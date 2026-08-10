@@ -351,11 +351,6 @@ In that shape, the route view keeps route lifecycle wiring and navigation, while
 - Exercise route changes manually or with tests when a fetch depends on route params, selected organization, selected workspace, filters, or query state. Confirm stale responses cannot overwrite the current view.
 - Verify incomplete shell or route context shows shared status UI instead of firing invalid API requests.
 - Verify table pages show loading, empty, blocking error, inline error, and retry through shared wrappers.
-- For guidance-only updates, run the agents build command so the authored example compiles into generated `AGENTS.md` output:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

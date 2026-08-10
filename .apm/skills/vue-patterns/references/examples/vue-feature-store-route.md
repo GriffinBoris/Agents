@@ -615,14 +615,6 @@ Then inside `ContactFormSection.vue`, bind fields to `contactDetailStore.formVal
 
 ## Verification
 
-For guidance-only edits, verify the authored Markdown and generated guidance output:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-feature-store-route.md
-git diff --check -- .apm/skills/vue-patterns/references/examples/vue-feature-store-route.md
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 For frontend implementation changes that follow this pattern, run the relevant frontend checks:
 
 ```bash

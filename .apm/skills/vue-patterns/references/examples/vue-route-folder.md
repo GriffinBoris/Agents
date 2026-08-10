@@ -550,7 +550,6 @@ Do not add this shape for modern code. It makes ownership ambiguous: router code
 - Use `rg "src/features|src/services|src/stores" frontend/src` when removing legacy architecture or reviewing a new route rollout.
 - Run `cd frontend && npm run type-check` after moving route files, route imports, shared types, or API method signatures.
 - Run `cd frontend && npm run lint` before finishing frontend code changes.
-- For guidance-only edits, check Markdown code fences, run `git diff --check -- .apm/skills/vue-patterns/references/examples/vue-route-folder.md`, and rebuild generated guidance with `apm compile --target all --root /tmp/guidance-examples-build --clean`.
 
 ## Why It Helps
 

@@ -675,14 +675,6 @@ Do not key rows by display names, emails, array indexes, or formatted labels. If
 
 ## Verification
 
-For guidance-only edits, run the guidance builder and Markdown checks:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-table-wrapper.md
-git diff --check -- .apm/skills/vue-patterns/references/examples/vue-table-wrapper.md
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 For frontend table changes, run the relevant local checks:
 
 ```bash

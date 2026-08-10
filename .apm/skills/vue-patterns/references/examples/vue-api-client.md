@@ -354,7 +354,6 @@ This application is session-backed. Auth flows belong in `api.auth`, and the bro
 - Use `rg "from [\"']axios|axios\\.|fetch\\(" frontend/src frontend/tests frontend/e2e` to confirm production app code is not importing direct transport outside the canonical boundary. Test harnesses and e2e support can use lower-level calls when they are setting up test state rather than implementing app behavior.
 - Use `rg "apiClient" frontend/src -g '*.ts' -g '*.vue'` to confirm direct `apiClient` usage is limited to `frontend/src/utils/api.ts` and the startup CSRF seed in `frontend/src/main.ts`.
 - Use `rg "localStorage.*token|access_token|authService|useApiClient|apiService" frontend/src` when refactoring auth or session flows.
-- For guidance-only edits, also run a Markdown/frontmatter/fence check for the changed example and rebuild generated agent guidance when practical.
 
 ## Implementation Contract
 

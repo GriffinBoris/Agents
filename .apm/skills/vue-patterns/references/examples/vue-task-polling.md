@@ -379,12 +379,6 @@ This leaks workflow rules into the UI, repeats status checks, omits timeout beha
 
 ## Verification
 
-- For guidance changes, run the agents build so the authored example compiles into generated outputs:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 - For frontend task helper changes, run:
 
 ```bash
@@ -405,12 +399,6 @@ pytest backend/survey/views/survey_version/tests/test_serializers.py
 
 ```bash
 rg -n "setInterval|setTimeout|waitForTask|task\\.status|apiClient|axios|fetch" frontend/src/views frontend/src/components frontend/src/utils
-```
-
-- Verify generated guidance output includes this example after the build:
-
-```bash
-rg -n "Vue Task Polling Example" /tmp/guidance-examples-build
 ```
 
 ## Why It Helps

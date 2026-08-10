@@ -38,7 +38,7 @@ Read every reference whose row matches the task. For cross-cutting changes, load
 - Shared UI and feedback: [app-owned wrapper](references/examples/vue-app-owned-wrapper-component.md), [table wrapper](references/examples/vue-table-wrapper.md), [loading/error states](references/examples/vue-loading-error-states.md), [notification system](references/examples/vue-notification-system.md), and [clipboard](references/examples/vue-clipboard.md).
 - Route views and authentication: [view pattern](references/examples/vue-view-pattern.md) and [session SSO login](references/examples/vue-session-sso-login.md).
 
-Open an example only when its pattern matches the task. For a long example, read its scenario and heading list first, then load only the relevant section instead of the entire file. Treat examples as structural references, not mandatory boilerplate.
+Open an example only when its pattern matches the task. For a long example, read its scenario and heading list first, then load only the relevant section instead of the entire file. Treat examples as structural references, not mandatory boilerplate. Treat their paths, folder names, and domain names as illustrative; use `project-architecture` and the closest repository code for actual route roots, shell locations, API-client paths, and migration targets.
 
 ## Completion Checklist
 

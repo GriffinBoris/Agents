@@ -306,12 +306,6 @@ pytest backend/partner/tests/test_import_service_networks_command.py
 ruff check backend/partner/management/commands/import_service_networks.py backend/partner/tests/test_import_service_networks_command.py
 ```
 
-- For guidance-only edits, inspect headings and code fences, then run the guidance builder:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 - Verify command-specific cases:
   - invalid options raise `CommandError`
   - `--allow-production` and `--noinput` behavior is covered

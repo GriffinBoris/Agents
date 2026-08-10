@@ -35,16 +35,16 @@ description: Audit Vue and TypeScript frontend code against established route, c
 
 ### Inspection Targets
 
-- `frontend/src/views/`
+- the repository's configured route root, commonly `frontend/src/views/` or `frontend/src/features/`
 - `frontend/src/components/`
 - `frontend/src/composables/`
-- `frontend/src/services/`
-- `frontend/src/stores/`
+- the canonical API-client or transport module
+- shared shell stores and route-local stores in their established locations
 - nearby route folders similar to the work in scope
 
 ### Route structure
-- route folder layout under `src/views/`
-- route-local `store.ts`, composables, types, constants, and subcomponents
+- route folder layout under the repository's chosen route root
+- route-local descriptively named stores, composables, types, constants, and subcomponents
 - whether state belongs in the route folder or a shared store
 
 ### API usage

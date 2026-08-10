@@ -486,12 +486,7 @@ Feature forms should use the shared error helpers rather than redefining DRF err
 
 ## Verification
 
-Use targeted checks that prove the type boundary is consistent with the API client and the generated guidance.
-
-```bash
-# The authored guidance must build into all generated agent outputs.
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
+Use targeted checks that prove the type boundary is consistent with the API client.
 
 ```bash
 # Type files should stay grouped under domain folders.
@@ -520,8 +515,6 @@ cd frontend
 npm run type-check
 npm run lint
 ```
-
-For guidance-only edits, run the Markdown fence check, `git diff --check` on the authored file, and the generated-agent build.
 
 ## Why It Helps
 

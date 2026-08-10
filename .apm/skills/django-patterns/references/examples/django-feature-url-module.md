@@ -193,11 +193,6 @@ Use `reverse(...)` for normal test setup and client calls. Add exact string asse
 - Run a focused route test after changing URL modules, such as `pytest backend/contact/tests/test_views.py::TestContactViews::test_contact_routes_follow_contract`.
 - Run the feature's view tests when route names, nested identifiers, or action endpoints change.
 - Use `python manage.py check` when changing include boundaries or namespaces and a focused pytest target is not available.
-- For documentation changes to this example, check that Markdown fences are balanced and rebuild generated guidance when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

@@ -313,13 +313,6 @@ View tests prove the route, permission, scoping, mutation, and response contract
 - For a view change, run the smallest relevant test target, such as `pytest backend/item/tests/test_item_views.py::TestItemViews`.
 - Run serializer tests when the view change depends on serializer validation or output fields.
 - Run `ruff check` on modified Python files when code changes accompany the guidance.
-- For guidance-only edits, inspect the Markdown headings and code fences, and run the guidance build when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
-- Before review, confirm the updated example still has valid frontmatter, balanced code fences, current class names, and no conflicts with the Django serializer or view-test examples.
 
 ## Why It Helps
 

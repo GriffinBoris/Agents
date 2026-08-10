@@ -378,14 +378,6 @@ node --test tests/use-clipboard.test.ts
 
 If the local frontend test setup changes, run the repository's equivalent targeted test for `frontend/tests/use-clipboard.test.ts`.
 
-For guidance changes, regenerate the agent output:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
-Before finishing, also run `git diff --check` on this authored example and confirm Markdown fences are balanced.
-
 ## Why It Helps
 
 Centralizing clipboard access gives the repo one browser API boundary, one copied-state contract, and one place to test failure behavior. Components stay focused on item UI: what text is copied, which shared button renders the action, and what feedback the user should see.

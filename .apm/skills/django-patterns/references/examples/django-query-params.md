@@ -319,7 +319,6 @@ Invalid query-param tests should assert both the status code and the standardize
 
 ## Verification
 
-- For guidance-only edits, inspect the Markdown headings and code fences instead of running backend test suites.
 - For view behavior changes that add or alter query params, run the smallest relevant pytest target, such as `pytest backend/contact/tests/test_views.py::TestContactViews`.
 - Add positive tests proving filters narrow the scoped queryset and do not include inaccessible organization or workspace rows.
 - Add invalid-value tests for each typed or choice filter, such as `?workspace_id=abc`, `?catalog_entry_id=abc`, `?status=INVALID`, `?start_date=not-a-date`, or `?item_ids=1,abc`.

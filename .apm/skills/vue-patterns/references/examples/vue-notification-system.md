@@ -584,19 +584,6 @@ Do not add `notification.error(...)` to every caught form submit. The inline ban
 
 ## Verification
 
-- Run the guidance build after editing this example:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
-- Check the authored example for balanced code fences and generated-output presence:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-notification-system.md
-rg -n "Vue Notification System Example" /tmp/guidance-examples-build/codex/.agents/AGENTS.md /tmp/guidance-examples-build/opencode/.opencode/AGENTS.md
-```
-
 - Check the frontend structure when changing notification behavior:
 
 ```bash

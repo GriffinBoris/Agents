@@ -560,11 +560,6 @@ pytest backend/core/tests/test_user_state_views.py::TestAppBootstrapView
 
 - For feature views that consume request context, run the relevant view test class and include positive, permission-negative, and ownership-boundary cases.
 - Run `ruff check` on modified Python files when implementation code changes.
-- For guidance-only edits, inspect the Markdown frontmatter, headings, and code fences, and run the guidance builder when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

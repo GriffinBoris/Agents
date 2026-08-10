@@ -692,14 +692,6 @@ rg "requiresAuth|guestOnly|skipShellBootstrap|requiredPermissions" frontend/src/
   - Token-storage and parallel auth-client searches return no modern app implementation.
   - Public routes that should avoid operator context explicitly use `skipShellBootstrap`.
 
-- For guidance-only edits, check code fences, run `git diff --check` on the changed example, and rebuild generated agent guidance:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-auth-shell.md
-git diff --check -- .apm/skills/vue-patterns/references/examples/vue-auth-shell.md
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 ## Why It Helps
 
 - The app has one source of truth for current user, organization, workspace, and permission state.

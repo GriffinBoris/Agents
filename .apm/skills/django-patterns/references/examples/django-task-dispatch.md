@@ -320,7 +320,8 @@ pytest backend/task/tests/test_models.py::TestTaskModel
   - required `data` validation for each task-specific implementation
   - Celery wrapper delegation
 
-- Run `ruff check` on modified Python files. For guidance-only Markdown edits, inspect headings and code fences, and run the guidance builder.
+- Run `ruff check` on modified Python files.
+
 
 ## Why It Helps
 

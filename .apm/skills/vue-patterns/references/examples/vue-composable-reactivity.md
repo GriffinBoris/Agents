@@ -390,12 +390,6 @@ npm run type-check
 npm run lint
 ```
 
-For this authored guidance file, also verify the generated agent output:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 ## Why It Helps
 
 This pattern keeps Vue reactivity visible without making templates noisy. Route views read as page outlines, route-local stores remain the owner of business state, composables receive live dependencies when they need them, and shared components stay prop-driven.

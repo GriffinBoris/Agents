@@ -551,12 +551,6 @@ Move an existing dialog into a route-local feature store when:
 
 ## Verification
 
-For guidance-only changes, verify the generated agent output:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 For code changes that add or refactor dialog forms, run the relevant frontend checks:
 
 ```bash

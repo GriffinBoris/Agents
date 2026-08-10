@@ -658,14 +658,6 @@ The runtime form renders the current page and emits small events. It does not ow
 
 ## Verification
 
-For guidance-only changes, run the guidance builder and structural checks:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-multi-step-form.md
-git diff --check -- .apm/skills/vue-patterns/references/examples/vue-multi-step-form.md
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 For implementation work that follows this pattern, use focused frontend verification:
 
 ```bash

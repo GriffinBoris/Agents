@@ -365,12 +365,6 @@ npm run type-check
 rg -n "setInterval|clearInterval|usePolling|startPolling|stopPolling" frontend/src
 ```
 
-- For guidance changes, rebuild generated agent output instead of editing generated files:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 ## Why It Helps
 
 - Polling behavior is consistent, lifecycle-safe, and easy to shut down cleanly.

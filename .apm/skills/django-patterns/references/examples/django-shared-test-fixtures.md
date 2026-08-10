@@ -425,15 +425,9 @@ The membership builders create rows. The test decides which user logs in, which 
 
 ## Verification
 
-- For a guidance-only edit, inspect Markdown frontmatter, headings, and code fences instead of running backend test suites.
 - Check that Python snippets follow repository conventions: explicit imports, single quotes, `Optional[...]`, no catch-all `**kwargs`, and no hidden parent creation for owned records.
 - Check that the example does not conflict with `.apm/skills/django-patterns/SKILL.md`, the view-test example, or the serializer-test example.
 - When changing actual fixture code, run `ruff check backend/tests/fixtures.py` and the smallest affected pytest target.
-- When practical for guidance authoring, run the guidance build:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

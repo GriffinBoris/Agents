@@ -367,11 +367,6 @@ pytest backend/order/tests
 - Run targeted model or service tests for any behavior called by an admin action. The action should be a thin operator entrypoint; the behavior should be provable without clicking through admin.
 - For relationship-heavy admin screens, manually review that every high-cardinality foreign key appears in `raw_id_fields`.
 - For timestamped models, scan the changed `admin.py` for `list_display` and `readonly_fields` entries that include `id`, `created_ts`, and `updated_ts`.
-- For guidance-only edits, run the guidance builder and a focused Markdown/fence check when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

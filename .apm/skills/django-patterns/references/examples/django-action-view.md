@@ -443,7 +443,8 @@ Tests for an action endpoint should prove routing, permission, ownership hiding,
   - invalid required query params under the exact query-param attr
   - generic update rejection for fields that must go through the action route
 - Use `reverse(...)` for URLs and compare successful responses with the output serializer.
-- Run `ruff check` on modified Python files. For guidance-only Markdown edits, inspect heading structure and code fences, and run the guidance builder when practical.
+- Run `ruff check` on modified Python files.
+
 
 ## Why It Helps
 

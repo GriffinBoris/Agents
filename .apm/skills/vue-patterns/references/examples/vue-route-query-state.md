@@ -442,8 +442,6 @@ For feature-specific changes, add or update focused tests that cover:
 - API filters are camelCase at the call site and converted by `buildParamsConfig(...)`
 - required path params and optional query IDs are guarded before API calls
 
-For guidance-only edits, also run a focused markdown/frontmatter/fence check for this file when practical.
-
 ## Why It Helps
 
 - Shared links, refreshes, and browser navigation reopen the same view without hidden state.

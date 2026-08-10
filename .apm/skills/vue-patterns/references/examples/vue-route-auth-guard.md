@@ -504,7 +504,6 @@ rg "router\\.beforeEach" frontend/src/router
 ```
 
 - `api.auth.bootstrap` should only appear in the shell store. `appShellStore.initialize()` in route views should be limited to session-changing auth flows that reset shell state first.
-- For guidance-only changes, also verify the Markdown source is structurally valid and that fenced code blocks are balanced.
 
 ## Why It Helps
 

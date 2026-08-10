@@ -570,14 +570,6 @@ npm run type-check
 npm run lint
 ```
 
-For guidance-only edits, verify the authored guidance builds into generated agent output:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-app-owned-wrapper-component.md
-git diff --check -- .apm/skills/vue-patterns/references/examples/vue-app-owned-wrapper-component.md
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 When reviewing a wrapper migration, also spot check representative callers. A good migration should make route views shorter and more semantic without moving route workflow state into shared components.
 
 ## Why It Helps

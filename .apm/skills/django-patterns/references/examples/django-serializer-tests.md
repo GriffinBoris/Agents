@@ -528,11 +528,6 @@ pytest backend/contact/tests/test_approved_plan_views.py::TestApprovedPlanViews
 ```
 
 - Run `ruff check` on modified Python files when serializer code or tests change.
-- For guidance-only edits, inspect the Markdown frontmatter, headings, and fenced code blocks. Run the guidance builder when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

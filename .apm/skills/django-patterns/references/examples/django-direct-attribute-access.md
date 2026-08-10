@@ -290,7 +290,6 @@ The update path has a real fallback: an omitted PATCH field keeps the instance's
 - Add tests proving route-owned context is used for persistence, for example that a created contact, coupon, mapping target, or membership belongs to the context organization or workspace.
 - Add tests for optional fields that are allowed to be missing, blank, or null so reviewers can distinguish legitimate optional branches from defensive fallbacks.
 - Add view or middleware tests when changing request-owned context, especially when `request.access_context`, `request.user`, organization membership, or workspace membership is part of the contract.
-- For guidance-only edits, check that Markdown frontmatter remains valid and code fences are balanced.
 
 ## Why It Helps
 

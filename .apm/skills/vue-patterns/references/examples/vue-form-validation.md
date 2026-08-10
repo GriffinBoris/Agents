@@ -491,14 +491,6 @@ Do not map backend fields one at a time unless the form intentionally presents a
 
 ## Verification
 
-- For guidance-only edits, check Markdown fences and rebuild generated guidance:
-
-```bash
-rg -c '^```' .apm/skills/vue-patterns/references/examples/vue-form-validation.md
-git diff --check -- .apm/skills/vue-patterns/references/examples/vue-form-validation.md
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
-
 - For form implementation changes, run the frontend typecheck and lint:
 
 ```bash

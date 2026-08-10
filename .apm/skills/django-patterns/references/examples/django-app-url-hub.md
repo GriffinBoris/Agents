@@ -208,7 +208,6 @@ Most view tests should build URLs with `reverse(...)` and then assert behavior. 
 
 ## Verification
 
-- For guidance-only edits, verify frontmatter, headings, and code fences in the changed markdown file.
 - For URL code changes, run the smallest affected view test target, such as:
 
 ```bash
@@ -218,11 +217,6 @@ pytest backend/item/tests/test_item_views.py::TestItemViews
 - Add or update focused route contract tests when the change affects path prefixes, `app_name`, include ordering, nested namespace composition, or duplicate route exposure.
 - Use `reverse(...)` in tests to verify the route contract and add one exact-path assertion only when the literal URL shape is part of the public API.
 - Run `ruff check` on modified Python URL or test files when code changes accompany the guidance.
-- For guidance build verification, run:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

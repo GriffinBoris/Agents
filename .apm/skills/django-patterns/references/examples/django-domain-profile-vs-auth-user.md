@@ -353,11 +353,6 @@ Contact portal routes should not accept arbitrary `contact_id` when the session 
 - For survey submission changes, run `pytest backend/survey/views/survey_submission/tests/test_views.py` and serializer tests when output or linking rules change.
 - For order changes, run `pytest backend/order/tests/test_order_views.py` and `pytest backend/order/tests/test_serializers.py`.
 - Run `ruff check` on modified Python files when code changes accompany the guidance.
-- For guidance-only edits, inspect this Markdown file for valid frontmatter, balanced code fences, and stale model names. Run the guidance build when practical:
-
-```bash
-apm compile --target all --root /tmp/guidance-examples-build --clean
-```
 
 ## Why It Helps
 

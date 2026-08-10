@@ -22,12 +22,12 @@
 
 - Use Pinia intentionally: keep cross-route shell state in shared shell stores, and keep route or feature state in route-local stores.
 - Put route-only state in the route folder when that state is not reused elsewhere.
-- Keep shared shell-level stores under the shell/application folder instead of a top-level catch-all `src/stores/` directory.
+- Keep shared shell-level stores under the repository's chosen shell or application folder instead of creating a second catch-all store location.
 - Do not name local store files `store.ts`; use a descriptive name such as `contactsStore.ts`, `organizationSettingsStore.ts`, or `workspaceDetailStore.ts`.
 - Shared shell stores should bootstrap cross-route context once, then expose selected organization, current user, or similar shell-level state for route views to consume.
 - Prefer a route-local feature store when three or more route-local components share the same record, loading state, filters, form DTO, or mutation workflow.
 - Let route-local feature stores own business state, data fetching, mutations, shared form state, permission-derived actions, and derived domain state used across sibling components.
-- Let route-local components under `src/views/<route>/components/` import their colocated feature store directly when that removes prop chains and keeps ownership obvious.
+- Let route-local components under the repository's route root import their colocated feature store directly when that removes prop chains and keeps ownership obvious.
 - Keep shared components under `src/components/` store-agnostic and prop-driven even when route-local components are store-aware.
 - Avoid passing route-local records, IDs, loading flags, error strings, and mutation callbacks through multiple component layers when the same route-local store can be consumed directly.
 - Prefer one focused feature store per route or domain workflow instead of one giant app store.
