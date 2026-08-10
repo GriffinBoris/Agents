@@ -34,14 +34,12 @@
 - Keep modal structure consistent with header, body, footer, and accessibility attributes such as `role="dialog"` and `aria-label`.
 - Reuse confirm dialogs for destructive actions.
 - Respect existing responsive breakpoints when building or reusing dialogs.
-- Use shared loading UI before introducing new spinners or progress banners.
-- Use shared loading, error, and other feedback components before inventing local alternatives.
+- Use shared loading, error, and other feedback components before introducing local spinners, progress banners, or other alternatives.
 - Use the repository's shared clipboard helper instead of direct `navigator.clipboard` calls when one exists.
 - Prefer extracting sizable UI blocks into subcomponents so pages stay readable.
 - When a route view or shell view starts mixing several distinct sections, split those sections into local subcomponents so the parent reads like a page outline.
 - Prefer route-local subcomponents under the repository's route root for route-specific panels, summaries, drawers, and list sections before promoting them into shared `src/components/`.
 - When one component contains both desktop and mobile versions of the same UI, prefer small focused subcomponents when that split makes the responsive behavior easier to scan.
-- Prefer shared UI inputs and keep spacing consistent with existing utility classes.
 - Prefer page-composition wrappers for repeated screen structure so route views can read as page outlines instead of piles of low-level surface markup.
 - For repeated resource lists, prefer a shared table or list wrapper that owns headings, loading state, empty state, and pagination slots while feature components supply filters and row markup.
 - Prefer shared PrimeVue-based wrappers for shell and navigation primitives such as menus, drawers, and surfaces instead of repeating custom sidebar markup.
@@ -55,8 +53,7 @@
 - Keep semantic colors scoped to success, warning, and error states.
 - Avoid ad hoc hex colors for surfaces, borders, hover states, and selected states.
 - Promote repeated UI into reusable shared components only when reuse is real; otherwise keep composition view-local.
-- Keep radii restrained and consistent across shells, cards, and controls.
-- Use the same radius family across the application by default unless a component has a clear reason to deviate.
+- Keep radii restrained and use the same radius family across shells, cards, and controls unless a component has a clear reason to deviate.
 - Avoid introducing new global styles when shared utility patterns already exist.
 - Align error and retry UI with shared patterns: shared error messages, warn-toned retry buttons, and minimal centered loading states.
 - Prefer small shared PrimeVue wrappers for repeated control styling.

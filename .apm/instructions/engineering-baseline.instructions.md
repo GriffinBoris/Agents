@@ -8,8 +8,6 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 - Capture the development guidance that applies generally across the repository, regardless of language, framework, or feature area.
 - Keep project-specific layout, tooling, migration notes, and product architecture decisions in `project-architecture` guidance skill.
-- Read this file before work, then read the relevant language, framework, and project guidance packages.
-- Load `ai-generation-patterns` for backend AI or LLM generation work.
 
 ## Living Document Philosophy
 
@@ -24,6 +22,8 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 ### How to Update
 
+- Edit authored `.apm/` sources, not generated `AGENTS.md` files or harness output.
+- Put reusable rules and examples with the shared skill that owns the concern; keep repository-specific guidance in the consuming repository's `project-architecture` skill.
 - Prefer small, incremental edits over large rewrites.
 - Add context explaining why a rule exists, not just what it is.
 - If a rule becomes obsolete, remove or revise it instead of layering exceptions.
@@ -41,8 +41,7 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 ### Match Existing Patterns
 
-- Follow the project's established coding style, naming conventions, and architectural patterns.
-- Reference similar existing code before implementing new features.
+- Before choosing a pattern, inspect the closest comparable code and follow the project's established style, naming, and architecture unless the task deliberately changes that pattern.
 
 ### Tool Use
 
@@ -74,26 +73,20 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 ### Core Philosophy
 
 - **Simplicity, readability, and organization above all else.** Every decision should optimize for code that is easy to understand, intelligently organized, loosely coupled, and minimal in scope.
-- **YAGNI first.** Do not add helpers, constants, abstractions, extension points, or configuration layers until the current requirements actually need them.
+- **YAGNI first.** Every line and abstraction must earn its place. Do not add helpers, constants, extension points, configuration layers, or other structures until the current requirements need them.
 - **Readability over performance.** If a simpler approach is slightly slower but far easier to understand, choose simplicity. Optimize only when there is a measured, real problem.
 - **No speculative defensive programming.** Trust verified internal contracts and avoid broad fallback behavior that hides defects. Handle expected failures at external, user-input, cleanup, and integration boundaries; never silently swallow errors.
-- **No bloat.** Every line, abstraction, and helper must earn its place. Remove anything that does not improve clarity or correctness.
-- **Avoid redundancy.** Remove unnecessary normalization, casting, or fallback logic once you verify the real behavior.
-- **KISS and DRY apply by default.** Keep behavior, data shapes, and control flow as simple as the real requirement allows. Reuse an existing source of truth before introducing a second concept, field, helper, or abstraction that models the same thing.
-- **Prefer direct usage over one-off helpers.** If a helper is only used once and adds no clarity, inline it.
+- **Keep one source of truth.** Reuse existing behavior, data shapes, components, and utilities before introducing a second concept that models the same thing. Remove redundant normalization, casting, null checks, intermediate values, or fallback logic after verifying the real contract.
+- **Prefer direct code over premature reuse.** A repeated line or two can be clearer than indirection. Extract a helper or abstraction when actual reuse or a material clarity improvement justifies it; inline one-off helpers that add no clarity.
 - **Loose coupling.** Components, modules, and services should have clear boundaries and minimal dependency on each other's internals.
 - **Intelligent organization.** Group related things together, separate unrelated things, and make the codebase structure reflect the domain.
 
 ### Follow Existing Architecture
 
-- Reference other views, models, serializers, admin files, apps, and folders to mirror the established architecture.
 - When adding utilities or one-off data tasks, implement them as management commands, dedicated CLI tools, or equivalent first-class entrypoints instead of placing scripts in the repo root.
 - Prefer the clearest verified end state over the smallest possible diff. Use a focused refactor when the current structure is demonstrably the wrong fit, the refactor remains within scope, and relevant behavior can be verified.
+- An in-scope refactor may replace the local implementation completely when that produces the clearest verified design. Do not preserve obsolete structure by layering a half-migrated hybrid of old and new patterns; retain compatibility or staged-migration code only when a demonstrated requirement needs it.
 - Do not layer new logic onto a confusing local design solely to avoid changing it. Rewrite the local unit only when doing so is simpler than a patch and does not create unnecessary migration or regression risk.
-
-### Reuse Existing Components
-
-- Reuse existing classes, methods, and structures to preserve consistency and avoid duplication.
 
 ### Control Flow
 
@@ -102,11 +95,8 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 ### Keep Logic Simple
 
-- Favor straightforward, explicit code even if it means repeating a line or two.
 - Group related steps together so future readers can follow the intent quickly.
-- Do not over-engineer solutions. Avoid unnecessary abstractions, helper functions, or complex patterns when a simple approach works.
 - If the current local design has become harder to understand than the underlying requirement, consider a focused rewrite rather than preserving the complexity with another layer.
-- Do not keep speculative structures around for imagined future reuse. When future requirements become real, refactor then.
 - Be deterministic.
   - If something must be uniquely identified, require the full identity at the API boundary.
   - Do not guess by matching on non-unique fields.
@@ -122,7 +112,6 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
   - Use logical spacing to separate chunks of code.
   - Avoid comments or docstrings unless they explain non-obvious logic, the reason something is done, or a business rule that is not self-evident.
   - Prefer full descriptive variable names and avoid abbreviations unless they are universally clear.
-  - Eliminate redundant null checks and unnecessary intermediate variables.
 - Combine conditions when they lead to the same outcome.
 - Encapsulate fragile third-party integrations behind a small service layer so views, commands, and tasks use a stable interface.
 
@@ -182,7 +171,6 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 ## Code Review Practices
 
 - Verify usage before claiming redundancy.
-- Gather comprehensive context first.
 - Distinguish intentional design from accidental complexity.
 - Document architectural decisions when you discover why something is designed a certain way.
 - Create refactoring plans before implementing non-trivial structural changes.

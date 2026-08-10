@@ -13,7 +13,6 @@ description: Build an evidence-backed map of an unfamiliar feature, component, s
 ### Boundaries
 
 - This skill gathers context; it does not replace a review or rewrite workflow.
-- Use `full-review` for the final comprehensive scoped review workflow.
 
 ## Workflow
 
@@ -43,7 +42,6 @@ description: Build an evidence-backed map of an unfamiliar feature, component, s
 
 - Read the [engineering baseline](../../instructions/engineering-baseline.instructions.md).
 - Read the relevant language and framework guidance skills.
-- Read the consumer-owned `project-architecture` skill when repository-specific structure or behavior matters.
 - Open only examples that match the feature, component, or workflow being mapped.
 
 ## Review Criteria
@@ -87,7 +85,3 @@ description: Build an evidence-backed map of an unfamiliar feature, component, s
 - The investigated scope and depth are explicit.
 - Structure, key components, data flow, integration points, and open questions are covered where applicable.
 - Concrete file references support the context map.
-
-## Maintenance
-
-- If context gathering reveals missing or misplaced guidance, update the relevant `.apm/` source file.

@@ -9,7 +9,6 @@ description: Apply the repository's Python implementation, typing, testing, and 
 
 - Apply these Python-wide conventions to modules, tooling, and tests.
 - Load `django-patterns` for Django, DRF, and Celery work.
-- Load the consuming repository's `project-architecture` skill for local architecture and product decisions.
 
 ## Workflow
 

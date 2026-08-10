@@ -15,8 +15,7 @@ Use the remaining arguments as the command body. If the body is missing, ask for
 When creating the command:
 - reference the native `.apm/` guidance tree, not generated target output
 - prefer named skills under `.apm/skills/` when a workflow should be auto-discovered
-- keep the reusable skill set small and centered on `architecture-audit`, `backend-homogeneity-audit`, `frontend-homogeneity-audit`, and `context-gatherer` unless there is a strong reason to expand it
-- keep review commands aligned with the rule that all verifiable in-scope guidance deviations must be listed
+- reference only the skills the command actually needs; for structured reviews, use `review-workflows` plus the specialized audit or context skills matching the scope
 - keep frontend guidance aligned with the consuming repository's established route root, as defined by `project-architecture` and nearby code; do not impose `src/views/` or `src/features/` universally
 
 If the work reveals a reusable prompt or skill convention, update the authored `.apm/` source rather than generated output.

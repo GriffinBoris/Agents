@@ -10,11 +10,9 @@
 
 ### Single API Client Rule
 
-- Maintain exactly one canonical API client.
-- Do not keep parallel implementations such as `apiService.ts` and `useApiClient.ts` when they serve the same role.
+- Maintain exactly one canonical API client; do not keep parallel implementations such as `apiService.ts` and `useApiClient.ts` when they serve the same role.
 - The canonical client should centralize Axios configuration, CSRF handling, snake_case to camelCase conversion, and typed response handling.
-- Outside of tests, `axios` imports should live only in the canonical API client layer.
-- Put the canonical client in one obvious location, commonly `src/utils/api.ts` or `src/api/client.ts`, and make that location the only runtime Axios owner.
+- Put the canonical client in one obvious location, commonly `src/utils/api.ts` or `src/api/client.ts`. Outside tests, make that layer the only runtime Axios owner.
 - For Django session-backed browser apps, keep `withCredentials`, XSRF cookie/header configuration, and any Django-rendered CSRF token handoff inside the canonical API client setup path.
 - Do not introduce a separate auth API client or local-storage token helper for login, logout, registration, password reset, or invitation acceptance flows.
 
@@ -26,7 +24,7 @@
 - Use `apiClient.setCsrfToken(...)` only at shell/bootstrap boundaries when a CSRF token is read from the rendered page.
 - Keep SSO login URL builders near the canonical API client so they share the same API base URL, but use normal browser navigation for SSO redirects instead of `apiClient.get(...)`.
 - Backend responses should stay snake_case; the client layer converts them to camelCase.
-- Components, composables, stores, and route views should work only with camelCase field names.
+- Components, composables, stores, and route views should work only with camelCase field names and must not pass snake_case keys to the API client.
 - The API client converts POST and PUT JSON request bodies from camelCase to snake_case before sending them to the backend.
 - Query params should be passed to `buildParamsConfig(...)` as camelCase objects so the shared helper can convert them to snake_case.
 - Import query-param helpers with `import { buildParamsConfig } from '@/utils/apiParams'` in domain API modules that accept filters.
@@ -39,7 +37,6 @@
 - Use RESTful URL structures with IDs in the path and nested paths for related resources.
 - Use `FormData` for uploads only when needed.
 - Customize headers for uploads only when the request truly requires it.
-- Use the shared query-param helper when one exists and let the API client handle casing conversion.
 - Define domain API modules as top-level `const` blocks and export them through one unified API object.
 - Order method parameters from most important to least important.
 - Do not set Axios defaults in `main.ts`, stores, or route views; keep transport configuration inside the canonical client.
@@ -71,14 +68,6 @@
 - Prefer descriptive names for data returned by the backend: use `[Thing]Interface` for persisted resources, names such as `[Thing]AvailableOptionsInterface` for option bundles, and `[Action]ResponseInterface` for endpoint-specific responses that do not have a clearer domain noun.
 - Treat returned-data interfaces as API output contracts. Include backend-owned fields such as `id`, timestamps, status, nested output objects, and read-only derived values when the API returns them.
 - Treat request interfaces as create/update/action payload and form contracts. Include only fields the frontend can submit, and omit backend-owned fields such as `id`, `createdTs`, `updatedTs`, and read-only derived values.
-- Existing `[Thing]InputInterface` files do not need churn-only renames, but prefer `[Thing]RequestInterface` when adding a new API request contract.
+- Existing `[Thing]InputInterface` files do not need churn-only renames; prefer `[Thing]RequestInterface` when adding a new API request contract.
 - Do not create a dedicated filter interface by default. Type simple query params inline at the API method boundary and pass them through `buildParamsConfig(...)`; extract a named request interface only when the query shape is reused or complex.
 - Prefer Zod-inferred request types when a form validates the same shape it submits, and colocate `createDefault...Request()` with that schema.
-
-### Casing Discipline
-
-- Frontend code uses camelCase everywhere.
-- Backend API responses stay snake_case and are converted by the API client.
-- Frontend request bodies and query params should be authored in camelCase and converted only at the API boundary.
-- Never pass snake_case keys from components or stores to the API client.
-- Never manually convert casing in components.

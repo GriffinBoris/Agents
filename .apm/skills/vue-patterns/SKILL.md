@@ -8,7 +8,6 @@ description: Apply Vue 3, TypeScript, Pinia, Vue Router, API-client, session-aut
 ## Scope
 
 - Apply these conventions to Vue, TypeScript, Pinia, Vue Router, frontend API, component, form, and frontend-test work.
-- When available, load the consuming repository's `project-architecture` skill before choosing local paths, components, commands, migration behavior, branding, or product decisions.
 
 ## Workflow
 

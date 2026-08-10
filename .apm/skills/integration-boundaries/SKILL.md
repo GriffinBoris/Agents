@@ -9,7 +9,6 @@ description: Apply resource-lifecycle testing and outbound-request security guid
 
 - Keep fragile external-resource ownership replaceable and testable without abstracting ordinary pure code.
 - Treat user-configurable outbound destinations as security boundaries.
-- Load the consuming repository's `project-architecture` skill before choosing project-specific adapters, clients, commands, or test tools.
 
 ## Workflow
 

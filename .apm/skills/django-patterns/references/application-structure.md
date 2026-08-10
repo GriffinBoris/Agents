@@ -25,9 +25,6 @@
 
 ## Module Boundaries
 
-- Do not add new unrelated concerns to an existing catch-all module.
-- If you are touching one concern inside a god module, consider extracting that concern into a dedicated module instead of growing the shared file further.
-- In new projects, start with split modules instead of growing a single `common.py`-style catch-all file.
 - Keep shared access or base-view modules focused on request context, permission checks, and scoped object resolution. Do not place feature-specific queryset builders or domain query shaping there; keep that logic in the owning app's views, models, or app-local query helpers.
 
 ## URL Patterns
@@ -62,5 +59,4 @@
 
 - Follow the repository's established settings inheritance chain instead of inventing ad hoc environment modules.
 - Keep shared configuration in the base settings layer and local or environment-specific overrides in dedicated child settings modules.
-- Production settings must not hardcode secrets.
 - Wildcard imports from base settings are acceptable only inside settings modules.

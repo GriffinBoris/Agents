@@ -105,11 +105,8 @@
 
 ## Backend Coding Style And Error Handling
 
-- Review similar apps before adding new patterns.
-- Use explicit names such as `instance` and `queryset` to match surrounding code.
-- Reuse existing permission checks and common attribute ordering.
+- Use explicit local names such as `instance` and `queryset`, reuse existing permission checks, and follow the common attribute ordering.
 - When class-based views expose shared attributes, prefer the common ordering `constants`, `queryset`, `serializer_class`, `permission_classes`, then methods.
-- Compare new serializers and views against similar existing ones to maintain structural parity.
 - Prefer using `settings.<VAR>` directly instead of copying settings values into local module constants.
 - If the repository uses standardized DRF error responses, raise DRF exceptions from views and keep serializer-level validation inside serializers so the shared error shape stays consistent.
 - Only return custom `{'detail': ...}` payloads when there is a strong reason and it matches surrounding code.

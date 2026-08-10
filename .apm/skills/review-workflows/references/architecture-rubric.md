@@ -2,27 +2,18 @@
 
 ## How To Use This Rubric
 
-1. Select the scope: full repository, one module, or a pull request.
-2. Walk each category using actual source evidence rather than assumptions.
-3. Record findings with specific file paths, line numbers, and concrete examples.
-4. Classify severity as critical, high, medium, or low.
-5. Within the chosen review scope, list every guidance deviation you can verify from the applicable rules and examples, not just a small sample.
-6. Store the final findings in the repository's agreed review output.
+Follow the scope, evidence, applicability-map, coverage, and output contract in [Review Workflows](../SKILL.md), then walk each category that applies to the declared scope. Treat the good and bad signals as diagnostic examples, not numeric pass/fail thresholds.
 
 ## Guidance Coverage Expectation
 
-- A review is not complete until it explicitly reports the guidance deviations found within the reviewed scope.
-- If no guidance deviations are found, say that explicitly.
-- If a guidance file or example was reviewed but produced no findings, keep it in the review map with a `matched` or `not_applicable` verdict.
-- Do not quietly omit lower-severity guidance mismatches that are inside scope; list them, even if you separate them from the highest-priority findings.
-- If time or context limits prevent full guidance coverage, state the uncovered portion as a blind spot.
+- Use this rubric to test architecture concerns; use the applicable owning guidance and established local patterns to decide whether a signal is an actual finding.
 
 ## Category 1: Simplicity, Readability, And Intent Clarity
 
 | # | Principle | Question | Good Signal | Bad Signal |
 |---|---|---|---|---|
-| 1 | Single responsibility per function | Does each function do one thing? | Functions under 30 lines, clear names | Functions over 100 lines, vague names like `process()` |
-| 2 | Shallow control flow | Are conditionals shallow with early returns? | Max 2 levels of nesting | 4+ levels, deeply nested if/else chains |
+| 1 | Single responsibility per function | Does each function have one coherent purpose? | Focused function with a clear name | Function mixes unrelated operations or has a vague name like `process()` |
+| 2 | Shallow control flow | Are conditionals shallow with early returns? | Main path stays obvious | Deeply nested branches obscure the main path |
 | 3 | Self-documenting names | Can you understand the code without comments? | `get_active_subscriptions()` | `get_data()`, `process()`, `handle()` |
 | 4 | No unnecessary comments | Are comments explaining why, not what? | Comments on business rules only | `# increment counter` above `counter += 1` |
 | 5 | Logical spacing | Is code grouped by intent with blank lines? | Related steps grouped together | Wall of code with no visual separation |
@@ -32,7 +23,7 @@
 | # | Principle | Question | Good Signal | Bad Signal |
 |---|---|---|---|---|
 | 6 | Layer separation | Are UI, transport, domain, and persistence separated? | Views call services, services call models | Views contain SQL queries and HTML rendering |
-| 7 | No god modules | Is any file handling 3+ unrelated concerns? | Files under 300 lines, focused names | `common.py` with auth + email + crypto + models |
+| 7 | No god modules | Does each file have a coherent responsibility? | Focused contents and purpose-specific name | `common.py` mixes auth, email, crypto, and models |
 | 8 | Service boundaries | Are third-party integrations behind service layers? | `stripe_service.py` wraps all Stripe calls | Stripe API calls scattered across views |
 | 9 | No I/O in model lifecycle | Are `save()` and `delete()` free of network calls? | Lifecycle methods only do DB work | Stripe, email, or webhook calls in `save()` |
 | 10 | Clear module boundaries | Can you change one module without affecting unrelated ones? | Explicit interfaces between modules | Circular imports, shared mutable state |
@@ -41,9 +32,9 @@
 
 | # | Principle | Question | Good Signal | Bad Signal |
 |---|---|---|---|---|
-| 11 | Justified abstractions | Does every abstraction serve 2+ consumers? | Shared base classes used by 5+ models | `AbstractFactory` with one implementation |
-| 12 | No premature abstraction | Are abstractions born from real duplication? | Helper extracted after the third copy | Abstract class created for the first implementation |
-| 13 | Transparent indirection | Can you trace a call from entry to effect in 3 hops? | View -> service -> model | View -> adapter -> factory -> strategy -> handler -> model |
+| 11 | Justified abstractions | Does each abstraction solve demonstrated reuse or materially clarify a boundary? | Shared contract has real consumers or isolates a meaningful boundary | `AbstractFactory` with one implementation and no clearer boundary |
+| 12 | No premature abstraction | Are abstractions born from an actual need? | Helper removes proven duplication or makes intent clearer | Abstract class created for an imagined future implementation |
+| 13 | Transparent indirection | Can you trace a call from entry to effect without unnecessary layers? | View -> service -> model | View -> adapter -> factory -> strategy -> handler -> model with no proportional benefit |
 | 14 | YAGNI compliance | Is there code for features that do not exist yet? | No unused interfaces or stub methods | Empty methods for future use |
 | 15 | Appropriate generality | Are abstractions at the right level? | `BaseExtractor` for multiple data sources | `BaseAnything` for one thing |
 
@@ -120,7 +111,7 @@
 | # | Principle | Question | Good Signal | Bad Signal |
 |---|---|---|---|---|
 | 49 | No committed secrets | Are credentials external to source code? | Env vars and gitignored local files | Live credentials in committed files |
-| 50 | Authenticated endpoints | Do all API endpoints require auth? | Explicit authentication and permission classes | Empty authentication or permission classes |
+| 50 | Explicit endpoint access | Does every endpoint declare and test its intended access boundary? | Authenticated by default; public access is deliberate and tested | Access is implicit, unintentionally public, or missing boundary tests |
 
 ## Severity Classification
 

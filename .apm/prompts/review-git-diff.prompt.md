@@ -4,13 +4,8 @@ description: Review the current git diff compared to origin/main.
 
 Run `git --no-pager diff origin/main` and review its output.
 
-Review the git diff and familiarize yourself with the changes.
-Gather any additional context you may need to understand the changes.
+Load `review-workflows` and use its shared scope, applicability-map, evidence, findings, and output contract for the diff.
 
-Use `context-gatherer`, `architecture-audit`, `backend-homogeneity-audit`, and `frontend-homogeneity-audit` when they help cover the diff well.
+Use `context-gatherer`, `architecture-audit`, `backend-homogeneity-audit`, or `frontend-homogeneity-audit` only when the diff includes the concern that skill owns.
 
-In your final review:
-- state the diff scope clearly
-- list the guidance and examples reviewed
-- list all verifiable guidance deviations within the diff scope, or explicitly state that none were found
-- report verification status and blind spots
+Gather enough local context to understand every changed area, then return the review using the shared output contract.

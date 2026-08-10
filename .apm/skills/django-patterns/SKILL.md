@@ -9,7 +9,6 @@ description: Apply Django, Django REST Framework, Celery, backend API, authoriza
 
 - Apply these conventions to Django, DRF, Celery, backend API, and backend-test work.
 - Always load `python-conventions` alongside this skill.
-- When available, load the consuming repository's `project-architecture` skill before choosing local base classes, paths, commands, settings, or product behavior.
 
 ## Workflow
 

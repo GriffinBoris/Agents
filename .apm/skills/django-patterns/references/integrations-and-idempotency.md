@@ -7,7 +7,6 @@
 
 ## Services And Shared Helpers
 
-- Wrap external systems behind focused service modules instead of spreading auth, retry, or network details through views and tasks.
 - Centralize session-refresh or retry logic inside one service helper instead of repeating reconnect logic at each call site.
 - Prefer small service classes when multiple operations share the same client or identity context, but do not cache plain Django settings in `__init__` just to avoid repeated `settings.<VAR>` reads.
 - Extract repeated setup or teardown only after multiple call sites clearly share the same boilerplate.

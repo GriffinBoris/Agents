@@ -6,6 +6,7 @@ input: [guidance_doc]
 Audit and correct the codebase against one specific repository guidance document.
 
 Read this guidance document first and treat its central idea as the audit subject.
+Load `review-workflows` and use its shared scope, evidence, findings, and reporting rules throughout the audit.
 
 GUIDANCE_DOC: `${input:guidance_doc}`
 
@@ -19,7 +20,6 @@ Your job:
 2. Do a deep codebase audit for that subject.
    - Search broadly for all related implementations, usages, examples, and near-misses
    - Include every relevant surface for the active stack, such as models, endpoints, services, tasks, stores, routes, components, tests, commands, middleware, and shared utilities
-   - Do not stop at the first example; find all meaningful occurrences
 
 3. Build a compliance report.
    - List files that already follow the guidance
@@ -28,12 +28,7 @@ Your job:
    - For each violation, explain exactly which rule is not being followed and why it matters
 
 4. Update the code to comply with the guidance.
-   - Make the smallest correct changes
-   - Match existing repository patterns
-   - Reuse existing shared helpers, base classes, and structures
-   - Do not add speculative abstractions
-   - Do not add backward-compatibility code unless clearly needed
-   - Do not touch unrelated code
+   - Apply the shared review's simplest appropriate fix direction without changing unrelated code
 
 5. Add or update tests where the guidance implies behavior, scoping, permissions, data-contract shape, routing, lifecycle rules, or other enforceable behavior.
 
@@ -52,10 +47,4 @@ Your job:
    - Tests and verification run
    - Remaining gaps or follow-ups
 
-Important requirements:
-- Follow the relevant baseline, language, framework, and repository conventions
-- Prefer direct, explicit code over defensive or generic code
-- Preserve the architectural boundaries taught by the selected guidance
-- If the repo already has a shared pattern for this subject, use it
-- If no changes are needed in a file, say so only after checking it
-- Be exhaustive, not sample-based
+If no changes are needed in an audited file, record that result only after checking it. Preserve the selected guidance's purpose and architectural boundaries while applying the repository's established pattern.

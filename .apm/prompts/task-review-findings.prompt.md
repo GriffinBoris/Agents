@@ -19,20 +19,12 @@ Artifact rules:
 - require `docs/task-review/<scope-slug>/task-review-context.md`
 - create or update `docs/task-review/<scope-slug>/task-review-findings.md`
 
-Read these before judging the scope:
+Load `review-workflows` and follow its shared scope, applicability-map, evidence, findings, and output contract. Read these workflow inputs and supporting review references before judging the scope:
 - `docs/task-review/<scope-slug>/task-review-context.md`
-- `.apm/instructions/engineering-baseline.instructions.md`
-- relevant language, framework, and project guidance
-- matching examples under the relevant guidance skill's `references/examples/` directory
 - `.apm/skills/review-workflows/references/architecture-rubric.md`
 - `.apm/skills/review-workflows/references/antipatterns.md`
 
-Use the full-review mindset:
-- inspect every in-scope file or changed area
-- compare the scoped code to the relevant guidance rules
-- compare the scoped code to the matching examples captured in the context file
-- compare structure and organization to the closest real repo patterns
-- list every verifiable in-scope deviation, not just a curated sample
+Inspect every scoped file or changed area and use the matching examples captured in the context artifact as the initial applicability set. Add another example only when the review exposes a concrete concern the context artifact missed.
 
 Use these audits when relevant:
 - `architecture-audit`
@@ -47,8 +39,6 @@ Use these audits when relevant:
 - example files reviewed
 - review map summary for the scoped files or areas
 - findings ordered by severity
-- every verified in-scope guidance deviation
-- every scoped anti-guided or example-divergent shape you can verify
 - issue ids such as `TR-001`
 - for each issue:
   - severity
@@ -70,7 +60,6 @@ Use these issue buckets when relevant:
 - tooling-and-metadata-gaps
 
 If no verified issues are found, say so explicitly.
-Do not omit lower-severity in-scope deviations because higher-severity findings exist.
 
 Keep the artifact under `docs/task-review/` as a temporary working review document.
 
