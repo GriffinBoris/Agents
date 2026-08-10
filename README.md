@@ -4,7 +4,15 @@ Shared engineering guidance for Codex, Claude Code, OpenCode, Copilot, and Gemin
 
 ## Use it in a project
 
-Install APM **v0.28.0+**, then keep repository-only guidance in a local skill before installing the shared package. Create `.apm/skills/project-architecture/SKILL.md` with at least:
+Install or upgrade to APM **v0.28.0+** and verify the active binary before continuing:
+
+```bash
+curl -sSL https://aka.ms/apm-unix | sh
+hash -r
+apm --version
+```
+
+Then keep repository-only guidance in a local skill before installing the shared package. Create `.apm/skills/project-architecture/SKILL.md` with at least:
 
 ```markdown
 ---
@@ -27,15 +35,14 @@ Append the generated-output ignore snippet once; do not replace the project's ex
 curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/gitignore.apm >> .gitignore
 ```
 
-Initialize a new consumer, install the pinned guidance package, and compile the harness outputs:
+Install the pinned guidance package and compile the harness outputs:
 
 ```bash
-apm init --yes --target claude,codex,opencode
 apm install GriffinBoris/Agents#v0.1.0 --target claude,codex,opencode
 apm compile --target claude,codex,opencode
 ```
 
-Skip `apm init` when the repository already has an `apm.yml`. Validate the local guidance and installed package after installation:
+`apm install` creates `apm.yml` when needed or adds the dependency to an existing manifest. Validate the local guidance and installed package after installation:
 
 ```bash
 apm compile --validate --local-only
