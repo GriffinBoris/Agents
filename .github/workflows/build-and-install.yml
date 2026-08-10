@@ -60,11 +60,13 @@ jobs:
 
           test -f .claude/skills/django-patterns/SKILL.md
           test -f .claude/skills/integration-boundaries/SKILL.md
+          test -f .claude/skills/ste-writing/references/plain-technical-writing.md
           test -f .claude/rules/engineering-baseline.md
           grep -Fq 'Never commit secrets or credentials.' .claude/rules/engineering-baseline.md
           test -f .claude/commands/full-review.md
           test -f .agents/skills/django-patterns/SKILL.md
           test -f .agents/skills/integration-boundaries/SKILL.md
+          test -f .agents/skills/ste-writing/references/strict-controlled-writing.md
           test -f .agents/skills/django-patterns/references/examples/django-view.md
           test -f .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
           grep -Fq '# Agent Guidance' .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
@@ -80,5 +82,6 @@ jobs:
           grep -Fq '# Agent Guidance' AGENTS.md
           grep -Fq 'Never commit secrets or credentials.' AGENTS.md
           grep -Fq 'Load `integration-boundaries`' AGENTS.md
+          grep -Fq 'Load `ste-writing`' AGENTS.md
           ! grep -Fq '# Django Guidance' AGENTS.md
           ! grep -Fq 'agents/guidance/' AGENTS.md

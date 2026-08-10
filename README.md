@@ -119,7 +119,7 @@ Review the parity map, then run `apm compile --target claude,codex,opencode`, `a
 | Change | Source |
 | --- | --- |
 | Always-on cross-stack guidance | `.apm/instructions/engineering-baseline.instructions.md` |
-| Shared Python, Django, Vue, or AI-generation conventions | `.apm/skills/<skill-name>/SKILL.md` |
+| Shared Python, Django, Vue, AI-generation, or technical-writing conventions | `.apm/skills/<skill-name>/SKILL.md` |
 | Long examples and review references | The owning skill's `references/` directory |
 | Reusable commands | `.apm/prompts/` |
 | Consumer Task and ignore templates | `templates/` |
@@ -153,6 +153,6 @@ apm audit
 
 ## Guidance loading
 
-The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django and Vue guidance use small routing skills that load detailed references and examples only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
+The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django, Vue, and technical-writing guidance use small routing skills that load detailed references and examples only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
 
 The immutable pre-APM aggregate remains at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`) only to distinguish former shared content from repository-owned guidance during a legacy port.

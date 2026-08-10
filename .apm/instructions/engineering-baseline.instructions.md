@@ -72,6 +72,16 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 - Report verification performed and not performed. If no verifiable deviations were found, say so explicitly.
 - Summaries are fine only when they are paired with a complete findings section.
 
+### Technical Communication
+
+- Write technical prose in plain, direct language. Prefer concrete nouns and verbs over filler, vague transitions, nominalizations, and promotional language.
+- Use one term consistently for each concept. Do not rotate among synonyms when readers could infer different meanings.
+- Prefer active voice when the actor matters. Put conditions before the actions they control, and give each procedural step one primary action.
+- Keep each sentence and paragraph focused. Use numbered vertical lists for ordered procedures.
+- Remove filler introductions, recaps, and conclusions that do not help the reader or add information.
+- Preserve every fact, condition, scope qualifier, identifier, command, unit, quotation, and error string when rewriting for clarity.
+- Match the writing system to the artifact. Ordinary engineering prose should stay natural; strict controlled-language rules belong in procedures, runbooks, safety text, or explicitly requested rewrites.
+
 ## General Principles
 
 ### Core Philosophy
@@ -197,6 +207,7 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 - Load `django-patterns` for Django, DRF, Celery, backend API, authorization, serializer, model, migration, or backend-test work.
 - Load `vue-patterns` for Vue, TypeScript, Pinia, frontend API, routing, form, component, or frontend-test work.
 - Load `ai-generation-patterns` for backend AI or LLM generation workflows.
+- Load `ste-writing` when writing, rewriting, or reviewing technical prose under a plain-language or controlled-language requirement.
 - Load `integration-boundaries` when code owns external-resource lifecycles or sends requests to user-configurable destinations.
 - Load the consuming repository's `project-architecture` skill for repository-specific structure, commands, architecture, and product conventions.
 - Load `migration-baseline` only when porting repository-owned or locally modified guidance from a legacy `agents/` or `AGENTS.md` layout into the consumer's local APM guidance.
