@@ -199,6 +199,17 @@ export const useAppShellStore = defineStore("appShell", () => {
   const hasOrganizations = computed(() => organizations.value.length > 0);
   const needsOrganizationOnboarding = computed(() => isAuthenticated.value && hasInitialized.value && !hasOrganizations.value);
 
+  function getSelectedWorkspaceRouteParams() {
+    if (!selectedOrganizationId.value || !selectedWorkspaceId.value) {
+      return null;
+    }
+
+    return {
+      organizationId: selectedOrganizationId.value,
+      workspaceId: selectedWorkspaceId.value,
+    };
+  }
+
   function can(permission: AppPermission, scope?: AccessScope) {
     if (scope && "workspaceId" in scope) {
       if (!scope.workspaceId) {
@@ -312,6 +323,7 @@ export const useAppShellStore = defineStore("appShell", () => {
     workspaces,
     currentUser,
     errorMessage,
+    getSelectedWorkspaceRouteParams,
     hasInitialized,
     initialize,
     isAuthenticated,

@@ -151,7 +151,7 @@ Protected workspace routes set `requiresAuth: true`. Routes that need organizati
 Use [Vue Auth-Aware Shell Example](vue-auth-shell.md) for the shell-store and bootstrap implementation. The route guard should depend on a narrow store contract:
 
 - `hasInitialized`, `isLoading`, and `isAuthenticated` expose bootstrap state.
-- `needsOrganizationOnboarding` and permission helpers expose route-admission decisions derived from the backend payload.
+- `needsOrganizationOnboarding`, `getSelectedWorkspaceRouteParams()`, and permission helpers expose route-admission decisions derived from the backend payload.
 - `initialize()` is idempotent and loads the current browser session once.
 - `resetState()` clears session-derived state after logout or before initializing a newly authenticated session.
 - `reload()` refreshes session-preserving access changes such as invitation acceptance.
