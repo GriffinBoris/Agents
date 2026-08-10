@@ -4,20 +4,70 @@ Shared engineering guidance for Codex, Claude Code, OpenCode, Copilot, and Gemin
 
 ## Use it in a project
 
-Install APM **v0.28.0+** and [Task](https://taskfile.dev), then keep repository-only guidance in a local skill before installing the shared package:
+Install APM **v0.28.0+**, then keep repository-only guidance in a local skill before installing the shared package. Create `.apm/skills/project-architecture/SKILL.md` with at least:
 
-```text
-.apm/skills/project-architecture/SKILL.md
+```markdown
+---
+name: project-architecture
+description: Repository-specific architecture, commands, tooling, and conventions. Use whenever working in this repository.
+---
+
+# Project Architecture
+
+Document the repository's structure, commands, tooling, and local conventions here.
 ```
 
-Give that file Agent Skills frontmatter with `name: project-architecture`, followed by the project's architecture, commands, and tooling guidance. This prevents package upgrades from overwriting project-specific rules.
+This keeps package upgrades from overwriting project-specific rules.
 
-Download the two ready-made templates from a tagged release. Append the ignore snippet once; do not replace the project's existing `.gitignore`. If the project already keeps hand-authored files in one of the listed generated paths, move that guidance into `.apm/` or omit the conflicting ignore line.
+### Install directly with APM
+
+Append the generated-output ignore snippet once; do not replace the project's existing `.gitignore`. If the project already keeps hand-authored files in one of the listed generated paths, move that guidance into `.apm/` or omit the conflicting ignore line.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/gitignore.apm >> .gitignore
+```
+
+Initialize a new consumer, install the pinned guidance package, and compile the harness outputs:
+
+```bash
+apm init --yes --target claude,codex,opencode
+apm install GriffinBoris/Agents#v0.1.0 --target claude,codex,opencode
+apm compile --target claude,codex,opencode
+```
+
+Skip `apm init` when the repository already has an `apm.yml`. Validate the local guidance and installed package after installation:
+
+```bash
+apm compile --validate --local-only
+apm audit
+```
+
+Generated `AGENTS.md`, harness directories, and `apm_modules/` stay ignored. Commit the consumer's `apm.yml`, `apm.lock.yaml`, and local `.apm/skills/project-architecture/` source instead.
+
+To upgrade, install another reviewed tag and compile again:
+
+```bash
+apm install GriffinBoris/Agents#v0.2.0 --target claude,codex,opencode
+apm compile --target claude,codex,opencode
+```
+
+There is no separate pull or merge command. `apm install` resolves the chosen package version and `apm compile` rebuilds generated harness files.
+
+For a private package, authenticate with a GitHub token that has repository read access before installing:
+
+```bash
+export GITHUB_APM_PAT="<token>"
+apm install GriffinBoris/Agents#v0.1.0 --target claude,codex,opencode
+apm compile --target claude,codex,opencode
+```
+
+### Optional Task wrapper
+
+If the project uses [Task](https://taskfile.dev), download the ready-made wrapper from the same tagged release:
 
 ```bash
 mkdir -p tasks
 curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/tasks/ai.yml -o tasks/ai.yml
-curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/gitignore.apm >> .gitignore
 ```
 
 Add the Task namespace to the project's `Taskfile.yml`:
@@ -29,14 +79,7 @@ includes:
     dir: .
 ```
 
-Then run:
-
-```bash
-task ai:install
-task ai:check
-```
-
-The included task file provides these commands:
+Then run `task ai:install` and `task ai:check`. The wrapper provides:
 
 | Command | Purpose |
 | --- | --- |
@@ -45,22 +88,11 @@ The included task file provides these commands:
 | `task ai:check` | Validate local guidance and detect installed-package drift. |
 | `task ai:setup` | Alias for `install`. |
 
-Generated `AGENTS.md`, harness directories, and `apm_modules/` stay ignored. Commit the consumer's `apm.yml`, `apm.lock.yaml`, and local `.apm/skills/project-architecture/` source instead.
-
 The template defaults to Codex, Claude Code, and OpenCode. Override its package or targets when needed:
 
 ```bash
 AGENTS_PACKAGE=GriffinBoris/Agents#v0.2.0 task ai:install  # upgrade to a reviewed release
 APM_TARGETS=claude,codex,opencode,copilot,gemini task ai:install
-```
-
-There is no separate pull or merge command. `task ai:install` resolves the chosen package version, recompiles generated files, and `task ai:check` verifies the result.
-
-For a private package, authenticate with a GitHub token that has repository read access:
-
-```bash
-export GITHUB_APM_PAT="<token>"
-task ai:install
 ```
 
 ### Migrate an older repository
@@ -73,7 +105,7 @@ After installing the package, ask the agent:
 Use migration-baseline to port every repository-owned or locally changed rule from the legacy agents/ sources and preserved AGENTS.md into .apm/skills/project-architecture/SKILL.md and linked references. Do not copy shared guidance or delete the legacy files. Produce a complete parity map.
 ```
 
-Review the parity map, then run `task ai:generate` and `task ai:check`. Remove the legacy layout only after every old section has a current shared owner or a verified local destination.
+Review the parity map, then run `apm compile --target claude,codex,opencode`, `apm compile --validate --local-only`, and `apm audit` (or the equivalent Task wrappers). Remove the legacy layout only after every old section has a current shared owner or a verified local destination.
 
 ## Edit this package
 
