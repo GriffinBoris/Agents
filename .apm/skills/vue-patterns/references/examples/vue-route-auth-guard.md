@@ -31,6 +31,7 @@ declare module "vue-router" {
     guestOnly?: boolean;
     requiredPermissions?: AppPermission[];
     requiresAuth?: boolean;
+    skipAppShell?: boolean;
     skipShellBootstrap?: boolean;
     title?: string;
   }
@@ -65,7 +66,7 @@ export const guestRoutes: RouteRecordRaw[] = [
     path: "/survey/:token",
     name: "public-survey",
     component: () => import("@/views/publicSurvey/PublicSurveyView.vue"),
-    meta: { skipShellBootstrap: true, title: "Survey" },
+    meta: { skipAppShell: true, skipShellBootstrap: true, title: "Survey" },
   },
 ];
 ```
@@ -143,146 +144,19 @@ export const workspaceRoutes: RouteRecordRaw = {
 };
 ```
 
-Protected workspace routes set `requiresAuth: true`. Routes that need organization or workspace access also set `requiredPermissions`. Guest auth screens set `guestOnly: true`. Public routes that should not touch the operator shell set `skipShellBootstrap: true`.
+Protected workspace routes set `requiresAuth: true`. Routes that need organization or workspace access also set `requiredPermissions`. Guest auth screens set `guestOnly: true`. Truly public routes that bypass all session admission set `skipShellBootstrap: true`; pair it with `skipAppShell: true` when they must not mount authenticated application chrome.
 
-### Shell Store Owns Bootstrap State
+### Shell Store Contract
 
-```typescript
-// frontend/src/views/application/appShellStore.ts
+Use [Vue Auth-Aware Shell Example](vue-auth-shell.md) for the shell-store and bootstrap implementation. The route guard should depend on a narrow store contract:
 
-export const useAppShellStore = defineStore("appShell", () => {
-  const access = ref<AppAccessInterface>({
-    workspacePermissions: {},
-    permissions: [],
-    organizationPermissions: {},
-  });
-  const hasInitialized = ref(false);
-  const isLoading = ref(false);
-  const errorMessage = ref("");
-  const isAuthenticated = ref(false);
-  const currentUser = ref<AuthUserInterface | null>(null);
-  const organizations = ref<OrganizationInterface[]>([]);
-  const selectedOrganizationId = ref<number | null>(null);
-  const workspaces = ref<WorkspaceInterface[]>([]);
-  const selectedWorkspaceId = ref<number | null>(null);
+- `hasInitialized`, `isLoading`, and `isAuthenticated` expose bootstrap state.
+- `needsOrganizationOnboarding` and permission helpers expose route-admission decisions derived from the backend payload.
+- `initialize()` is idempotent and loads the current browser session once.
+- `resetState()` clears session-derived state after logout or before initializing a newly authenticated session.
+- `reload()` refreshes session-preserving access changes such as invitation acceptance.
 
-  const hasOrganizations = computed(() => organizations.value.length > 0);
-  const needsOrganizationOnboarding = computed(() => isAuthenticated.value && hasInitialized.value && !hasOrganizations.value);
-
-  function can(permission: AppPermission, scope?: AccessScope) {
-    if (scope && "workspaceId" in scope) {
-      if (!scope.workspaceId) {
-        return false;
-      }
-
-      const workspace = getWorkspaceById(scope.workspaceId);
-      if (!workspace) {
-        return false;
-      }
-
-      return getWorkspacePermissions(workspace.id).includes(permission) || getOrganizationPermissions(workspace.organization).includes(permission);
-    }
-
-    if (scope && "organizationId" in scope) {
-      if (!scope.organizationId) {
-        return false;
-      }
-
-      return getOrganizationPermissions(scope.organizationId).includes(permission);
-    }
-
-    return access.value.permissions.includes(permission);
-  }
-
-  function resetState() {
-    hasInitialized.value = false;
-    isLoading.value = false;
-    errorMessage.value = "";
-    isAuthenticated.value = false;
-    currentUser.value = null;
-    access.value = {
-      workspacePermissions: {},
-      permissions: [],
-      organizationPermissions: {},
-    };
-    organizations.value = [];
-    selectedOrganizationId.value = null;
-    workspaces.value = [];
-    selectedWorkspaceId.value = null;
-  }
-
-  async function loadBootstrapState() {
-    const bootstrap = await api.auth.bootstrap();
-
-    access.value = bootstrap.access;
-    isAuthenticated.value = bootstrap.isAuthenticated;
-    currentUser.value = bootstrap.user;
-    organizations.value = bootstrap.organizations;
-    selectedOrganizationId.value = bootstrap.currentOrganizationId;
-    workspaces.value = bootstrap.workspaces;
-    selectedWorkspaceId.value = bootstrap.currentWorkspaceId;
-    hasInitialized.value = true;
-
-    await selectFirstAvailableWorkspace();
-
-    return bootstrap;
-  }
-
-  async function initialize() {
-    if (isLoading.value || hasInitialized.value) {
-      return;
-    }
-
-    isLoading.value = true;
-    errorMessage.value = "";
-
-    try {
-      await loadBootstrapState();
-    } catch (error) {
-      errorMessage.value = "Unable to load the workspace shell.";
-      throw error;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  async function reload() {
-    if (isLoading.value) {
-      return;
-    }
-
-    isLoading.value = true;
-    errorMessage.value = "";
-
-    try {
-      await loadBootstrapState();
-    } catch (error) {
-      errorMessage.value = "Unable to load the workspace shell.";
-      throw error;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  return {
-    can,
-    currentUser,
-    errorMessage,
-    getSelectedWorkspaceRouteParams,
-    hasInitialized,
-    initialize,
-    isAuthenticated,
-    isLoading,
-    needsOrganizationOnboarding,
-    reload,
-    resetState,
-    selectedWorkspaceId,
-    selectedOrganizationId,
-  };
-});
-```
-
-The router guard calls `initialize()`. Route views, dialogs, and route-local stores read shell state, but they do not call `api.auth.bootstrap()` or initialize the shell for themselves. `reload()` exists for session-preserving changes, such as accepting an invitation into another organization, where the store should refresh from the backend without clearing every field first.
+Normal route views, dialogs, and route-local stores read shell state but do not call the bootstrap endpoint or initialize the shell themselves.
 
 ### Permission Redirect Helper
 
@@ -347,17 +221,20 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const appShellStore = useAppShellStore();
-  const shouldInitializeShell = !to.meta.skipShellBootstrap;
 
-  if (shouldInitializeShell && !appShellStore.hasInitialized && !appShellStore.isLoading) {
+  if (to.meta.skipShellBootstrap) {
+    return true;
+  }
+
+  if (!appShellStore.hasInitialized) {
     try {
       await appShellStore.initialize();
     } catch {
-      return true;
+      return false;
     }
   }
 
-  if (to.meta.requiresAuth && appShellStore.hasInitialized && !appShellStore.isAuthenticated) {
+  if (to.meta.requiresAuth && !appShellStore.isAuthenticated) {
     return { name: "login", query: { redirect: to.fullPath } };
   }
 
@@ -389,89 +266,44 @@ router.beforeEach(async (to) => {
 export default router;
 ```
 
-The guard initializes shell state once for every route that has not opted out. Protected route checks wait for `hasInitialized` so a page does not render before the browser session has been resolved. Anonymous protected-route visits are redirected to login with `redirect: to.fullPath`; guest-only routes honor that redirect after login only when it is app-local.
+The guard admits explicitly public routes without touching shell state. Every other route waits for the shared initialization promise, so concurrent navigations do not bypass unresolved session state. If bootstrap fails, abort navigation and let the shell's existing error or retry UI handle the failure; never admit a protected route with unknown session state. Anonymous protected-route visits are redirected to login with `redirect: to.fullPath`; guest-only routes honor that redirect after login only when it is app-local.
 
-### Session-Changing Flows Reset Or Rebootstrap
+### Session Changes Use The Shell Lifecycle
 
-```vue
-<!-- frontend/src/views/login/LoginView.vue -->
-
-<script setup lang="ts">
-  const route = useRoute();
-  const router = useRouter();
-  const appShellStore = useAppShellStore();
-
-  async function submitLogin() {
-    if (!(await validate())) {
-      return;
-    }
-
-    await api.auth.login(formValues);
-    appShellStore.resetState();
-    await appShellStore.initialize();
-
-    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : null;
-    if (redirect && redirect.startsWith("/")) {
-      await router.replace(redirect);
-      return;
-    }
-
-    await router.replace({ name: "workspaces-list" });
-  }
-</script>
-```
-
-```typescript
-// frontend/src/views/application/ApplicationShellView.vue
-
-async function handleSidebarFooterAction(action: "logout" | "settings" | "theme" | "workspace") {
-  if (action !== "logout") {
-    return;
-  }
-
-  await api.auth.logout();
-  appShellStore.resetState();
-  await router.replace({ name: "login", query: { redirect: route.fullPath } });
-}
-```
-
-Login and registration create a new authenticated session, so reset stale shell state and initialize from the backend before redirecting into the workspace. Logout destroys the session, so reset immediately before navigating to a guest route. Invitation acceptance or similar flows that add access to an existing session should call `appShellStore.reload()` before sending the user to a workspace that depends on the new access payload.
+The guard owns route admission, not session mutation. Use [Vue Auth-Aware Shell Example](vue-auth-shell.md) for login, registration, invitation acceptance, and logout. Those flows reset and initialize after creating a session, reload after session-preserving access changes, and reset after destroying a session before the guard admits the next route.
 
 ## Things To Notice
 
 - Route access rules live in router metadata instead of being re-implemented inside page components.
 - One global guard owns bootstrap timing, anonymous redirects, guest-only redirects, onboarding redirects, and permission redirects.
-- `skipShellBootstrap` is explicit and rare. It belongs on public flows that should not initialize organization, workspace, or operator shell context.
+- `skipShellBootstrap` is explicit and rare. It bypasses session admission for truly public flows, and `skipAppShell` separately keeps authenticated application chrome from mounting.
 - `requiredPermissions` is an array because a route may require more than one backend-provided permission.
 - Permission redirects use `getRouteAccessRedirect(...)`, not hand-built role checks in the page.
 - The app preserves the intended destination for anonymous users with `query.redirect`, then only honors local paths after login.
-- Session-changing flows refresh shell state from the backend instead of manually assigning `isAuthenticated`, `currentUser`, organization arrays, workspace arrays, or permission arrays.
 - Route-local stores may call `appShellStore.can(...)` for feature actions, but they do not own top-level route admission or shell bootstrap.
 
 ## Rules To Follow
 
-- Keep session bootstrap in `frontend/src/views/application/appShellStore.ts`.
-- Keep route access intent in typed route metadata: `requiresAuth`, `guestOnly`, `skipShellBootstrap`, and `requiredPermissions`.
+- Keep session bootstrap in the repository's shared shell store.
+- Keep route access and shell intent in typed route metadata: `requiresAuth`, `guestOnly`, `requiredPermissions`, `skipShellBootstrap`, `skipAppShell`, and `fullscreenShell`.
 - Keep exactly one global `router.beforeEach(...)` responsible for auth and permission redirects.
-- Bootstrap the shell before protected routes render unless the route explicitly sets `skipShellBootstrap`.
+- Await shell bootstrap before non-public routes render; abort navigation when bootstrap fails instead of admitting a route with unknown session state.
 - Redirect anonymous protected-route visits to login with `query.redirect: to.fullPath`.
 - Redirect authenticated users away from `guestOnly` routes, honoring only app-local redirect paths.
 - Enforce route permissions through `getRouteAccessRedirect(...)` and `appShellStore.can(...)`; do not duplicate permission logic inside route views.
 - Do not call `api.auth.bootstrap()` from route views, dialogs, public views, or route-local feature stores.
-- Do not call `appShellStore.initialize()` from normal route views as a workaround for missing route metadata. Session-changing auth views may reset and initialize after login or registration.
-- Mark truly public routes with `skipShellBootstrap: true`; do not leave them implicit.
-- Reset and re-bootstrap shell state after login, registration, or another flow that creates a new authenticated session.
-- Reset shell state immediately after logout.
-- Re-bootstrap or reload shell state after session-preserving access changes, such as accepting an invitation.
+- Do not call `appShellStore.initialize()` from normal route views as a workaround for missing route metadata.
+- Mark truly public routes with `skipShellBootstrap: true`; pair it with `skipAppShell: true` when they should not mount authenticated chrome. Do not combine `skipShellBootstrap` with protected or permission-gated metadata.
 - Keep frontend redirects deterministic. Do not guess a destination from display labels, previous component state, or untrusted external URLs.
 
 ## Refactor Signals
 
 - A non-auth route component imports `api.auth.bootstrap`, calls a session-status endpoint, or calls `appShellStore.initialize()`.
 - A route component calls `router.replace({ name: "login" })` because the user is anonymous.
-- A login, register, logout, or invitation flow manually assigns shell fields instead of calling `resetState()`, `initialize()`, or `reload()`.
 - A protected route is missing `requiresAuth: true` or a permission-gated route is missing `requiredPermissions`.
 - A public route loads organization or workspace shell context even though it only needs a token or public payload.
+- A route combines `skipShellBootstrap` with `requiresAuth` or `requiredPermissions`, leaving admission dependent on stale or missing shell state.
+- A bootstrap failure admits navigation while authentication and permissions are unresolved.
 - Several routes repeat the same permission redirect branch instead of using `getRouteAccessRedirect(...)`.
 - A route-local store decides whether the route is allowed to render instead of exposing local action permissions.
 - Route metadata uses ad hoc keys such as `auth`, `public`, `roles`, or `permissions` instead of the typed contract.
@@ -493,13 +325,13 @@ cd frontend
 npm run lint
 ```
 
-- Add or update focused route-guard tests when behavior changes. The repository uses `frontend/tests/route-auth-guard-guidance.test.ts` to assert that the global guard owns redirects, route metadata expresses access, and route views do not bootstrap auth themselves.
-- Add or update e2e coverage for public routes that skip shell bootstrap. The public survey flow should prove the survey route renders without mounting authenticated shell controls.
+- Add or update focused route-guard tests when behavior changes. Assert that the global guard owns redirects, route metadata expresses access, bootstrap failure aborts navigation, and route views do not bootstrap auth themselves.
+- Add or update e2e coverage for public routes that skip shell bootstrap. A representative public route should render without mounting authenticated shell controls.
 - Use `rg` as a structural check before finishing route-auth work:
 
 ```bash
-rg "api\\.auth\\.bootstrap|appShellStore\\.initialize\\(" frontend/src/views
-rg "requiresAuth|guestOnly|skipShellBootstrap|requiredPermissions" frontend/src/router
+rg "api\\.auth\\.bootstrap|appShellStore\\.initialize\\(" frontend/src
+rg "requiresAuth|guestOnly|requiredPermissions|skipShellBootstrap|skipAppShell|fullscreenShell" frontend/src/router
 rg "router\\.beforeEach" frontend/src/router
 ```
 
@@ -511,5 +343,4 @@ rg "router\\.beforeEach" frontend/src/router
 - Protected pages do not render before the app knows whether the browser session is authenticated.
 - Public pages stay lightweight and avoid loading unrelated operator shell state.
 - Permission behavior is auditable in route records and one helper instead of scattered through pages.
-- Login, logout, registration, and invitation flows cannot leave stale organization, workspace, or permission state behind.
 - New routes need metadata and normal shell-store reads, not custom bootstrap and redirect plumbing.

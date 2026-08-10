@@ -40,7 +40,9 @@
 - For session-backed apps, use the auth-aware shell example as the baseline for bootstrap state, login, logout, guest-only routes, public routes, and permission redirects.
 - Keep session bootstrap in the repository's shared shell store, and let the router guard initialize that store once before protected routes render.
 - Route views, dialogs, and route-local stores must not call the auth bootstrap endpoint directly. They should read the shared shell store instead.
-- Express route access with route metadata such as `requiresAuth`, `guestOnly`, `skipShellBootstrap`, and `requiredPermissions` instead of route-local redirect logic.
+- Express route access with typed metadata such as `requiresAuth`, `guestOnly`, `skipShellBootstrap`, and `requiredPermissions` instead of route-local redirect logic. Keep shell-layout flags such as `skipAppShell` and `fullscreenShell` in the same typed contract.
+- Reserve `skipShellBootstrap` for truly public routes that bypass session admission. Pair it with `skipAppShell` when authenticated application chrome must not mount, and never combine it with protected or permission-gated metadata.
+- Await the shared shell initialization promise before admitting non-public routes. If bootstrap fails, abort navigation or use the repository's established shell error route; never fail open with unresolved authentication or permissions.
 - Reset and re-bootstrap the shell store after any frontend flow that creates a new authenticated session, and reset shell state immediately after logout.
 - For session-backed SSO, route provider sign-in buttons to backend SSO login URLs and let the backend complete the provider callback, create the Django session, and redirect back to the SPA.
 - Preserve the intended destination as a relative redirect path in the SSO login URL, and let the backend reject unsafe redirect values.

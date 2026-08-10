@@ -188,6 +188,7 @@ export const useAppShellStore = defineStore("appShell", () => {
   const selectedWorkspaceId = ref<number | null>(null);
   const isWorkspacesLoading = ref(false);
   const workspacesErrorMessage = ref("");
+  let initializationPromise: Promise<void> | null = null;
 
   const selectedOrganization = computed(() => {
     return organizations.value.find((organization) => organization.id === selectedOrganizationId.value) ?? null;
@@ -261,20 +262,30 @@ export const useAppShellStore = defineStore("appShell", () => {
   }
 
   async function initialize() {
-    if (isLoading.value || hasInitialized.value) {
+    if (hasInitialized.value) {
       return;
     }
 
-    isLoading.value = true;
-    errorMessage.value = "";
+    if (!initializationPromise) {
+      initializationPromise = (async () => {
+        isLoading.value = true;
+        errorMessage.value = "";
+
+        try {
+          await loadBootstrapState();
+        } catch (error) {
+          errorMessage.value = "Unable to load the workspace shell.";
+          throw error;
+        } finally {
+          isLoading.value = false;
+        }
+      })();
+    }
 
     try {
-      await loadBootstrapState();
-    } catch (error) {
-      errorMessage.value = "Unable to load the workspace shell.";
-      throw error;
+      await initializationPromise;
     } finally {
-      isLoading.value = false;
+      initializationPromise = null;
     }
   }
 
@@ -288,6 +299,9 @@ export const useAppShellStore = defineStore("appShell", () => {
 
     try {
       await loadBootstrapState();
+    } catch (error) {
+      errorMessage.value = "Unable to load the workspace shell.";
+      throw error;
     } finally {
       isLoading.value = false;
     }
@@ -318,134 +332,13 @@ The shell store owns the authenticated session view of the world. It should load
 
 Use `initialize()` for first route-guard bootstrap, `resetState()` plus `initialize()` after login or registration creates a new session, `reload()` after session-preserving access changes such as invitation acceptance, and `resetState()` immediately after logout.
 
-### Route Metadata
+### Route Admission Uses The Shared Guard
 
-```typescript
-// frontend/src/router/routeMeta.d.ts
+Define typed route metadata for access and shell selection, including `requiresAuth`, `guestOnly`, `requiredPermissions`, `skipShellBootstrap`, `skipAppShell`, and `fullscreenShell`. Enforce route admission in one global router guard backed by the shell store.
 
-import type { AppPermission } from "@/views/application/permissions";
+Invitation acceptance should remain accessible to anonymous invited users and signed-in users. Do not mark it guest-only or skip shell bootstrap when accepting it can change the current session's access.
 
-declare module "vue-router" {
-  interface RouteMeta {
-    breadcrumbLabel?: string;
-    fullscreenShell?: boolean;
-    globalNavKey?: string;
-    guestOnly?: boolean;
-    placeholderDescription?: string;
-    placeholderStatus?: string;
-    placeholderTitle?: string;
-    requiredPermissions?: AppPermission[];
-    requiresAuth?: boolean;
-    skipAppShell?: boolean;
-    skipShellBootstrap?: boolean;
-    title?: string;
-  }
-}
-
-export {};
-```
-
-```typescript
-// frontend/src/router/guestRoutes.ts
-
-export const guestRoutes: RouteRecordRaw[] = [
-  {
-    path: "/login",
-    name: "login",
-    component: () => import("@/views/login/LoginView.vue"),
-    meta: { guestOnly: true, title: "Sign In" },
-  },
-  {
-    path: "/register",
-    name: "register",
-    component: () => import("@/views/register/RegisterView.vue"),
-    meta: { guestOnly: true, title: "Register" },
-  },
-  {
-    path: "/accept-invitation/:token",
-    name: "accept-invitation",
-    component: () => import("@/views/acceptInvitation/AcceptInvitationView.vue"),
-    meta: { title: "Accept Invitation" },
-  },
-  {
-    path: "/survey/:token",
-    name: "public-survey",
-    component: () => import("@/views/publicSurvey/PublicSurveyView.vue"),
-    meta: { skipShellBootstrap: true, title: "Survey" },
-  },
-];
-```
-
-```typescript
-// frontend/src/router/organizationRoutes.ts
-
-export const organizationRoutes: RouteRecordRaw[] = [
-  {
-    path: "access",
-    name: "organization-access",
-    component: () => import("@/views/organizationAccess/OrganizationAccessView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: [APP_PERMISSIONS.organizationAccessManage],
-      title: "Organization Access",
-      globalNavKey: "access",
-    },
-  },
-];
-```
-
-Routes declare access behavior through metadata. Use `requiresAuth` for protected workspace routes, `guestOnly` for login, registration, and password routes, `requiredPermissions` for permission-gated routes, and `skipShellBootstrap` for public flows that must not initialize operator organization, workspace, or permission state.
-
-Invitation acceptance is intentionally not `guestOnly` and not `skipShellBootstrap`: an anonymous invited user can register, while an already signed-in user can accept the invitation and refresh the existing shell access payload.
-
-### Global Router Guard
-
-```typescript
-// frontend/src/router/index.ts
-
-router.beforeEach(async (to) => {
-  const appShellStore = useAppShellStore();
-  const shouldInitializeShell = !to.meta.skipShellBootstrap;
-
-  if (shouldInitializeShell && !appShellStore.hasInitialized && !appShellStore.isLoading) {
-    try {
-      await appShellStore.initialize();
-    } catch {
-      return true;
-    }
-  }
-
-  if (to.meta.requiresAuth && appShellStore.hasInitialized && !appShellStore.isAuthenticated) {
-    return { name: "login", query: { redirect: to.fullPath } };
-  }
-
-  if (appShellStore.needsOrganizationOnboarding) {
-    if (to.name === "workspaces-list") {
-      return true;
-    }
-
-    return { name: "workspaces-list" };
-  }
-
-  const accessRedirect = getRouteAccessRedirect(to, appShellStore);
-  if (accessRedirect) {
-    return accessRedirect;
-  }
-
-  if (to.meta.guestOnly && appShellStore.isAuthenticated) {
-    const redirect = typeof to.query.redirect === "string" ? to.query.redirect : null;
-    if (redirect && redirect.startsWith("/")) {
-      return redirect;
-    }
-
-    return { name: "dashboard" };
-  }
-
-  return true;
-});
-```
-
-The router guard is the only place that performs auth admission redirects. It initializes the shell unless the route opts out, sends anonymous users to login for protected routes, redirects signed-in users away from guest-only routes, enforces onboarding, and delegates permission-specific redirects to `getRouteAccessRedirect(...)`.
+Use [Vue Route Auth Guard Example](vue-route-auth-guard.md) for route records, permission redirects, the global guard, and route-admission tests. Keep this example focused on the session, CSRF, bootstrap, shell, and session-changing flows.
 
 ### App Shell Boundary
 
@@ -601,14 +494,12 @@ After logout, clear shell state and send the user to a guest route. Do not leave
 - Local split-origin development and production same-origin serving use the same frontend API client contract. Only `__API_URL__` changes by environment.
 - The production CSRF seed happens once in `main.ts`. Route views, stores, and auth components do not scrape CSRF tokens.
 - The shell store owns bootstrap state and exposes it to the router, shell, and route views.
-- Route metadata describes access behavior. The global router guard enforces it.
-- `skipShellBootstrap` is reserved for truly public flows, such as public survey, that must not initialize the operator workspace.
 - Guest-only routes still use the shared API client so login, registration, and password flows get credentials and CSRF handling.
 - Login and registration reset shell state before initializing because they create a new authenticated session.
 - Invitation acceptance reloads shell state because it can add organization or workspace access to an existing session.
 - Logout resets shell state immediately because the browser session is no longer authenticated.
-- Permission redirects are derived from the backend-provided access payload, not duplicated as hardcoded frontend role assumptions.
 - Route views consume shell state when they need it, but they do not call `api.auth.bootstrap()` or `appShellStore.initialize()` themselves.
+- The shared route guard consumes this store contract. Its metadata, redirects, and admission tests live in [Vue Route Auth Guard Example](vue-route-auth-guard.md).
 
 ## Rules To Follow
 
@@ -617,16 +508,12 @@ After logout, clear shell state and send the user to a guest route. Do not leave
 - Keep auth API methods in the shared `api.auth` segment in `frontend/src/utils/api.ts`.
 - Keep production API calls same-origin by leaving production `__API_URL__` empty.
 - Keep the production CSRF handoff in Django-rendered HTML plus `apiClient.setCsrfToken(...)` in `main.ts`.
-- Keep session bootstrap in the shell store under `frontend/src/views/application/`.
-- Keep route access behavior in typed route metadata plus the single global router guard.
+- Keep session bootstrap in the repository's shared shell store.
 - Do not bootstrap auth state inside route views, dialogs, public views, or route-local stores.
 - Reset and re-bootstrap shell state after login, registration, invitation registration, or any flow that creates a new authenticated session before entering the workspace.
 - Reload shell state after session-preserving access changes, such as accepting an invitation while signed in.
 - Reset shell state immediately after logout.
-- Preserve intended protected destinations with a `redirect` query, and only honor app-local redirects that start with `/`.
-- Keep public routes explicit with `skipShellBootstrap` when they should not load operator session context.
-- Keep permission redirects in `getRouteAccessRedirect(...)` and shell-store permission helpers instead of route-local role checks.
-- Add tests that assert route auth remains centralized and route views do not call the bootstrap endpoint directly.
+- Test the shell lifecycle across anonymous bootstrap, login, registration, access refresh, and logout.
 
 ## Refactor Signals
 
@@ -635,13 +522,9 @@ After logout, clear shell state and send the user to a guest route. Do not leave
 - More than one file creates an Axios instance, sets XSRF names, sets `axios.defaults`, or handles CSRF token scraping.
 - Login, registration, invitation, password, or logout code lives in `authService.ts`, `apiService.ts`, `useApiClient.ts`, or a local-storage token module.
 - A frontend file reads or writes `access_token`, `refresh_token`, or auth state in local storage.
-- A protected route is missing `requiresAuth: true`, or a permission-gated route is missing `requiredPermissions`.
-- A public token route initializes organization, workspace, or operator shell state when it should set `skipShellBootstrap: true`.
-- Multiple route components redirect anonymous users to login instead of letting the global guard handle protected admission.
-- Permission checks are hardcoded as frontend roles or display labels instead of using the backend-provided permission payload and `appShellStore.can(...)`.
 - Login, logout, registration, or invitation flows manually assign `isAuthenticated`, `currentUser`, organization arrays, workspace arrays, or permission arrays.
 - Production config points the frontend bundle at a hard-coded local or cross-origin API URL.
-- Tests cover only happy-path page rendering and do not assert anonymous redirects, guest-only redirects, public-route shell skipping, or session refresh after auth changes.
+- Tests cover only happy-path page rendering and do not assert session bootstrap, refresh, or reset behavior after auth changes.
 
 ## Verification
 
@@ -659,46 +542,28 @@ cd frontend
 npm run lint
 ```
 
-- Run focused structural tests when changing route-auth behavior:
-
-```bash
-cd frontend
-node --test tests/route-auth-guard-guidance.test.ts
-```
-
-- Run relevant e2e coverage when behavior changes:
-
-```bash
-cd frontend
-npm run e2e -- auth.spec.ts
-npm run e2e -- invitations.spec.ts
-npm run e2e -- public-survey.spec.ts
-```
+- Run focused shell-store and auth-flow tests when bootstrap or session-changing behavior changes. Cover anonymous bootstrap, login or registration, access refresh, and logout using the repository's existing test commands.
 
 - Use `rg` checks to keep the auth shape centralized:
 
 ```bash
 rg "api\\.auth\\.bootstrap" frontend/src
-rg "appShellStore\\.initialize\\(" frontend/src/views
+rg "appShellStore\\.initialize\\(" frontend/src
 rg "from [\"']axios|axios\\.|fetch\\(" frontend/src frontend/tests frontend/e2e
 rg "localStorage.*token|access_token|refresh_token|authService|authClient|useApiClient|apiService" frontend/src
-rg "requiresAuth|guestOnly|skipShellBootstrap|requiredPermissions" frontend/src/router
 ```
 
 - Expected structural results:
-  - `api.auth.bootstrap` appears only in `frontend/src/views/application/appShellStore.ts`.
+  - `api.auth.bootstrap` appears only in the repository's shared shell store.
   - `appShellStore.initialize()` in route views is limited to session-changing auth flows that reset shell state first.
   - Direct Axios runtime usage is limited to the canonical API client, with test harness exceptions only for setup code.
   - Token-storage and parallel auth-client searches return no modern app implementation.
-  - Public routes that should avoid operator context explicitly use `skipShellBootstrap`.
 
 ## Why It Helps
 
 - The app has one source of truth for current user, organization, workspace, and permission state.
 - Split-origin local development works without weakening the production session and CSRF model.
 - Production deployment stays simple because Django serves the SPA and API from one origin.
-- Route behavior stays predictable because every protected route passes through the same guard.
-- Public routes stay lightweight and avoid loading unrelated operator workspace context.
 - Login, logout, registration, and invitation flows cannot leave stale organization or permission data behind.
-- New routes only need metadata and normal shell-store reads instead of custom auth plumbing.
-- Reviewers can audit session security, CSRF handling, route admission, and shell ownership with targeted searches instead of reading every page component.
+- The route guard receives a small, stable store contract instead of owning a second copy of session state.
+- Reviewers can audit session security, CSRF handling, and shell ownership with targeted searches instead of reading every page component.
