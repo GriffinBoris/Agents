@@ -3,3 +3,12 @@ name = "agents"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = []
+
+[project.optional-dependencies]
+github-settings = [
+    "PyYAML>=6.0,<7",
+    "requests>=2.32,<3",
+]
+
+[project.scripts]
+agents-github-settings = "agents.github_settings.cli:main"
