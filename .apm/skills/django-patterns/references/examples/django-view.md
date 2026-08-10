@@ -5,7 +5,7 @@
 - Use this shape when adding list, create, detail, update, or action endpoints under nested organization, workspace, catalog_entry, contact, order, or other owned-resource routes.
 - Use this shape when the URL determines scope, such as `organization_id`, `workspace_id`, `catalog_entry_id`, or `item_id`.
 - Use this shape when the view must combine shared access helpers, explicit permissions, input serializers, output serializers, deterministic querysets, and HTTP-boundary tests.
-- Use the serializer and view-test examples for deeper serializer validation and test-matrix details; this example is the north-star for view structure.
+- Use the serializer examples for deeper validation details and [Django View Tests Example](django-view-tests.md) for the HTTP-boundary test matrix; this example owns production view structure.
 
 ## Why This Shape Exists
 
@@ -172,100 +172,9 @@ class ItemArchiveView(AuthenticatedAccessAPIView):
 
 Use dedicated action views for lifecycle transitions that have business rules, permission requirements, audit behavior, or side effects. Do not quietly expose those changes through broad generic update serializers.
 
-### View Test Expectations
+### View Test Contract
 
-```python
-import pytest
-from workspace.models import WorkspaceMembership
-from tests.fixtures import FixtureFactory
-from django.urls import reverse
-from item.models import Item
-from item.views.item.serializers import ItemOutputSerializer
-from rest_framework import status
-from tenancy.models import OrganizationMembership
-
-
-@pytest.mark.django_db
-class TestItemViews:
-	def setup_method(self):
-		self.organization_admin = FixtureFactory.create_user(email='organization-admin@example.com')
-		self.workspace_admin = FixtureFactory.create_user(email='workspace-admin@example.com')
-		self.workspace_operator = FixtureFactory.create_user(email='workspace-operator@example.com')
-		self.other_organization_admin = FixtureFactory.create_user(email='other-organization-admin@example.com')
-
-		self.organization = FixtureFactory.create_organization(name='Workspace Organization', slug='workspace-organization')
-		self.other_organization = FixtureFactory.create_organization(name='Other Organization', slug='other-organization')
-		self.workspace = FixtureFactory.create_workspace(self.organization, name='Primary Workspace', slug='primary-workspace')
-		self.other_workspace = FixtureFactory.create_workspace(self.other_organization, name='Other Workspace', slug='other-workspace')
-
-		FixtureFactory.create_organization_membership(self.organization_admin, self.organization, role=OrganizationMembership.RoleChoices.ADMIN)
-		FixtureFactory.create_organization_membership(self.workspace_admin, self.organization, role=OrganizationMembership.RoleChoices.MEMBER)
-		FixtureFactory.create_organization_membership(self.workspace_operator, self.organization, role=OrganizationMembership.RoleChoices.MEMBER)
-		FixtureFactory.create_organization_membership(self.other_organization_admin, self.other_organization, role=OrganizationMembership.RoleChoices.ADMIN)
-		FixtureFactory.create_workspace_membership(self.workspace_admin, self.workspace, role=WorkspaceMembership.RoleChoices.ADMIN)
-		FixtureFactory.create_workspace_membership(self.workspace_operator, self.workspace, role=WorkspaceMembership.RoleChoices.OPERATOR)
-
-		self.catalog_entry = FixtureFactory.create_catalog_entry(self.workspace, name='Operations Project', slug='weight-management')
-		self.other_catalog_entry = FixtureFactory.create_catalog_entry(self.workspace, name='Support Project', slug='primary-care')
-		self.item = FixtureFactory.create_item(self.catalog_entry, name='Starter Package', slug='glp1-treatment')
-
-		self.list_url = reverse(
-			'workspace:catalog_entry:item:item-list',
-			kwargs={'organization_id': self.organization.id, 'workspace_id': self.workspace.id, 'catalog_entry_id': self.catalog_entry.id},
-		)
-		self.create_url = reverse(
-			'workspace:catalog_entry:item:item-create',
-			kwargs={'organization_id': self.organization.id, 'workspace_id': self.workspace.id, 'catalog_entry_id': self.catalog_entry.id},
-		)
-		self.detail_url = reverse(
-			'workspace:catalog_entry:item:item-detail',
-			kwargs={'organization_id': self.organization.id, 'workspace_id': self.workspace.id, 'catalog_entry_id': self.catalog_entry.id, 'item_id': self.item.id},
-		)
-
-	def test_organization_admin_can_list_items(self, client):
-		client.force_login(self.organization_admin)
-
-		response = client.get(self.list_url, content_type='application/json')
-
-		assert response.status_code == status.HTTP_200_OK
-		assert response.json() == ItemOutputSerializer([self.item], many=True, context={'request': response.wsgi_request}).data
-
-	def test_create_keeps_route_catalog_entry_scope_when_payload_includes_other_catalog_entry(self, client):
-		client.force_login(self.workspace_admin)
-
-		response = client.post(
-			self.create_url,
-			{
-				'name': 'Scoped Item',
-				'status': Item.StatusChoices.ACTIVE,
-				'summary': 'Scoped summary',
-				'description': 'Scoped description',
-				'catalog_entry': self.other_catalog_entry.id,
-			},
-			content_type='application/json',
-		)
-
-		instance = Item.objects.get(catalog_entry=self.catalog_entry, slug='scoped-item')
-		assert response.status_code == status.HTTP_201_CREATED
-		assert response.json() == ItemOutputSerializer(instance, context={'request': response.wsgi_request}).data
-		assert instance.catalog_entry_id == self.catalog_entry.id
-
-	def test_workspace_operator_cannot_create_item(self, client):
-		client.force_login(self.workspace_operator)
-
-		response = client.post(self.create_url, {'name': 'Blocked Item'}, content_type='application/json')
-
-		assert response.status_code == status.HTTP_403_FORBIDDEN
-
-	def test_other_organization_admin_cannot_access_item(self, client):
-		client.force_login(self.other_organization_admin)
-
-		response = client.get(self.detail_url, content_type='application/json')
-
-		assert response.status_code == status.HTTP_404_NOT_FOUND
-```
-
-View tests prove the route, permission, scoping, mutation, and response contracts together. They should use shared fixture builders, build URLs with `reverse(...)`, compare successful responses against output serializers, include lower-permission cases, and include other-organization or other-scope isolation cases.
+Use [Django View Tests Example](django-view-tests.md) for shared setup, route assertions, scoped list cases, route-owned payload spoofing, permission and isolation cases, validation errors, and database-state assertions. Keep this example focused on the production endpoint being tested.
 
 ## Things To Notice
 
@@ -292,8 +201,6 @@ View tests prove the route, permission, scoping, mutation, and response contract
 - Keep query params snake_case and raise `ValidationError({param_name: message})` for invalid filter values.
 - Use `get_object_or_404(...)` only after the queryset has already been scoped to the current user, organization, workspace, or parent resource.
 - Put feature routes in feature-local `urls.py` modules and include them through thin app-level URL hubs.
-- Add view tests for the positive case, lower-permission case, ownership-boundary case, and route-owned payload-spoofing case.
-- Compare successful response bodies against output serializer data instead of hand-built response dictionaries.
 
 ## Refactor Signals
 
@@ -306,7 +213,6 @@ View tests prove the route, permission, scoping, mutation, and response contract
 - One serializer is doing both broad write validation and read-only response shaping when the input and output contracts differ.
 - Multiple views repeat the same nested object lookup instead of using an existing `resolve_*_scope(...)` helper.
 - Feature route definitions are scattered in the project root or a catch-all URL module instead of the owning app or feature package.
-- View tests cover only the happy path, create no out-of-scope records, or skip payload-spoofing cases for route-owned fields.
 
 ## Verification
 

@@ -5,6 +5,7 @@
 - Use this shape when testing Django API views that are scoped to an organization, workspace, user, contact, order, catalog_entry, or other owned resource.
 - Use this shape when routes enforce permissions through shared access helpers.
 - Use this shape when views return serializer-shaped payloads and must protect route-owned scope from spoofed request data.
+- Use [Django CRUD View Example](django-view.md) for the production endpoint structure; this example owns HTTP-boundary test setup, cases, and assertions.
 
 ## Why This Shape Exists
 
@@ -142,6 +143,40 @@ def test_workspace_create_keeps_route_organization_scope_when_payload_includes_o
 ```
 
 Every create endpoint with URL-owned scope should have a spoofed-payload test. If the client submits another organization, workspace, contact, or parent ID, the URL scope should still win or the request should fail explicitly.
+
+### Deeply Nested Parent Scope
+
+```python
+from item.views.item.serializers import ItemOutputSerializer
+
+
+def test_item_create_keeps_route_catalog_entry_scope_when_payload_spoofs_parent(self, client):
+    route_catalog_entry = FixtureFactory.create_catalog_entry(self.workspace, name='Route Catalog Entry')
+    other_catalog_entry = FixtureFactory.create_catalog_entry(self.workspace, name='Other Catalog Entry')
+    create_url = reverse(
+        'workspace:catalog_entry:item:item-create',
+        kwargs={
+            'organization_id': self.organization.id,
+            'workspace_id': self.workspace.id,
+            'catalog_entry_id': route_catalog_entry.id,
+        },
+    )
+    client.force_login(self.workspace_admin)
+
+    response = client.post(
+        create_url,
+        {'name': 'Scoped Item', 'catalog_entry': other_catalog_entry.id},
+        content_type='application/json',
+    )
+
+    instance = route_catalog_entry.items.get(slug='scoped-item')
+    expected = ItemOutputSerializer(instance, context={'request': response.wsgi_request}).data
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json() == expected
+    assert instance.catalog_entry_id == route_catalog_entry.id
+```
+
+For deeply nested routes, include a same-scope sibling parent in the spoofing case. That proves the endpoint enforces the exact parent named by the URL, not merely the broader organization or workspace boundary.
 
 ### Update, Permission, And Isolation Cases
 
