@@ -2,7 +2,7 @@
 
 ## How To Use This Rubric
 
-Follow the scope, evidence, applicability-map, coverage, and output contract in [Review Workflows](../SKILL.md), then walk each category that applies to the declared scope. Treat the good and bad signals as diagnostic examples, not numeric pass/fail thresholds.
+Follow the baseline review contract and the workflow in [Architecture Audit](../SKILL.md), then walk each category that applies to the declared scope. Treat the good and bad signals as diagnostic examples, not numeric pass/fail thresholds.
 
 ## Guidance Coverage Expectation
 

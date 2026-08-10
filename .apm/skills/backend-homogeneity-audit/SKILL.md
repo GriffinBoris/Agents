@@ -13,11 +13,11 @@ description: Audit Django and Python backend code against established app, view,
 
 - Use this as the backend pattern-matching audit for Django and Python code.
 - Pair it with `architecture-audit` when file, folder, or code structure also needs review.
-- Follow the shared review contract in [review-workflows](../review-workflows/SKILL.md); the criteria and output below are additions specific to backend consistency.
+- Follow the review reporting and code-review practices in the [engineering baseline](../../instructions/engineering-baseline.instructions.md); the criteria and output below are additions specific to backend consistency.
 
 ## Workflow
 
-1. Apply the shared review workflow.
+1. Apply the baseline review contract.
 2. Load the Python and Django guidance and only the examples matching the backend concerns in scope.
 3. Inspect the closest comparable backend modules and apply every relevant criterion below.
 
@@ -70,7 +70,7 @@ description: Audit Django and Python backend code against established app, view,
 
 ## Output
 
-In addition to the shared review output, include:
+In addition to the baseline review output, include:
 
 - preferred reference files and why they are the right pattern
 - reusable backend structures found in the existing repository

@@ -63,10 +63,14 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 ### Review Reporting
 
+- State the exact review scope and list skipped files, blind spots, and lightly checked areas.
+- For full reviews, identify the concrete concerns first and record each applicable guidance or example source, why it applies, and whether the code matched it. Select examples through the owning skill, inspect their filename, H1, `Scenario`, and headings first, and load only the sections needed for distinct in-scope concerns.
 - Full reviews must report every finding in scope, not only the biggest or most representative ones.
 - If the same issue appears multiple times, enumerate every audited occurrence or provide the full occurrence list.
+- Base findings on source evidence and the closest local implementation. Distinguish verified deviations from preferences, intentional exceptions, and unverified suspicions.
+- For each finding, include severity, a concrete file reference, evidence, the applicable rule, example, or pattern, and the simplest appropriate fix.
+- Report verification performed and not performed. If no verifiable deviations were found, say so explicitly.
 - Summaries are fine only when they are paired with a complete findings section.
-- List any skipped files, blind spots, or lightly checked areas explicitly.
 
 ## General Principles
 
@@ -171,7 +175,6 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 ## Code Review Practices
 
 - Verify usage before claiming redundancy.
-- Distinguish intentional design from accidental complexity.
 - Document architectural decisions when you discover why something is designed a certain way.
 - Create refactoring plans before implementing non-trivial structural changes.
 

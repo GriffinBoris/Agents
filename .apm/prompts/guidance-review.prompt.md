@@ -6,7 +6,7 @@ input: [guidance_doc]
 Audit and correct the codebase against one specific repository guidance document.
 
 Read this guidance document first and treat its central idea as the audit subject.
-Load `review-workflows` and use its shared scope, evidence, findings, and reporting rules throughout the audit.
+Follow the `Review Reporting` and `Code Review Practices` sections of the engineering baseline throughout the audit.
 
 GUIDANCE_DOC: `${input:guidance_doc}`
 
@@ -28,7 +28,7 @@ Your job:
    - For each violation, explain exactly which rule is not being followed and why it matters
 
 4. Update the code to comply with the guidance.
-   - Apply the shared review's simplest appropriate fix direction without changing unrelated code
+   - Apply the baseline review contract's simplest appropriate fix direction without changing unrelated code
 
 5. Add or update tests where the guidance implies behavior, scoping, permissions, data-contract shape, routing, lifecycle rules, or other enforceable behavior.
 

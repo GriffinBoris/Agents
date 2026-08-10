@@ -14,17 +14,17 @@ description: Audit file, folder, module, responsibility, layering, readability, 
 
 - Use this as the primary structure and readability audit for files, folders, modules, and code shape.
 - Pair it with backend or frontend homogeneity audits when stack-specific patterns matter.
-- Follow the shared review contract in [review-workflows](../review-workflows/SKILL.md); the criteria and output below are additions specific to architecture.
+- Follow the review reporting and code-review practices in the [engineering baseline](../../instructions/engineering-baseline.instructions.md); the criteria and output below are additions specific to architecture.
 
 ## Workflow
 
-1. Apply the shared review workflow and select the architecture rubric.
+1. Apply the baseline review contract and select the architecture rubric.
 2. Inspect the file and folder layout, responsibilities, public surface, control flow, state changes, abstractions, dependency direction, and boundaries between UI, transport, domain, persistence, and integrations.
-3. Add the architecture-specific structure map and action plan to the shared review output.
+3. Add the architecture-specific structure map and action plan to the baseline review output.
 
 ## Reference Selection
 
-- [Architecture rubric](../review-workflows/references/architecture-rubric.md)
+- [Architecture rubric](references/architecture-rubric.md)
 
 ## Review Criteria
 
@@ -50,7 +50,7 @@ description: Audit file, folder, module, responsibility, layering, readability, 
 
 ## Output
 
-In addition to the shared review output, include:
+In addition to the baseline review output, include:
 
 ### Structure Map
 

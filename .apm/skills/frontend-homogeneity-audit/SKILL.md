@@ -13,11 +13,11 @@ description: Audit Vue and TypeScript frontend code against established route, c
 
 - Use this as the frontend pattern-matching audit for Vue and TypeScript code.
 - Pair it with `architecture-audit` when file, folder, or code structure also needs review.
-- Follow the shared review contract in [review-workflows](../review-workflows/SKILL.md); the criteria and output below are additions specific to frontend consistency.
+- Follow the review reporting and code-review practices in the [engineering baseline](../../instructions/engineering-baseline.instructions.md); the criteria and output below are additions specific to frontend consistency.
 
 ## Workflow
 
-1. Apply the shared review workflow.
+1. Apply the baseline review contract.
 2. Load the Vue guidance and only the examples matching the frontend concerns in scope.
 3. Inspect the closest comparable route, component, store, composable, and API module, then apply every relevant criterion below.
 
@@ -68,7 +68,7 @@ description: Audit Vue and TypeScript frontend code against established route, c
 
 ## Output
 
-In addition to the shared review output, include:
+In addition to the baseline review output, include:
 
 - preferred reference files and why they fit
 - reused shared pieces or route patterns

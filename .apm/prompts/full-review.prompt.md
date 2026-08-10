@@ -15,16 +15,15 @@ Supported scopes include:
 - a concept or workflow across multiple files
 - a guidance package, examples folder, or selected guidance files
 
-Load `review-workflows` and follow its shared scope, applicability-map, evidence, findings, and output contract. Treat this command as one integrated review of the in-scope material, not a generic command chooser or a stack-by-stack checklist.
+Follow the `Review Reporting` and `Code Review Practices` sections of the engineering baseline. Treat this command as one integrated review of the in-scope material, not a generic command chooser or a stack-by-stack checklist.
 
 Use these skills as relevant:
 - `architecture-audit`
 - `backend-homogeneity-audit`
 - `frontend-homogeneity-audit`
-- `context-gatherer`
 
-Use `context-gatherer` first when the scope is broad, unfamiliar, or concept-based.
+When the scope is broad, unfamiliar, or concept-based, map the relevant structure, responsibilities, and data flow before judging it.
 Use `architecture-audit` for file, folder, module, and code-structure review.
 Use the backend or frontend homogeneity audits when those stacks are in scope.
 
-Inspect every declared in-scope file or changed area. Apply all specialized audit criteria that match the concerns, then produce one final report using the `review-workflows` output contract.
+Inspect every declared in-scope file or changed area. Apply all specialized audit criteria that match the concerns, then produce one final report using the baseline review contract.
