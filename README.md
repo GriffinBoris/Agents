@@ -12,7 +12,7 @@ Install APM **v0.28.0+** and [Task](https://taskfile.dev), then keep repository-
 
 Give that file Agent Skills frontmatter with `name: project-architecture`, followed by the project's architecture, commands, and tooling guidance. This prevents package upgrades from overwriting project-specific rules.
 
-Download the two ready-made templates from a tagged release. Append the ignore snippet once; do not replace the project's existing `.gitignore`.
+Download the two ready-made templates from a tagged release. Append the ignore snippet once; do not replace the project's existing `.gitignore`. If the project already keeps hand-authored files in one of the listed generated paths, move that guidance into `.apm/` or omit the conflicting ignore line.
 
 ```bash
 mkdir -p tasks

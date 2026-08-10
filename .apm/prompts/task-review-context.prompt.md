@@ -29,7 +29,7 @@ Use `context-gatherer` when the scope is broad, unfamiliar, or concept-based.
 This command must gather:
 - scoped repo context
 - relevant guidance files
-- example file names and frontmatter metadata
+- example file names and the structural cues that establish applicability
 - the matching examples for the scoped area
 
 Do not perform the final review in this command.
@@ -46,13 +46,13 @@ Do not produce the final issue list yet.
 - key components and responsibilities
 - important flows through the scope
 - closest relevant guidance files
-- matching examples with repeatable metadata fields:
+- matching examples with repeatable fields:
   - example file path
   - filename
-  - title
-  - description
-  - tags
-  - applies_to
+  - H1 title
+  - matching concern
+  - applicability reason
+  - relevant section headings
 - closest local reference implementations already in the repo
 - open questions, assumptions, and blind spots
 

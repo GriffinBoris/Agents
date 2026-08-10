@@ -24,12 +24,12 @@ description: Build an evidence-backed map of an unfamiliar feature, component, s
 
 ### 2. Map the structure
 - Identify key directories and important files
-- Note whether frontend code is organized by route folders under `src/views/`
+- Identify the repository's route root and note whether frontend code is organized by route, feature, or another established boundary
 - Note whether backend code is flat, feature-foldered, or split into domain app plus `api/` transport
 
 ### 3. Identify key components
 - Backend: models, views, serializers, services, tasks, commands, middleware
-- Frontend: route views, local route components, route-local `store.ts`, shared stores, composables, services, shared UI
+- Frontend: route views, local route components, local or shared stores, composables, API modules, and shared UI
 
 ### 4. Trace the flow
 - entrypoint -> validation -> business logic -> persistence -> response

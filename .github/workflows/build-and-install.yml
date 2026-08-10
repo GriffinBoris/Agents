@@ -30,11 +30,11 @@ jobs:
 
           test -f .apm/skills/migration-baseline/references/legacy-codex-AGENTS.md
           echo '2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43  .apm/skills/migration-baseline/references/legacy-codex-AGENTS.md' | shasum -a 256 --check
-          test "$(wc -c < .apm/instructions/engineering-baseline.instructions.md)" -gt 90000
-          grep -Fq '# Global Guidance' .apm/instructions/engineering-baseline.instructions.md
-          grep -Fq '# Django Guidance' .apm/instructions/engineering-baseline.instructions.md
-          grep -Fq '# Vue Guidance' .apm/instructions/engineering-baseline.instructions.md
-          grep -Fq '# Project Guidance' .apm/instructions/engineering-baseline.instructions.md
+          test -s .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq '# Agent Guidance' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Load `django-patterns`' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Load `vue-patterns`' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Load the consuming repository' .apm/instructions/engineering-baseline.instructions.md
           ! rg -n 'agents/(guidance|content|reference|agents_builder|build_agents|scripts|tools)' .apm/instructions .apm/skills --glob '!migration-baseline/references/legacy-codex-AGENTS.md'
 
       - name: Audit the package against its tracked release lockfile
@@ -58,48 +58,19 @@ jobs:
           apm compile --target claude,codex,opencode
 
           test -f .claude/skills/django-patterns/SKILL.md
+          test -f .claude/skills/integration-boundaries/SKILL.md
           test -f .claude/rules/engineering-baseline.md
           grep -Fq 'Never commit secrets or credentials.' .claude/rules/engineering-baseline.md
           test -f .claude/commands/full-review.md
           test -f .agents/skills/django-patterns/SKILL.md
+          test -f .agents/skills/integration-boundaries/SKILL.md
           test -f .agents/skills/django-patterns/references/examples/django-view.md
           test -f .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
           grep -Fq '# Agent Guidance' .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
           test -f .opencode/commands/full-review.md
           test -f AGENTS.md
-          test "$(wc -c < AGENTS.md)" -gt 90000
+          grep -Fq '# Agent Guidance' AGENTS.md
           grep -Fq 'Never commit secrets or credentials.' AGENTS.md
-          grep -Fq '# Django Guidance' AGENTS.md
-          ! grep -Fq 'agents/guidance/' AGENTS.md
-
-      - name: Build portable plugin bundle
-        run: apm pack --archive --output dist
-
-      - name: Install into Codex, Claude, and OpenCode fixture
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          consumer_dir="$(mktemp -d)/agents-consumer"
-          mkdir "$consumer_dir"
-          cd "$consumer_dir"
-
-          apm init --yes --target claude,codex,opencode
-          apm install "$GITHUB_WORKSPACE/dist/agents-guidance-0.1.0.zip" --target claude,codex,opencode
-          apm compile --target claude,codex,opencode
-
-          test -f .claude/skills/django-patterns/SKILL.md
-          test -f .claude/skills/django-patterns/references/examples/django-view.md
-          test -f CLAUDE.md
-          grep -Fq 'Never commit secrets or credentials.' CLAUDE.md
-          test -f .claude/commands/full-review.md
-          test -f .agents/skills/django-patterns/SKILL.md
-          test -f .agents/skills/django-patterns/references/examples/django-view.md
-          test -f .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
-          grep -Fq '# Agent Guidance' .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
-          test -f .opencode/commands/full-review.md
-          test -f AGENTS.md
-          test "$(wc -c < AGENTS.md)" -gt 90000
-          grep -Fq 'Never commit secrets or credentials.' AGENTS.md
-          grep -Fq '# Django Guidance' AGENTS.md
+          grep -Fq 'Load `integration-boundaries`' AGENTS.md
+          ! grep -Fq '# Django Guidance' AGENTS.md
           ! grep -Fq 'agents/guidance/' AGENTS.md

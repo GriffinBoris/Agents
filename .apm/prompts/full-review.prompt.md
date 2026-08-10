@@ -31,19 +31,19 @@ Systematically work through the scope:
 - list every verifiable in-scope deviation, not just a short curated subset
 
 Guidance and example applicability is required, not optional:
-- discover named examples under the relevant guidance skill's `references/examples/` directory
-- use both diff context and example frontmatter to decide applicability
-- check frontmatter fields when present, including filename, title, `description`, `tags`, and `applies_to`
-- treat examples as applicable when the scope touches the same concern, even if the stack match is broad and the filename is the strongest signal
+- start with the owning skill's example-selection routing, then discover additional candidates under its `references/examples/` directory only when the scope exposes an uncovered concern
+- use the diff or requested scope, filename, H1 title, Scenario section, and heading list to decide applicability
+- for long examples, inspect the Scenario section and headings first, then read only the sections relevant to the in-scope concern
+- treat an example as applicable when it teaches the same concrete concern, not merely because it uses the same broad stack
 - do not stop at one matching example if multiple examples cover different concerns in the same scope, such as structure, routing, models, serializers, views, services, tests, forms, or state management
-- if an example appears plausibly relevant, include it in the review map and mark it `matched`, `partially_matched`, `not_matched`, or `not_applicable`
+- include each reviewed example in the review map and mark it `matched`, `partially_matched`, `not_matched`, or `not_applicable`
 - if a reviewed example produced no findings, keep it in the review map with `matched` or `not_applicable`; do not silently omit it
-- prefer over-including plausible examples in the review map rather than under-including them; if unsure, include the example and explain the uncertainty in the applicability reason
+- do not load or list examples solely because they are in the active stack; record uncertainty only when a concrete in-scope concern makes the example plausibly relevant
 
 Build the review map in this order:
 1. Determine the concrete concerns in scope from the diff or requested review area.
 2. Load the mandatory guidance files for the active stack.
-3. Find candidate examples by path, filename, title, tags, and `applies_to` frontmatter.
+3. Find candidate examples through the owning skill's routing, then compare their filename, H1 title, Scenario section, and headings to the in-scope concerns.
 4. Cross-reference each candidate example against the in-scope concerns, touched files, and changed behaviors.
 5. Record why each reviewed example does or does not apply before finalizing findings.
 
