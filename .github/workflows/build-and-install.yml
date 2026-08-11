@@ -61,23 +61,25 @@ jobs:
           test -f .claude/skills/django-patterns/SKILL.md
           test -f .claude/skills/integration-boundaries/SKILL.md
           test -f .claude/skills/ste-writing/references/plain-technical-writing.md
+          for skill in full-review guidance-review review-git-diff push-guidance-to-agents; do
+            test -f ".claude/skills/$skill/SKILL.md"
+          done
           test -f .claude/rules/engineering-baseline.md
           grep -Fq 'Never commit secrets or credentials.' .claude/rules/engineering-baseline.md
-          test -f .claude/commands/full-review.md
           test -f .agents/skills/django-patterns/SKILL.md
           test -f .agents/skills/integration-boundaries/SKILL.md
           test -f .agents/skills/ste-writing/references/strict-controlled-writing.md
+          for skill in full-review guidance-review review-git-diff push-guidance-to-agents; do
+            test -f ".agents/skills/$skill/SKILL.md"
+          done
           test -f .agents/skills/django-patterns/references/examples/django-view.md
           test -f .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
           grep -Fq '# Agent Guidance' .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
-          test -f .opencode/commands/full-review.md
           test -f .github/copilot-instructions.md
           test -f .github/instructions/engineering-baseline.instructions.md
           grep -Fq 'Never commit secrets or credentials.' .github/instructions/engineering-baseline.instructions.md
-          test -f .github/prompts/full-review.prompt.md
           test -f GEMINI.md
           grep -Fq '@./AGENTS.md' GEMINI.md
-          test -f .gemini/commands/full-review.toml
           test -f AGENTS.md
           grep -Fq '# Agent Guidance' AGENTS.md
           grep -Fq 'Never commit secrets or credentials.' AGENTS.md

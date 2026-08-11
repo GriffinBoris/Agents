@@ -1,6 +1,6 @@
 # Agents
 
-Shared engineering guidance for Codex, Claude Code, OpenCode, Copilot, and Gemini. Install a pinned release with [APM](https://github.com/microsoft/apm); use skills and examples when a task needs them.
+Shared engineering guidance for Codex, Claude Code, OpenCode, Copilot, and Gemini. Install a pinned release with [APM](https://github.com/microsoft/apm); use skills, workflows, and examples when a task needs them.
 
 ## Use it in a project
 
@@ -68,6 +68,26 @@ apm install GriffinBoris/Agents#v0.1.0 --target claude,codex,opencode
 apm compile --target claude,codex,opencode
 ```
 
+### Use shared workflows
+
+Reusable workflows install as skills so Codex, Claude Code, and OpenCode can discover them from their supported skill locations.
+
+| Skill | Purpose |
+| --- | --- |
+| `full-review` | Review a branch diff, selected area, workflow, guidance package, or repository comprehensively. |
+| `guidance-review` | Audit a codebase against one named guidance document and correct deviations when requested. |
+| `review-git-diff` | Review the current branch diff against `origin/main`. |
+| `push-guidance-to-agents` | Contribute verified reusable guidance to this shared package when explicitly requested. |
+
+Ask for a workflow by name, for example:
+
+```text
+Use full-review to review the current branch changes.
+Use guidance-review with .apm/skills/project-architecture/SKILL.md and correct the verified deviations.
+```
+
+Codex users can also invoke a skill explicitly with `$full-review` or select it through `/skills`. Skill bodies load only after invocation or a matching request; they are not added to the always-on `AGENTS.md` context.
+
 ### Optional Task wrapper
 
 If the project uses [Task](https://taskfile.dev), download the ready-made wrapper from the same tagged release:
@@ -102,6 +122,49 @@ AGENTS_PACKAGE=GriffinBoris/Agents#v0.2.0 task ai:install  # upgrade to a review
 APM_TARGETS=claude,codex,opencode,copilot,gemini task ai:install
 ```
 
+### Optional pre-commit hooks
+
+If the project uses [pre-commit](https://pre-commit.com), `uv`, Ruff, isort, and the optional Task wrapper, add this local repository entry to `.pre-commit-config.yaml`. If the file already has a `repos:` key, add only the `repo: local` entry beneath it.
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: lint-code
+        name: Ruff Lint
+        entry: bash -c "uv run ruff check --fix"
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: format-code
+        name: Ruff Format
+        entry: bash -c "uv run ruff format"
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: sort-imports
+        name: Sort Imports
+        entry: bash -c "uv run isort ."
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: setup-all-agents
+        name: Setup All Agents
+        entry: bash -c "task ai:setup"
+        language: system
+        pass_filenames: false
+```
+
+Install the hooks and run them once:
+
+```bash
+uv run pre-commit install
+uv run pre-commit run --all-files
+```
+
 ### Migrate an older repository
 
 Keep the legacy `agents/` sources and any existing `AGENTS.md` available until the migration is verified. If `AGENTS.md` is the only remaining copy, preserve it outside the generated output path before installing.
@@ -121,7 +184,7 @@ Review the parity map, then run `apm compile --target claude,codex,opencode`, `a
 | Always-on cross-stack guidance | `.apm/instructions/engineering-baseline.instructions.md` |
 | Shared Python, Django, Vue, AI-generation, or technical-writing conventions | `.apm/skills/<skill-name>/SKILL.md` |
 | Long examples and review references | The owning skill's `references/` directory |
-| Reusable commands | `.apm/prompts/` |
+| Reusable review and contribution workflows | `.apm/skills/<workflow-name>/SKILL.md` |
 | Consumer Task and ignore templates | `templates/` |
 
 ### Skill structure
@@ -153,6 +216,6 @@ apm audit
 
 ## Guidance loading
 
-The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django, Vue, and technical-writing guidance use small routing skills that load detailed references and examples only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
+The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django, Vue, technical-writing, review, and contribution workflows use skills that load only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
 
 The immutable pre-APM aggregate remains at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`) only to distinguish former shared content from repository-owned guidance during a legacy port.
