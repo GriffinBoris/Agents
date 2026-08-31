@@ -31,10 +31,15 @@ jobs:
           test -f .apm/skills/migration-baseline/references/legacy-codex-AGENTS.md
           echo '2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43  .apm/skills/migration-baseline/references/legacy-codex-AGENTS.md' | shasum -a 256 --check
           test -s .apm/instructions/engineering-baseline.instructions.md
+          test -s templates/project-baseline.txt
+          test -s templates/project-architecture.md
           grep -Fq '# Agent Guidance' .apm/instructions/engineering-baseline.instructions.md
           grep -Fq 'Load `django-patterns`' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Load `django-testing`' .apm/instructions/engineering-baseline.instructions.md
           grep -Fq 'Load `vue-patterns`' .apm/instructions/engineering-baseline.instructions.md
-          grep -Fq 'Load the consuming repository' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Load `vue-testing`' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Follow the consuming repository' .apm/instructions/engineering-baseline.instructions.md
+          grep -Fq 'Load its `project-architecture`' .apm/instructions/engineering-baseline.instructions.md
           ! rg -n 'agents/(guidance|content|reference|agents_builder|build_agents|scripts|tools)' .apm/instructions .apm/skills --glob '!migration-baseline/references/legacy-codex-AGENTS.md'
 
       - name: Audit the package against its tracked release lockfile
@@ -55,35 +60,59 @@ jobs:
 
           targets="claude,codex,opencode,copilot,gemini"
           apm init --yes --target "$targets"
+          mkdir -p .apm/skills/project-architecture
+          cp "$source_dir/templates/project-architecture.md" .apm/skills/project-architecture/SKILL.md
           apm install "$source_dir" --target "$targets"
           apm compile --target "$targets"
 
           test -f .claude/skills/django-patterns/SKILL.md
+          test -f .claude/skills/django-testing/SKILL.md
+          test -f .claude/skills/django-testing/references/testing.md
+          test -f .claude/skills/django-testing/references/examples/django-view-tests.md
+          test -f .claude/skills/vue-testing/SKILL.md
+          test -f .claude/skills/vue-testing/references/testing.md
           test -f .claude/skills/integration-boundaries/SKILL.md
+          test -f .claude/skills/project-architecture/SKILL.md
           test -f .claude/skills/ste-writing/references/plain-technical-writing.md
           for skill in full-review guidance-review review-git-diff push-guidance-to-agents; do
             test -f ".claude/skills/$skill/SKILL.md"
           done
           test -f .claude/rules/engineering-baseline.md
+          test ! -e .claude/rules/project-baseline.md
           grep -Fq 'Never commit secrets or credentials.' .claude/rules/engineering-baseline.md
           test -f .agents/skills/django-patterns/SKILL.md
+          test -f .agents/skills/django-testing/SKILL.md
+          test -f .agents/skills/django-testing/references/testing.md
+          test -f .agents/skills/django-testing/references/examples/django-view-tests.md
+          test -f .agents/skills/vue-testing/SKILL.md
+          test -f .agents/skills/vue-testing/references/testing.md
+          grep -Fq 'production-code implementation conventions' .agents/skills/django-patterns/SKILL.md
+          grep -Fq 'behavior-focused unit and integration tests' .agents/skills/django-testing/SKILL.md
+          grep -Fq 'production-code implementation conventions' .agents/skills/vue-patterns/SKILL.md
+          grep -Fq 'behavior-focused unit, component, and end-to-end tests' .agents/skills/vue-testing/SKILL.md
           test -f .agents/skills/integration-boundaries/SKILL.md
+          test -f .agents/skills/project-architecture/SKILL.md
           test -f .agents/skills/ste-writing/references/strict-controlled-writing.md
           for skill in full-review guidance-review review-git-diff push-guidance-to-agents; do
             test -f ".agents/skills/$skill/SKILL.md"
           done
           test -f .agents/skills/django-patterns/references/examples/django-view.md
+          test ! -e .agents/skills/django-patterns/references/testing.md
+          test ! -e .agents/skills/django-patterns/references/examples/django-view-tests.md
           test -f .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
           grep -Fq '# Agent Guidance' .agents/skills/migration-baseline/references/legacy-codex-AGENTS.md
           test -f .github/copilot-instructions.md
           test -f .github/instructions/engineering-baseline.instructions.md
+          test ! -e .github/instructions/project-baseline.instructions.md
           grep -Fq 'Never commit secrets or credentials.' .github/instructions/engineering-baseline.instructions.md
           test -f GEMINI.md
           grep -Fq '@./AGENTS.md' GEMINI.md
           test -f AGENTS.md
           grep -Fq '# Agent Guidance' AGENTS.md
+          ! grep -Fq '# Project Essentials' AGENTS.md
           grep -Fq 'Never commit secrets or credentials.' AGENTS.md
           grep -Fq 'Load `integration-boundaries`' AGENTS.md
           grep -Fq 'Load `ste-writing`' AGENTS.md
           ! grep -Fq '# Django Guidance' AGENTS.md
+          ! grep -Fq '# Project Architecture' AGENTS.md
           ! grep -Fq 'agents/guidance/' AGENTS.md

@@ -8,7 +8,7 @@ description: Apply the repository's Python implementation, typing, testing, and 
 ## Scope
 
 - Apply these Python-wide conventions to modules, tooling, and tests.
-- Load `django-patterns` for Django, DRF, and Celery work.
+- Load `django-patterns` for Django, DRF, and Celery production code. Load `django-testing` for their tests.
 
 ## Workflow
 

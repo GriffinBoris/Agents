@@ -1,14 +1,15 @@
 ---
 name: django-patterns
-description: Apply Django, Django REST Framework, Celery, backend API, authorization, serialization, model, migration, session-authentication, integration, and backend-testing conventions. Use whenever creating, editing, reviewing, or testing Django backend code.
+description: Apply production-code implementation conventions for Django, Django REST Framework, Celery, backend APIs, authorization, serializers, models, migrations, session authentication, and integrations. Use when creating, editing, reviewing, or refactoring Django production code; do not trigger for test-only work.
 ---
 
 # Django Guidance
 
 ## Scope
 
-- Apply these conventions to Django, DRF, Celery, backend API, and backend-test work.
+- Apply these conventions to Django, DRF, Celery, backend API, and other production backend work.
 - Always load `python-conventions` alongside this skill.
+- Load `django-testing` when test files change or test design is part of the task.
 
 ## Workflow
 
@@ -16,7 +17,7 @@ description: Apply Django, Django REST Framework, Celery, backend API, authoriza
 2. Identify the affected concerns and read only the matching references below.
 3. Open only the examples needed to confirm a concrete structure or implementation pattern.
 4. Implement consistently with the local repository and the loaded rules.
-5. Read the testing reference when tests change, then run the repository's targeted verification.
+5. Run the repository's targeted verification; use `django-testing` for test implementation or review.
 
 ## Reference Selection
 
@@ -27,7 +28,6 @@ description: Apply Django, Django REST Framework, Celery, backend API, authoriza
 | Models, migrations, lifecycle methods, or Celery tasks | [models-and-tasks.md](references/models-and-tasks.md) |
 | Browser sessions, CSRF, SSO, sensitive uploads, or Django security configuration | [browser-auth-and-security.md](references/browser-auth-and-security.md) |
 | External services, webhooks, provider events, retry behavior, or concurrency-safe idempotency | [integrations-and-idempotency.md](references/integrations-and-idempotency.md) |
-| Django, serializer, view, or model tests | [testing.md](references/testing.md) |
 
 Read every reference whose row matches the task. For cross-cutting changes, load multiple references; do not load unrelated references preemptively.
 
@@ -40,7 +40,6 @@ Read every reference whose row matches the task. For cross-cutting changes, load
 - Sessions and SSO: [session/CSRF SPA](references/examples/django-session-csrf-spa.md) and [browser-session SSO](references/examples/django-session-sso.md).
 - Tasks and operations: [Celery enqueue](references/examples/django-celery-enqueue.md), [task dispatch](references/examples/django-task-dispatch.md), [management command](references/examples/django-management-command.md), and [admin](references/examples/django-admin.md).
 - Integrations: [durable sync event processing](references/examples/django-durable-sync-events.md).
-- Tests and fixtures: [shared fixtures](references/examples/django-shared-test-fixtures.md), [serializer tests](references/examples/django-serializer-tests.md), [view tests](references/examples/django-view-tests.md), and [model tests](references/examples/django-model-tests.md).
 
 Open an example only when its pattern matches the task. For a long example, read its scenario and heading list first, then load only the relevant section instead of the entire file. Treat examples as structural references, not mandatory boilerplate.
 
@@ -52,5 +51,4 @@ Open an example only when its pattern matches the task. For a long example, read
 - List endpoints are scoped to the current user or organization.
 - Mutating endpoints return the created or updated resource.
 - Model lifecycle methods do not hide third-party I/O.
-- Tests cover permission-positive, permission-negative, and cross-user isolation paths.
-- Session-authenticated browser APIs keep CSRF enabled and have a tested bootstrap flow that provides session state and a CSRF token.
+- Session-authenticated browser APIs keep CSRF enabled and provide a bootstrap flow for session state and a CSRF token.

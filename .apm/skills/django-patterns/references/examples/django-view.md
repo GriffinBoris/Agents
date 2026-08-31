@@ -5,7 +5,7 @@
 - Use this shape when adding list, create, detail, update, or action endpoints under nested organization, workspace, catalog_entry, contact, order, or other owned-resource routes.
 - Use this shape when the URL determines scope, such as `organization_id`, `workspace_id`, `catalog_entry_id`, or `item_id`.
 - Use this shape when the view must combine shared access helpers, explicit permissions, input serializers, output serializers, deterministic querysets, and HTTP-boundary tests.
-- Use the serializer examples for deeper validation details and [Django View Tests Example](django-view-tests.md) for the HTTP-boundary test matrix; this example owns production view structure.
+- Use the serializer examples for deeper validation details and [Django View Tests Example](../../../django-testing/references/examples/django-view-tests.md) for the HTTP-boundary test matrix; this example owns production view structure.
 
 ## Why This Shape Exists
 
@@ -174,7 +174,7 @@ Use dedicated action views for lifecycle transitions that have business rules, p
 
 ### View Test Contract
 
-Use [Django View Tests Example](django-view-tests.md) for shared setup, route assertions, scoped list cases, route-owned payload spoofing, permission and isolation cases, validation errors, and database-state assertions. Keep this example focused on the production endpoint being tested.
+Use [Django View Tests Example](../../../django-testing/references/examples/django-view-tests.md) for shared setup, route assertions, scoped list cases, route-owned payload spoofing, permission and isolation cases, validation errors, and database-state assertions. Keep this example focused on the production endpoint being tested.
 
 ## Things To Notice
 

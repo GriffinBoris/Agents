@@ -18,15 +18,17 @@ description: Audit Django and Python backend code against established app, view,
 ## Workflow
 
 1. Apply the baseline review contract.
-2. Load the Python and Django guidance and only the examples matching the backend concerns in scope.
+2. Load the Python and Django implementation guidance, add `django-testing` when tests are in scope, and select only examples matching the backend concerns.
 3. Inspect the closest comparable backend modules and apply every relevant criterion below.
 
 ## Reference Selection
 
 - [Python conventions](../python-conventions/SKILL.md)
 - [Django patterns](../django-patterns/SKILL.md)
+- [Django testing](../django-testing/SKILL.md) when backend tests are in scope
 - relevant docs in `.apm/skills/python-conventions/references/examples/`
 - relevant docs in `.apm/skills/django-patterns/references/examples/`
+- relevant docs in `.apm/skills/django-testing/references/examples/` when backend tests are in scope
 
 ## Review Criteria
 

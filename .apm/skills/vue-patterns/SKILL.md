@@ -1,13 +1,14 @@
 ---
 name: vue-patterns
-description: Apply Vue 3, TypeScript, Pinia, Vue Router, API-client, session-authentication, component, form, styling, state-management, and frontend-testing conventions. Use whenever creating, editing, reviewing, or testing Vue frontend code.
+description: Apply production-code implementation conventions for Vue 3, TypeScript, Pinia, Vue Router, API clients, session authentication, components, forms, styling, and state management. Use when creating, editing, reviewing, or refactoring Vue production code; do not trigger for test-only work.
 ---
 
 # Vue Guidance
 
 ## Scope
 
-- Apply these conventions to Vue, TypeScript, Pinia, Vue Router, frontend API, component, form, and frontend-test work.
+- Apply these conventions to Vue, TypeScript, Pinia, Vue Router, frontend API, component, form, and other production frontend work.
+- Load `vue-testing` when test files change or test design is part of the task.
 
 ## Workflow
 
@@ -15,7 +16,7 @@ description: Apply Vue 3, TypeScript, Pinia, Vue Router, API-client, session-aut
 2. Identify the affected concerns and read only the matching references below.
 3. Open only the examples needed to confirm a concrete implementation pattern.
 4. Reuse the repository's existing UI, API, state, and validation infrastructure.
-5. Run the repository's linter, typecheck, tests, and build checks appropriate to the change.
+5. Run the repository's linter, typecheck, tests, and build checks appropriate to the change; use `vue-testing` for test implementation or review.
 
 ## Reference Selection
 

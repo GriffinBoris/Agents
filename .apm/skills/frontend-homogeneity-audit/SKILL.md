@@ -18,12 +18,13 @@ description: Audit Vue and TypeScript frontend code against established route, c
 ## Workflow
 
 1. Apply the baseline review contract.
-2. Load the Vue guidance and only the examples matching the frontend concerns in scope.
+2. Load the Vue implementation guidance, add `vue-testing` when tests are in scope, and select only examples matching the frontend concerns.
 3. Inspect the closest comparable route, component, store, composable, and API module, then apply every relevant criterion below.
 
 ## Reference Selection
 
 - [Vue patterns](../vue-patterns/SKILL.md)
+- [Vue testing](../vue-testing/SKILL.md) when frontend tests are in scope
 - relevant docs in `.apm/skills/vue-patterns/references/examples/`
 
 ## Review Criteria

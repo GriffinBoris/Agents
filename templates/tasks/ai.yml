@@ -1,8 +1,10 @@
 version: '3'
 
 # Copy this file to the consuming repository as tasks/ai.yml.
-# Before task ai:install, create .apm/skills/project-architecture/SKILL.md
-# for guidance that belongs only to that repository.
+# Before task ai:install, create .apm/skills/project-architecture/SKILL.md for
+# detailed or conditional local guidance. Add
+# .apm/instructions/project-baseline.instructions.md only when the repository has
+# critical local rules that must be available for nearly every task.
 
 vars:
   AGENTS_PACKAGE: '{{default "GriffinBoris/Agents#v0.1.0" .AGENTS_PACKAGE}}'

@@ -5,7 +5,7 @@
 - Use this shape when testing Django API views that are scoped to an organization, workspace, user, contact, order, catalog_entry, or other owned resource.
 - Use this shape when routes enforce permissions through shared access helpers.
 - Use this shape when views return serializer-shaped payloads and must protect route-owned scope from spoofed request data.
-- Use [Django CRUD View Example](django-view.md) for the production endpoint structure; this example owns HTTP-boundary test setup, cases, and assertions.
+- Use [Django CRUD View Example](../../../django-patterns/references/examples/django-view.md) for the production endpoint structure; this example owns HTTP-boundary test setup, cases, and assertions.
 
 ## Why This Shape Exists
 
@@ -102,7 +102,7 @@ def test_workspace_operator_only_lists_assigned_workspaces(self, client):
     assert response.json() == expected
 ```
 
-Positive list tests should prove both broad and narrowed access. If organization admins can see all organization rows and workspace operators can only see assigned rows, test both. Compare the payload to the output serializer so the test tracks the live response contract.
+Positive list tests should prove both broad and narrowed access. If organization admins can see all organization rows and workspace operators can only see assigned rows, test both. Compare the payload to the output serializer only when serializer tests independently prove its field and value contract; the view test then proves selection, scope, and HTTP wiring without duplicating serializer assertions.
 
 ### Create And Route-Owned Scope
 

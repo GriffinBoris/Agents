@@ -12,20 +12,27 @@ hash -r
 apm --version
 ```
 
-Then keep repository-only guidance in a local skill before installing the shared package. Create `.apm/skills/project-architecture/SKILL.md` with at least:
+Before installing the shared package, download the repository-owned architecture template:
 
-```markdown
----
-name: project-architecture
-description: Repository-specific architecture, commands, tooling, and conventions. Use whenever working in this repository.
----
-
-# Project Architecture
-
-Document the repository's structure, commands, tooling, and local conventions here.
+```bash
+mkdir -p .apm/skills/project-architecture
+curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/project-architecture.md -o .apm/skills/project-architecture/SKILL.md
 ```
 
-This keeps package upgrades from overwriting project-specific rules.
+Edit it with detailed architecture, feature placement, conditional workflows, integrations, migration notes, and project-specific examples. Its body and references load only when relevant.
+
+Add a project baseline only when the repository has critical local facts that must be visible for nearly every task. Do not create or keep an empty baseline:
+
+```bash
+mkdir -p .apm/instructions
+curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/project-baseline.txt -o .apm/instructions/project-baseline.instructions.md
+```
+
+Use it for exact commands, primary source roots, universal safety or ownership invariants, and local overrides that must not be missed. It is compiled into always-on harness guidance, so keep it concise. State each rule in one place; do not copy the same guidance into both local files.
+
+These local authored sources keep repository-specific guidance under the consumer repository's control and prevent package upgrades from overwriting it.
+
+The baseline template uses a `.txt` extension only to keep APM from treating the source-package template as shared guidance. Save it under the `.instructions.md` destination shown above.
 
 ### Install directly with APM
 
@@ -49,7 +56,7 @@ apm compile --validate --local-only
 apm audit
 ```
 
-Generated `AGENTS.md`, harness directories, and `apm_modules/` stay ignored. Commit the consumer's `apm.yml`, `apm.lock.yaml`, and local `.apm/skills/project-architecture/` source instead.
+Generated `AGENTS.md`, harness directories, and `apm_modules/` stay ignored. Commit the consumer's `apm.yml`, `apm.lock.yaml`, and `.apm/skills/project-architecture/` source. Commit `.apm/instructions/project-baseline.instructions.md` only when the repository needs that optional always-on guidance.
 
 To upgrade, install another reviewed tag and compile again:
 
@@ -172,7 +179,7 @@ Keep the legacy `agents/` sources and any existing `AGENTS.md` available until t
 After installing the package, ask the agent:
 
 ```text
-Use migration-baseline to port every repository-owned or locally changed rule from the legacy agents/ sources and preserved AGENTS.md into .apm/skills/project-architecture/SKILL.md and linked references. Do not copy shared guidance or delete the legacy files. Produce a complete parity map.
+Use migration-baseline to port every repository-owned or locally changed rule from the legacy agents/ sources and preserved AGENTS.md. If there are concise rules that must affect nearly every task or prevent unsafe or invalid work, put them in .apm/instructions/project-baseline.instructions.md; otherwise do not create that file. Put detailed or conditional guidance in .apm/skills/project-architecture/SKILL.md and linked references. Do not copy shared guidance or delete the legacy files. Produce a complete parity map.
 ```
 
 Review the parity map, then run `apm compile --target claude,codex,opencode`, `apm compile --validate --local-only`, and `apm audit` (or the equivalent Task wrappers). Remove the legacy layout only after every old section has a current shared owner or a verified local destination.
@@ -182,7 +189,9 @@ Review the parity map, then run `apm compile --target claude,codex,opencode`, `a
 | Change | Source |
 | --- | --- |
 | Always-on cross-stack guidance | `.apm/instructions/engineering-baseline.instructions.md` |
-| Shared Python, Django, Vue, AI-generation, or technical-writing conventions | `.apm/skills/<skill-name>/SKILL.md` |
+| Optional consumer-owned critical always-on guidance | `.apm/instructions/project-baseline.instructions.md` in the consuming repository |
+| Consumer-owned detailed or conditional guidance | `.apm/skills/project-architecture/` in the consuming repository |
+| Shared Python, Django, Vue, framework-testing, AI-generation, or technical-writing conventions | `.apm/skills/<skill-name>/SKILL.md` |
 | Long examples and review references | The owning skill's `references/` directory |
 | Reusable review and contribution workflows | `.apm/skills/<workflow-name>/SKILL.md` |
 | Consumer Task and ignore templates | `templates/` |
@@ -207,15 +216,14 @@ apm audit
 
 To release it, update `version` in `apm.yml`, validate, commit, and create the matching Git tag. Consumer repositories install and pin that tag directly.
 
-```bash
-apm compile --validate --local-only
-apm audit
-```
-
 `apm pack` bundles installed dependencies; it is not the release mechanism for this source package.
 
 ## Guidance loading
 
-The always-on baseline contains only cross-stack rules and a skill router. Python guidance stays compact in `python-conventions`; Django, Vue, technical-writing, review, and contribution workflows use skills that load only when the task needs them. Consumer-repository decisions remain in that repository's local `project-architecture` skill.
+The shared always-on baseline contains only cross-stack rules and a skill router. A consuming repository may add a concise always-on `project-baseline` when it has critical local facts; an empty baseline should be omitted. Detailed or conditional decisions stay in `project-architecture`. Python guidance stays compact in `python-conventions`; Django, Vue, framework testing, technical writing, review, and contribution workflows use skills that load only when the task needs them.
+
+`django-patterns` and `vue-patterns` own production-code guidance. `django-testing` and `vue-testing` own test structure, coverage, assertions, and verification. Their concise names and descriptions are advertised for discovery; the skill bodies and selected references load only when the request matches them.
+
+Production-only work loads the implementation skill, test-only work loads the testing skill, and tasks that change both implementation and tests load both.
 
 The immutable pre-APM aggregate remains at `.apm/skills/migration-baseline/references/legacy-codex-AGENTS.md` (SHA-256 `2f1ea4481b85236a287645d2bcb83c626559d0060d961f8ea1bb0c1382744b43`) only to distinguish former shared content from repository-owned guidance during a legacy port.

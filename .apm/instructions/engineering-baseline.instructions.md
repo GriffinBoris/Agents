@@ -7,7 +7,7 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 ## Purpose
 
 - Capture the development guidance that applies generally across the repository, regardless of language, framework, or feature area.
-- Keep project-specific layout, tooling, migration notes, and product architecture decisions in `project-architecture` guidance skill.
+- When a consuming repository has essential local commands, source roots, safety invariants, or overrides that must affect nearly every task, keep them in an optional always-on `project-baseline` instruction. Omit that instruction when it would be empty. Keep detailed architecture, conditional workflows, migration notes, and examples in the repository's `project-architecture` skill.
 
 ## Living Document Philosophy
 
@@ -23,7 +23,7 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 ### How to Update
 
 - Edit authored `.apm/` sources, not generated `AGENTS.md` files or harness output.
-- Put reusable rules and examples with the shared skill that owns the concern; keep repository-specific guidance in the consuming repository's `project-architecture` skill.
+- Put reusable rules and examples with the shared skill that owns the concern. In consuming repositories, put critical always-needed local rules in `project-baseline` when such rules exist and detailed or conditional local guidance in `project-architecture`.
 - Prefer small, incremental edits over large rewrites.
 - Add context explaining why a rule exists, not just what it is.
 - If a rule becomes obsolete, remove or revise it instead of layering exceptions.
@@ -204,10 +204,13 @@ description: Always-on cross-stack engineering rules and routing to task-specifi
 
 - Keep this baseline limited to rules that apply regardless of language, framework, or repository.
 - Load `python-conventions` when creating, editing, reviewing, or testing Python code.
-- Load `django-patterns` for Django, DRF, Celery, backend API, authorization, serializer, model, migration, or backend-test work.
-- Load `vue-patterns` for Vue, TypeScript, Pinia, frontend API, routing, form, component, or frontend-test work.
+- Load `django-patterns` for Django, DRF, Celery, backend API, authorization, serializer, model, migration, or other production backend work.
+- Load `django-testing` when creating, editing, reviewing, debugging, or running Django, DRF, Celery, serializer, view, or model tests.
+- Load `vue-patterns` for Vue, TypeScript, Pinia, frontend API, routing, form, component, or other production frontend work.
+- Load `vue-testing` when creating, editing, reviewing, debugging, or running Vue or TypeScript frontend tests.
 - Load `ai-generation-patterns` for backend AI or LLM generation workflows.
 - Load `ste-writing` when writing, rewriting, or reviewing technical prose under a plain-language or controlled-language requirement.
 - Load `integration-boundaries` when code owns external-resource lifecycles or sends requests to user-configurable destinations.
-- Load the consuming repository's `project-architecture` skill for repository-specific structure, commands, architecture, and product conventions.
+- Follow the consuming repository's always-on `project-baseline` instruction for critical local commands, source roots, invariants, and overrides when that optional instruction exists.
+- Load its `project-architecture` skill for detailed repository structure, feature placement, integrations, migrations, conditional workflows, and examples.
 - Load `migration-baseline` only when porting repository-owned or locally modified guidance from a legacy `agents/` or `AGENTS.md` layout into the consumer's local APM guidance.

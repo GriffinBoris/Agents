@@ -1,0 +1,19 @@
+---
+description: Essential repository-specific rules and facts that must be available for every task.
+---
+
+# Project Essentials
+
+<!-- This file is optional. Delete it instead of keeping it empty. When used, keep it concise and record only repository facts that affect nearly every task or prevent unsafe or invalid work. Move detailed architecture, conditional workflows, integration notes, and examples to the project-architecture skill. Remove this comment after editing. -->
+
+## Commands
+
+<!-- Record the exact install, lint, typecheck, test, build, and generated-code commands agents must use. Remove this comment after editing. -->
+
+## Repository Map
+
+<!-- Record the primary source roots and ownership boundaries agents must know before editing. Remove this comment after editing. -->
+
+## Critical Rules and Local Overrides
+
+<!-- Record universal security, tenancy, data-ownership, base-class, and shared-guidance override rules. State each rule once and remove this comment after editing. -->
