@@ -7,7 +7,7 @@ import yaml
 from jsonschema import SchemaError
 from jsonschema.validators import validator_for
 
-SUPPORTED_PROVIDERS = {'claude', 'codex'}
+SUPPORTED_PROVIDERS = {'codex'}
 SUPPORTED_STEP_TYPES = {'agent', 'approval', 'parallel', 'shell'}
 SUPPORTED_DELEGATION_STRATEGIES = {'native', 'off'}
 SUPPORTED_MODES = {'read', 'write'}
@@ -43,7 +43,6 @@ class AgentStep:
     inputs: tuple[str, ...]
     output: Optional[str]
     schema: Optional[dict]
-    allowed_tools: tuple[str, ...]
     delegation: DelegationConfig
 
 
@@ -240,7 +239,6 @@ def _parse_agent_step(raw_step: dict, source_directory: Path, step_id: str) -> A
         inputs=tuple(inputs),
         output=_optional_relative_path(raw_step.get('output'), f'step {step_id}.output'),
         schema=schema,
-        allowed_tools=tuple(_require_string_list(raw_step.get('allowed_tools', []), f'step {step_id}.allowed_tools')),
         delegation=_parse_delegation(raw_step.get('delegation', {}), step_id),
     )
 
@@ -370,7 +368,6 @@ def _step_snapshot(step: WorkflowStep) -> dict:
             'inputs': list(step.inputs),
             'output': step.output,
             'schema': step.schema,
-            'allowed_tools': list(step.allowed_tools),
             'delegation': {
                 'strategy': step.delegation.strategy,
                 'max_agents': step.delegation.max_agents,

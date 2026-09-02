@@ -17,9 +17,9 @@ models:
     model: gpt-5.6-luna
     effort: medium
 
-  claude-review:
-    provider: claude
-    model: sonnet
+  review-fast:
+    provider: codex
+    model: gpt-5.6-terra
     effort: high
 
 defaults:
@@ -79,7 +79,7 @@ steps:
 
       - id: simplicity-review
         type: agent
-        model: claude-review
+        model: review-fast
         mode: read
         prompt_file: prompts/review-simplicity.md
         inputs: [request.md, plan.md, test-output.txt]

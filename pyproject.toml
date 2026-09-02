@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "agent-flow-runner"
 version = "0.1.0"
-description = "A small file-backed workflow runner for Codex and Claude Code."
+description = "A file-backed controller for Codex Desktop-native agent workflows."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }

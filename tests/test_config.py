@@ -67,16 +67,11 @@ steps:
     assert load_workflow_snapshot(snapshot_path) == workflow
 
 
-def test_rejects_native_delegation_across_providers(tmp_path: Path) -> None:
+def test_rejects_non_codex_provider(tmp_path: Path) -> None:
     data = _base_workflow()
-    data['models']['claude-fast'] = {'provider': 'claude', 'model': 'haiku'}
-    data['steps'][0]['delegation'] = {
-        'strategy': 'native',
-        'max_agents': 2,
-        'default_model': 'claude-fast',
-    }
+    data['models']['claude'] = {'provider': 'claude', 'model': 'sonnet'}
 
-    with pytest.raises(WorkflowConfigError, match='cannot cross providers'):
+    with pytest.raises(WorkflowConfigError, match='Unsupported provider'):
         parse_workflow(data, tmp_path)
 
 

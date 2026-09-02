@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agent Flow"
+  short_description: "Run Desktop-native multi-agent workflows"
+  default_prompt: "Use $agent-flow to run a staged workflow in this Desktop task."
+
+policy:
+  allow_implicit_invocation: true

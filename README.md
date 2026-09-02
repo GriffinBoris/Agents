@@ -2,27 +2,27 @@
 
 Shared engineering guidance for Codex, Claude Code, OpenCode, Copilot, and Gemini. Install a pinned release with [APM](https://github.com/microsoft/apm); use skills, workflows, and examples when a task needs them.
 
-## Experimental agent workflow runner
+## Experimental Desktop-native agent workflows
 
-This repository also contains `agent-flow`, a small file-backed workflow runner for Codex CLI and Claude Code. It supports:
+This repository also contains `agent-flow`, a small file-backed controller for workflows run from a persistent Codex Desktop task. The Desktop task remains the parent and uses native Codex subagents as fresh, disposable workers. The controller provides:
 
-- YAML workflows with fresh agent context for each stage
-- Named provider, model, and reasoning-effort profiles
-- Bounded native subagents with per-stage model selection
+- YAML workflows and named model/reasoning profiles
+- Durable step state, artifacts, worker IDs, and retry history
 - Read-only parallel agent groups
-- Shell commands and approval gates
-- Durable artifacts, logs, failure state, approval, and resume
+- Deterministic shell commands and explicit approval gates
+- Local JSON Schema validation before a worker result is accepted
 
-Install the development version and run the included example:
+Install the controller, then invoke the bundled `agent-flow` skill from Codex Desktop:
 
 ```bash
 uv tool install .
-agent-flow run examples/agent-flow/deep-feature.yml \
-  --request examples/agent-flow/request.md \
-  --repo /path/to/target-repository
 ```
 
-The runner stores state and artifacts under `.agent-flow/runs/` in the target repository. See [Agent Flow](docs/agent-flow.md) for the workflow format, provider behavior, and current limitations.
+```text
+$agent-flow Run examples/agent-flow/deep-feature.yml with examples/agent-flow/request.md against this repository.
+```
+
+The skill drives native Desktop subagents; the Python command does not launch Codex or Claude processes. Run state and artifacts live under `.agent-flow/runs/` in the target repository. See [Agent Flow](docs/agent-flow.md) for the workflow format, controller commands, and current limitations.
 
 ## Use it in a project
 
