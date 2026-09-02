@@ -128,9 +128,7 @@ def test_shell_failure_is_recorded_for_desktop_parent_to_handle(tmp_path: Path) 
     request_path = repository / 'request-source.md'
     request_path.write_text('Run validation.', encoding='utf-8')
     workflow_data = _single_agent_workflow()
-    workflow_data['steps'] = [
-        {'id': 'tests', 'type': 'shell', 'command': ['python3', '-c', 'raise SystemExit(4)']}
-    ]
+    workflow_data['steps'] = [{'id': 'tests', 'type': 'shell', 'command': ['python3', '-c', 'raise SystemExit(4)']}]
     workflow = parse_workflow(workflow_data, repository)
     controller = WorkflowController()
 

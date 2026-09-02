@@ -34,11 +34,6 @@ class WorkflowController:
         self._set_boundary(workflow, store, state)
         return store, state
 
-    def status(self, store: RunStore) -> tuple[RunState, dict]:
-        workflow = load_workflow_snapshot(store.workflow_path)
-        state = store.load_state()
-        return state, self.describe(workflow, store, state)
-
     def begin(self, store: RunStore, step_id: str, *, allow_shell: bool = False) -> RunState:
         workflow = load_workflow_snapshot(store.workflow_path)
         state = store.load_state()
