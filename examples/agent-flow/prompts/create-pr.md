@@ -8,7 +8,7 @@ Stage only files belonging to this issue, create a clear commit, push the branch
 
 - reference and close the GitHub issue when appropriate;
 - summarize behavior and implementation, not the orchestration process;
-- list the exact validation commands and results from `final-validation.json`;
+- list the exact validation commands and results from `final-validation.md`;
 - call out migrations, compatibility risks, follow-ups, or blocked checks;
 - avoid claiming checks passed when they were skipped or blocked.
 
@@ -18,4 +18,4 @@ After creation, query the PR to verify its URL, number, base, head branch, head 
 
 # Output
 
-Return only JSON conforming to the provided PR schema.
+Return a concise Markdown receipt with the PR link, number, title, state, base, head branch, head SHA, and commit.

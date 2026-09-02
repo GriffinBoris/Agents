@@ -18,11 +18,6 @@ from agent_flow.config import (
 def test_loads_workflow_files_and_round_trips_snapshot(tmp_path: Path) -> None:
     (tmp_path / 'prompts').mkdir()
     (tmp_path / 'prompts' / 'research.md').write_text('Research the repository.', encoding='utf-8')
-    (tmp_path / 'schemas').mkdir()
-    (tmp_path / 'schemas' / 'result.json').write_text(
-        json.dumps({'type': 'object', 'properties': {'summary': {'type': 'string'}}}),
-        encoding='utf-8',
-    )
     workflow_path = tmp_path / 'workflow.yml'
     workflow_path.write_text(
         """version: 1
@@ -43,8 +38,7 @@ steps:
     type: agent
     prompt_file: prompts/research.md
     inputs: [request.md]
-    output: research.json
-    schema_file: schemas/result.json
+    output: research.md
     delegation:
       strategy: native
       max_agents: 3
@@ -58,7 +52,6 @@ steps:
     step = workflow.steps[0]
     assert isinstance(step, AgentStep)
     assert step.prompt == 'Research the repository.'
-    assert step.schema == {'type': 'object', 'properties': {'summary': {'type': 'string'}}}
     assert workflow.model_for(step).model == 'gpt-5.6-sol'
     assert workflow.delegated_model_for(step).model == 'gpt-5.6-luna'
 
@@ -98,14 +91,6 @@ def test_rejects_artifact_paths_that_escape_run_directory(tmp_path: Path) -> Non
     data['steps'][0]['output'] = '../outside.md'
 
     with pytest.raises(WorkflowConfigError, match='safe relative path'):
-        parse_workflow(data, tmp_path)
-
-
-def test_rejects_invalid_json_schema_before_run(tmp_path: Path) -> None:
-    data = _base_workflow()
-    data['steps'][0]['schema'] = {'type': 'not-a-json-schema-type'}
-
-    with pytest.raises(WorkflowConfigError, match='Invalid JSON schema'):
         parse_workflow(data, tmp_path)
 
 

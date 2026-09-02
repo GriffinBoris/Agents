@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pytest
@@ -69,7 +68,7 @@ def test_failed_worker_step_can_be_retried_without_launching_a_provider(tmp_path
     assert completed.steps['research']['attempts'] == 2
 
 
-def test_parallel_workers_are_tracked_and_validated_independently(tmp_path: Path) -> None:
+def test_parallel_workers_and_artifacts_are_tracked_independently(tmp_path: Path) -> None:
     repository = tmp_path / 'repository'
     repository.mkdir()
     request_path = repository / 'request-source.md'
@@ -94,32 +93,6 @@ def test_parallel_workers_are_tracked_and_validated_independently(tmp_path: Path
     assert state.steps['reviews']['status'] == 'succeeded'
     assert state.steps['research']['metadata']['worker_ids'] == ['worker-research']
     assert state.steps['security']['metadata']['worker_ids'] == ['worker-security']
-
-
-def test_completion_rejects_artifact_that_does_not_match_schema(tmp_path: Path) -> None:
-    repository = tmp_path / 'repository'
-    repository.mkdir()
-    request_path = repository / 'request-source.md'
-    request_path.write_text('Review the project.', encoding='utf-8')
-    workflow_data = _single_agent_workflow()
-    workflow_data['steps'][0]['schema'] = {
-        'type': 'object',
-        'properties': {'status': {'type': 'string'}},
-        'required': ['status'],
-        'additionalProperties': False,
-    }
-    workflow_data['steps'][0]['output'] = 'research.json'
-    workflow = parse_workflow(workflow_data, repository)
-    controller = WorkflowController()
-
-    store, _ = controller.start(workflow, request_path, repository)
-    controller.begin(store, 'research')
-    store.write_artifact('research.json', json.dumps({'unexpected': True}))
-
-    with pytest.raises(WorkflowStateError, match='does not match its JSON Schema'):
-        controller.complete(store, 'research')
-
-    assert store.load_state().status == 'running'
 
 
 def test_shell_failure_is_recorded_for_desktop_parent_to_handle(tmp_path: Path) -> None:

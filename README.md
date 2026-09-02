@@ -10,7 +10,7 @@ This repository also contains `agent-flow`, a small file-backed controller for w
 - Durable step state, artifacts, worker IDs, and retry history
 - Read-only parallel agent groups
 - Deterministic shell commands and explicit approval gates
-- Local JSON Schema validation before a worker result is accepted
+- Durable Markdown artifacts before a worker result is accepted
 - GitHub issue intake through `gh`, question routing through the visible parent, and approval-controlled correction loops
 
 Install the controller, then invoke the bundled `agent-flow` skill from Codex Desktop:

@@ -1,9 +1,6 @@
-import json
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-
-from jsonschema import SchemaError, ValidationError, validate
 
 from agent_flow.config import (
     AgentStep,
@@ -83,12 +80,12 @@ class WorkflowController:
             raise WorkflowStateError(f'Run cannot complete a step from status {state.status!r}')
 
         if isinstance(step, AgentStep):
-            artifact = self._validate_agent_artifact(store, step)
+            artifact = self._require_agent_artifact(store, step)
             state.steps[step.id]['metadata']['artifact'] = str(artifact)
         elif isinstance(step, ParallelStep):
             artifacts = {}
             for child in step.steps:
-                artifact = self._validate_agent_artifact(store, child)
+                artifact = self._require_agent_artifact(store, child)
                 artifacts[child.id] = str(artifact)
                 child_record = state.steps[child.id]
                 child_record['status'] = 'succeeded'
@@ -246,26 +243,11 @@ class WorkflowController:
         record['error'] = None
 
     @staticmethod
-    def _validate_agent_artifact(store: RunStore, step: AgentStep) -> Path:
+    def _require_agent_artifact(store: RunStore, step: AgentStep) -> Path:
         output_path = _agent_output(step)
         artifact = (store.run_directory / output_path).resolve()
         if not artifact.is_relative_to(store.run_directory) or not artifact.is_file():
             raise WorkflowStateError(f'Step {step.id!r} has no artifact at {artifact}')
-        if step.schema is None:
-            return artifact
-
-        try:
-            value = json.loads(artifact.read_text(encoding='utf-8'))
-        except json.JSONDecodeError as error:
-            raise WorkflowStateError(f'Step {step.id!r} artifact is invalid JSON: {error}') from error
-        try:
-            validate(instance=value, schema=step.schema)
-        except ValidationError as error:
-            raise WorkflowStateError(
-                f'Step {step.id!r} artifact does not match its JSON Schema: {error.message}'
-            ) from error
-        except SchemaError as error:
-            raise WorkflowStateError(f'Step {step.id!r} has an invalid JSON Schema: {error.message}') from error
         return artifact
 
     def _describe_step(
@@ -325,7 +307,6 @@ class WorkflowController:
             'prompt': step.prompt,
             'inputs': inputs,
             'output': str(store.run_directory / _agent_output(step)),
-            'schema': step.schema,
             'model': {
                 'profile': profile.name,
                 'provider': profile.provider,
@@ -337,7 +318,7 @@ class WorkflowController:
 
 
 def _agent_output(step: AgentStep) -> str:
-    return step.output or f'artifacts/{step.id}.{"json" if step.schema is not None else "md"}'
+    return step.output or f'artifacts/{step.id}.md'
 
 
 def _now() -> str:

@@ -9,7 +9,7 @@ description: Run or resume a YAML Agent Flow workflow from a persistent Codex De
 
 Keep the current Codex Desktop task as the persistent workflow parent. Execute `agent` and `parallel` steps with native Codex subagents so their activity is visible in Desktop and their results return to this parent.
 
-Do not invoke `codex exec`, Claude Code, or another provider CLI. The `agent-flow` command only validates workflow definitions, records durable state, validates artifacts, and runs declared shell steps.
+Do not invoke `codex exec`, Claude Code, or another provider CLI. The `agent-flow` command only validates workflow definitions, records durable state, verifies artifacts, and runs declared shell steps.
 
 If the user explicitly asks for a new or dedicated Desktop task, use the host's task-creation capability and instruct that task to invoke `$agent-flow`. Otherwise, run the workflow in the current task. Never create a separate task merely because the workflow has multiple steps.
 
@@ -41,7 +41,7 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
    - the rendered step prompt;
    - the exact resolved input paths;
    - the requested read or write mode;
-   - the output contract and JSON Schema when present;
+   - the exact output path and requested report structure;
    - an instruction to return its complete artifact to the parent rather than writing the workflow artifact itself.
 3. Read-mode workers must not modify repository files. Run write-mode workers sequentially in the parent's checkout.
 4. After spawning, record the returned worker or thread identifier with:
@@ -51,8 +51,8 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
    ```
 
 5. Coordinate through the parent. Send bounded follow-up instructions when the worker needs correction or missing context, wait for it to finish, and do not duplicate its assigned work in the parent.
-6. Write the worker's final response to the exact output path from `status`. When a schema is present, write only valid JSON conforming to it.
-7. Run `agent-flow complete <run-id> <step-id> --repo <repository>`. Completion validates the artifact before advancing.
+6. Write the worker's final response to the exact output path from `status`.
+7. Run `agent-flow complete <run-id> <step-id> --repo <repository>`. Completion verifies the artifact exists before advancing.
 8. After the artifact is durable and no follow-up is needed, close the completed worker thread when the host supports closing. Otherwise leave it in the completed list; never delete useful output before it is captured.
 
 When `delegation.strategy` is `native`, the step worker may itself spawn at most `max_agents` bounded subagents. Give it the configured delegated model, effort, and delegation instructions. It must wait for those children and return one synthesized artifact to the parent.
@@ -74,7 +74,7 @@ Answer small, evidence-backed implementation questions within the parent only wh
 2. Spawn one native subagent for each child concurrently. Parallel children are read-only and must have disjoint assignments.
 3. Attach each worker to its child step id, not the enclosing parallel step id.
 4. Wait for every child. Persist each final response to that child's declared output path.
-5. Run `agent-flow complete <run-id> <parallel-step-id> --repo <repository>`. The controller validates every child artifact before advancing.
+5. Run `agent-flow complete <run-id> <parallel-step-id> --repo <repository>`. The controller verifies every child artifact exists before advancing.
 6. Close completed child threads only after all required artifacts are durable.
 
 ### Shell step
@@ -117,7 +117,7 @@ Keep the parent task alive, report the failed step and available evidence, and r
 - Workers own bounded execution. Their full scratch context stays out of the parent; return concise findings and the complete requested artifact.
 - Route cross-worker communication through the parent. Share only the information another worker needs.
 - Persist important results in the run directory before closing workers.
-- Do not expose a worker's existence as proof that its output was accepted; artifact validation and `complete` are the acceptance boundary.
+- Do not expose a worker's existence as proof that its output was accepted; a durable artifact and `complete` are the acceptance boundary.
 - Do not substitute unavailable models, broaden permissions, create new tasks, push changes, or open pull requests unless the user separately authorizes those actions. Invoking a workflow that clearly declares a PR-publication step is authorization for that step only after its preceding approval gate is explicitly approved.
 
 ## Completion

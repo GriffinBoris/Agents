@@ -69,17 +69,15 @@ steps:
     mode: write
     prompt_file: prompts/issue-validate.md
     inputs: [request.md, context.md, plan.md, implementation.md]
-    output: validation.json
-    schema_file: schemas/validation.json
+    output: validation.md
 
   - id: detailed-review
     type: agent
     model: deep
     mode: read
     prompt_file: prompts/detailed-review.md
-    inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
-    output: detailed-review.json
-    schema_file: schemas/detailed-review.json
+    inputs: [request.md, context.md, plan.md, implementation.md, validation.md]
+    output: detailed-review.md
     delegation:
       strategy: native
       max_agents: 3
@@ -95,7 +93,7 @@ steps:
       - request.md
       - context.md
       - plan.md
-      - detailed-review.json
+      - detailed-review.md
     output: fixes.md
 
   - id: final-validation
@@ -104,17 +102,15 @@ steps:
     mode: write
     prompt_file: prompts/issue-validate.md
     inputs: [request.md, context.md, plan.md, implementation.md, fixes.md]
-    output: final-validation.json
-    schema_file: schemas/validation.json
+    output: final-validation.md
 
   - id: final-review
     type: agent
     model: deep
     mode: read
     prompt_file: prompts/detailed-review.md
-    inputs: [request.md, context.md, plan.md, fixes.md, final-validation.json]
-    output: final-review.json
-    schema_file: schemas/detailed-review.json
+    inputs: [request.md, context.md, plan.md, fixes.md, final-validation.md]
+    output: final-review.md
     delegation:
       strategy: native
       max_agents: 3
@@ -123,7 +119,7 @@ steps:
 
   - id: approve-pr
     type: approval
-    message: Review the final diff, final-validation.json, and final-review.json. Request another correction pass if needed; approve only when the branch is ready to publish as a pull request.
+    message: Review the final diff, final-validation.md, and final-review.md. Request another correction pass if needed; approve only when the branch is ready to publish as a pull request.
 
   - id: create-pr
     type: agent
@@ -134,7 +130,6 @@ steps:
       - request.md
       - context.md
       - plan.md
-      - final-review.json
-      - final-validation.json
-    output: pr.json
-    schema_file: schemas/pr.json
+      - final-review.md
+      - final-validation.md
+    output: pr.md

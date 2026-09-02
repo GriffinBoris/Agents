@@ -4,8 +4,6 @@ from pathlib import Path, PurePath
 from typing import Optional, Union
 
 import yaml
-from jsonschema import SchemaError
-from jsonschema.validators import validator_for
 
 SUPPORTED_PROVIDERS = {'codex'}
 SUPPORTED_STEP_TYPES = {'agent', 'approval', 'parallel', 'shell'}
@@ -42,7 +40,6 @@ class AgentStep:
     prompt: str
     inputs: tuple[str, ...]
     output: Optional[str]
-    schema: Optional[dict]
     delegation: DelegationConfig
 
 
@@ -225,7 +222,6 @@ def _parse_agent_step(raw_step: dict, source_directory: Path, step_id: str) -> A
         raise WorkflowConfigError(f'Unsupported mode for agent step {step_id!r}: {mode}')
 
     prompt = _parse_prompt(raw_step, source_directory, step_id)
-    schema = _parse_schema(raw_step, source_directory, step_id)
     inputs = _require_string_list(raw_step.get('inputs', []), f'step {step_id}.inputs')
     for input_path in inputs:
         _validate_relative_path(input_path, f'step {step_id}.inputs')
@@ -238,7 +234,6 @@ def _parse_agent_step(raw_step: dict, source_directory: Path, step_id: str) -> A
         prompt=prompt,
         inputs=tuple(inputs),
         output=_optional_relative_path(raw_step.get('output'), f'step {step_id}.output'),
-        schema=schema,
         delegation=_parse_delegation(raw_step.get('delegation', {}), step_id),
     )
 
@@ -255,33 +250,6 @@ def _parse_prompt(raw_step: dict, source_directory: Path, step_id: str) -> str:
     relative_path = _require_relative_path(prompt_file, f'step {step_id}.prompt_file')
     resolved_path = _resolve_source_file(source_directory, relative_path, f'step {step_id}.prompt_file')
     return resolved_path.read_text(encoding='utf-8')
-
-
-def _parse_schema(raw_step: dict, source_directory: Path, step_id: str) -> Optional[dict]:
-    schema = raw_step.get('schema')
-    schema_file = raw_step.get('schema_file')
-    if schema is not None and schema_file is not None:
-        raise WorkflowConfigError(f'Agent step {step_id!r} may define only one of schema or schema_file')
-    if schema is not None:
-        return _validated_schema(_require_mapping(schema, f'step {step_id}.schema'), step_id)
-    if schema_file is None:
-        return None
-
-    relative_path = _require_relative_path(schema_file, f'step {step_id}.schema_file')
-    resolved_path = _resolve_source_file(source_directory, relative_path, f'step {step_id}.schema_file')
-    try:
-        loaded_schema = json.loads(resolved_path.read_text(encoding='utf-8'))
-    except json.JSONDecodeError as error:
-        raise WorkflowConfigError(f'Invalid JSON schema for step {step_id!r}: {error}') from error
-    return _validated_schema(_require_mapping(loaded_schema, f'step {step_id}.schema_file'), step_id)
-
-
-def _validated_schema(schema: dict, step_id: str) -> dict:
-    try:
-        validator_for(schema).check_schema(schema)
-    except SchemaError as error:
-        raise WorkflowConfigError(f'Invalid JSON schema for step {step_id!r}: {error.message}') from error
-    return schema
 
 
 def _parse_delegation(value: object, step_id: str) -> DelegationConfig:
@@ -367,7 +335,6 @@ def _step_snapshot(step: WorkflowStep) -> dict:
             'prompt': step.prompt,
             'inputs': list(step.inputs),
             'output': step.output,
-            'schema': step.schema,
             'delegation': {
                 'strategy': step.delegation.strategy,
                 'max_agents': step.delegation.max_agents,

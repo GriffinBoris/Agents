@@ -1,6 +1,6 @@
 # Objective
 
-Resolve all actionable findings from `detailed-review.json` while preserving the approved issue scope.
+Resolve all actionable findings from `detailed-review.md` while preserving the approved issue scope.
 
 Re-open each cited source and inspect the current code before editing. Address blocker, high, and medium findings unless they are demonstrably false or conflict with an explicit user decision. Fix low findings when the change is small and clearly beneficial. For any rejected finding, provide concrete evidence. Add or improve tests alongside behavioral changes and run focused checks.
 

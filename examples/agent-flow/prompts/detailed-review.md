@@ -14,4 +14,4 @@ If ambiguity prevents a defensible verdict, ask the Desktop parent and mark the 
 
 # Output
 
-Return only JSON conforming to the provided review schema.
+Return one Markdown report with a clear verdict, prioritized findings, verified requirements, supporting evidence, and unresolved questions.

@@ -10,4 +10,4 @@ If choosing between validation paths would materially change confidence or cost,
 
 # Output
 
-Return only JSON conforming to the provided schema.
+Return one Markdown report containing the overall status, every command with its exit code and result, failures or blocked checks, the diff-scope check, and unresolved questions.

@@ -2,7 +2,7 @@
 
 Agent Flow runs repeatable engineering workflows from a persistent Codex Desktop task. The Desktop task is the workflow parent: it retains requirements and decisions, spawns native Codex subagents, coordinates follow-ups, handles approvals, and presents the final result. Subagents use fresh contexts and become disposable after their accepted outputs are stored.
 
-The Python package is deliberately not an agent launcher. It validates YAML, snapshots the workflow, records state and worker IDs, validates artifacts, and executes declared shell commands.
+The Python package is deliberately not an agent launcher. It validates YAML, snapshots the workflow, records state and worker IDs, verifies artifacts, and executes declared shell commands.
 
 ## Architecture
 
@@ -70,7 +70,7 @@ agent-flow start workflows/deep-feature.yml \
   --repo /path/to/repository
 ```
 
-The command returns the current step as JSON, including resolved input and output paths, the selected model and effort, the prompt, schema, and delegation policy. The Desktop parent uses that descriptor to spawn a native worker.
+The command returns the current step as JSON, including resolved input and output paths, the selected model and effort, the prompt, and the delegation policy. The Desktop parent uses that descriptor to spawn a native worker.
 
 ## Controller lifecycle
 
@@ -88,7 +88,7 @@ agent-flow shell <run-id> <step-id> --repo <repository>
 agent-flow approve <run-id> --repo <repository>
 ```
 
-`begin` marks the current step as running. `attach` records the native worker returned by Desktop. The parent writes the worker's final response to the declared artifact path, then `complete` validates it and advances. A failed step remains current and can be retried with `begin`; completed steps do not rerun.
+`begin` marks the current step as running. `attach` records the native worker returned by Desktop. The parent writes the worker's final response to the declared artifact path, then `complete` verifies it exists and advances. A failed step remains current and can be retried with `begin`; completed steps do not rerun.
 
 An approval step saves `waiting_for_approval` state. The Desktop parent presents the message and relevant artifacts, then stops. Only explicit user approval permits `agent-flow approve`.
 
@@ -108,7 +108,7 @@ Each run stores its durable state in the target repository:
 └── workflow.json
 ```
 
-`workflow.json` is a resolved snapshot containing prompt-file contents and JSON schemas. Later edits to the source workflow do not alter an active run. `state.json` records attempts, worker IDs, failures, artifact paths, and the current step.
+`workflow.json` is a resolved snapshot containing prompt-file contents. Later edits to the source workflow do not alter an active run. `state.json` records attempts, worker IDs, failures, artifact paths, and the current step.
 
 The Desktop conversation remains the human-visible coordination history. The run directory is the durable, machine-readable recovery boundary.
 
@@ -157,7 +157,7 @@ steps:
     output: test-output.txt
 ```
 
-Prompt and schema files are relative to the workflow file. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory.
+Prompt files are relative to the workflow file. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory.
 
 ### Agent steps
 
@@ -172,7 +172,6 @@ Every agent step becomes one native Desktop subagent. The parent passes only the
 | `prompt` or `prompt_file` | Yes | Inline instructions or a workflow-relative prompt file. |
 | `inputs` | No | Run artifacts or repository files supplied to the worker. |
 | `output` | No | Run-relative artifact path; a default is used when omitted. |
-| `schema` or `schema_file` | No | JSON Schema validated locally at completion. |
 | `delegation` | No | Whether the step worker may spawn bounded native children. |
 
 The controller passes model names and effort values to the skill unchanged. The skill must not silently substitute an unavailable model.
@@ -207,8 +206,7 @@ A parallel step asks the Desktop parent to spawn one native worker per child con
       mode: read
       prompt_file: prompts/review-correctness.md
       inputs: [plan.md]
-      output: correctness-review.json
-      schema_file: schemas/review.json
+      output: correctness-review.md
 
     - id: simplicity
       type: agent
@@ -216,8 +214,7 @@ A parallel step asks the Desktop parent to spawn one native worker per child con
       mode: read
       prompt_file: prompts/review-simplicity.md
       inputs: [plan.md]
-      output: simplicity-review.json
-      schema_file: schemas/review.json
+      output: simplicity-review.md
 ```
 
 Parallel children must be read-only. The parent waits for every worker, persists each output, and completes the group only after every artifact validates.
