@@ -12,7 +12,7 @@ def test_parent_driven_run_pauses_for_approval_then_executes_shell(tmp_path: Pat
     repository.mkdir()
     request_path = repository / 'source-request.md'
     request_path.write_text('Build the feature.', encoding='utf-8')
-    workflow = parse_workflow(_approval_workflow(), repository)
+    workflow = parse_workflow(_approval_workflow())
     controller = WorkflowController()
 
     store, state = controller.start(workflow, request_path, repository)
@@ -50,7 +50,7 @@ def test_failed_worker_step_can_be_retried_without_launching_a_provider(tmp_path
     repository.mkdir()
     request_path = repository / 'request-source.md'
     request_path.write_text('Investigate the project.', encoding='utf-8')
-    workflow = parse_workflow(_single_agent_workflow(), repository)
+    workflow = parse_workflow(_single_agent_workflow())
     controller = WorkflowController()
 
     store, _ = controller.start(workflow, request_path, repository)
@@ -77,7 +77,7 @@ def test_parallel_workers_and_artifacts_are_tracked_independently(tmp_path: Path
     first = workflow_data['steps'][0]
     second = {**first, 'id': 'security', 'output': 'security.md'}
     workflow_data['steps'] = [{'id': 'reviews', 'type': 'parallel', 'steps': [first, second]}]
-    workflow = parse_workflow(workflow_data, repository)
+    workflow = parse_workflow(workflow_data)
     controller = WorkflowController()
 
     store, _ = controller.start(workflow, request_path, repository)
@@ -102,7 +102,7 @@ def test_shell_failure_is_recorded_for_desktop_parent_to_handle(tmp_path: Path) 
     request_path.write_text('Run validation.', encoding='utf-8')
     workflow_data = _single_agent_workflow()
     workflow_data['steps'] = [{'id': 'tests', 'type': 'shell', 'command': ['python3', '-c', 'raise SystemExit(4)']}]
-    workflow = parse_workflow(workflow_data, repository)
+    workflow = parse_workflow(workflow_data)
     controller = WorkflowController()
 
     store, _ = controller.start(workflow, request_path, repository)
@@ -123,7 +123,7 @@ def test_shell_step_cannot_be_advanced_without_running_command(tmp_path: Path) -
     request_path.write_text('Run validation.', encoding='utf-8')
     workflow_data = _single_agent_workflow()
     workflow_data['steps'] = [{'id': 'tests', 'type': 'shell', 'command': ['python3', '-c', 'print(1)']}]
-    workflow = parse_workflow(workflow_data, repository)
+    workflow = parse_workflow(workflow_data)
     controller = WorkflowController()
 
     store, _ = controller.start(workflow, request_path, repository)
@@ -139,7 +139,7 @@ def test_store_can_reopen_desktop_managed_run(tmp_path: Path) -> None:
     repository.mkdir()
     request_path = repository / 'request-source.md'
     request_path.write_text('Keep durable state.', encoding='utf-8')
-    workflow = parse_workflow(_single_agent_workflow(), repository)
+    workflow = parse_workflow(_single_agent_workflow())
 
     store, state = WorkflowController().start(workflow, request_path, repository)
     reopened = RunStore.open(repository, state.run_id)

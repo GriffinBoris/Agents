@@ -108,7 +108,7 @@ Each run stores its durable state in the target repository:
 └── workflow.json
 ```
 
-`workflow.json` is a resolved snapshot containing prompt-file contents. Later edits to the source workflow do not alter an active run. `state.json` records attempts, worker IDs, failures, artifact paths, and the current step.
+`workflow.json` is a resolved snapshot containing every inline step prompt. Later edits to the source workflow do not alter an active run. `state.json` records attempts, worker IDs, failures, artifact paths, and the current step.
 
 The Desktop conversation remains the human-visible coordination history. The run directory is the durable, machine-readable recovery boundary.
 
@@ -138,7 +138,7 @@ steps:
   - id: research
     type: agent
     mode: read
-    prompt_file: prompts/research.md
+    prompt: Research the request and repository, then return an evidence-backed implementation brief.
     inputs: [request.md]
     output: research.md
     delegation:
@@ -157,7 +157,7 @@ steps:
     output: test-output.txt
 ```
 
-Prompt files are relative to the workflow file. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory.
+Prompts live directly in the workflow. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory.
 
 ### Agent steps
 
@@ -169,7 +169,7 @@ Every agent step becomes one native Desktop subagent. The parent passes only the
 | `type` | Yes | Must be `agent`. |
 | `model` | When no default exists | Named Codex model profile. |
 | `mode` | No | `read` by default; `write` permits repository changes. |
-| `prompt` or `prompt_file` | Yes | Inline instructions or a workflow-relative prompt file. |
+| `prompt` | Yes | Inline instructions for the worker. Use a YAML block scalar for longer prompts. |
 | `inputs` | No | Run artifacts or repository files supplied to the worker. |
 | `output` | No | Run-relative artifact path; a default is used when omitted. |
 | `delegation` | No | Whether the step worker may spawn bounded native children. |
@@ -204,7 +204,7 @@ A parallel step asks the Desktop parent to spawn one native worker per child con
       type: agent
       model: deep
       mode: read
-      prompt_file: prompts/review-correctness.md
+      prompt: Review the implementation for correctness and regressions.
       inputs: [plan.md]
       output: correctness-review.md
 
@@ -212,7 +212,7 @@ A parallel step asks the Desktop parent to spawn one native worker per child con
       type: agent
       model: fast
       mode: read
-      prompt_file: prompts/review-simplicity.md
+      prompt: Review the implementation for unnecessary complexity.
       inputs: [plan.md]
       output: simplicity-review.md
 ```

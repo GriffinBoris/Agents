@@ -99,7 +99,7 @@ def load_workflow(path: Path) -> Workflow:
     except yaml.YAMLError as error:
         raise WorkflowConfigError(f'Invalid workflow YAML: {error}') from error
 
-    return parse_workflow(data, source_path.parent)
+    return parse_workflow(data)
 
 
 def load_workflow_snapshot(path: Path) -> Workflow:
@@ -108,10 +108,10 @@ def load_workflow_snapshot(path: Path) -> Workflow:
     except (json.JSONDecodeError, OSError) as error:
         raise WorkflowConfigError(f'Cannot read workflow snapshot {path}: {error}') from error
 
-    return parse_workflow(data, path.parent)
+    return parse_workflow(data)
 
 
-def parse_workflow(data: object, source_directory: Path) -> Workflow:
+def parse_workflow(data: object) -> Workflow:
     root = _require_mapping(data, 'workflow')
     version = root.get('version')
     if version != 1:
@@ -130,7 +130,7 @@ def parse_workflow(data: object, source_directory: Path) -> Workflow:
     if not raw_steps:
         raise WorkflowConfigError('Workflow must contain at least one step')
 
-    steps = tuple(_parse_step(raw_step, source_directory) for raw_step in raw_steps)
+    steps = tuple(_parse_step(raw_step) for raw_step in raw_steps)
     workflow = Workflow(version=version, name=name, models=models, default_model=default_model, steps=steps)
     _validate_workflow(workflow)
     return workflow
@@ -175,7 +175,7 @@ def _parse_models(value: object) -> dict[str, ModelProfile]:
     return models
 
 
-def _parse_step(value: object, source_directory: Path) -> WorkflowStep:
+def _parse_step(value: object) -> WorkflowStep:
     raw_step = _require_mapping(value, 'workflow step')
     step_id = _require_identifier(raw_step.get('id'), 'step.id')
     step_type = _require_string(raw_step.get('type'), f'step {step_id}.type')
@@ -183,7 +183,7 @@ def _parse_step(value: object, source_directory: Path) -> WorkflowStep:
         raise WorkflowConfigError(f'Unsupported step type for {step_id!r}: {step_type}')
 
     if step_type == 'agent':
-        return _parse_agent_step(raw_step, source_directory, step_id)
+        return _parse_agent_step(raw_step, step_id)
     if step_type == 'approval':
         return ApprovalStep(
             id=step_id,
@@ -207,7 +207,7 @@ def _parse_step(value: object, source_directory: Path) -> WorkflowStep:
 
     children = []
     for raw_child in raw_children:
-        child = _parse_step(raw_child, source_directory)
+        child = _parse_step(raw_child)
         if not isinstance(child, AgentStep):
             raise WorkflowConfigError(f'Parallel step {step_id!r} may contain only agent steps')
         if child.mode != 'read':
@@ -216,12 +216,12 @@ def _parse_step(value: object, source_directory: Path) -> WorkflowStep:
     return ParallelStep(id=step_id, type=step_type, steps=tuple(children))
 
 
-def _parse_agent_step(raw_step: dict, source_directory: Path, step_id: str) -> AgentStep:
+def _parse_agent_step(raw_step: dict, step_id: str) -> AgentStep:
     mode = raw_step.get('mode', 'read')
     if mode not in SUPPORTED_MODES:
         raise WorkflowConfigError(f'Unsupported mode for agent step {step_id!r}: {mode}')
 
-    prompt = _parse_prompt(raw_step, source_directory, step_id)
+    prompt = _require_string(raw_step.get('prompt'), f'step {step_id}.prompt')
     inputs = _require_string_list(raw_step.get('inputs', []), f'step {step_id}.inputs')
     for input_path in inputs:
         _validate_relative_path(input_path, f'step {step_id}.inputs')
@@ -236,20 +236,6 @@ def _parse_agent_step(raw_step: dict, source_directory: Path, step_id: str) -> A
         output=_optional_relative_path(raw_step.get('output'), f'step {step_id}.output'),
         delegation=_parse_delegation(raw_step.get('delegation', {}), step_id),
     )
-
-
-def _parse_prompt(raw_step: dict, source_directory: Path, step_id: str) -> str:
-    prompt = raw_step.get('prompt')
-    prompt_file = raw_step.get('prompt_file')
-    if (prompt is None) == (prompt_file is None):
-        raise WorkflowConfigError(f'Agent step {step_id!r} must define exactly one of prompt or prompt_file')
-
-    if prompt is not None:
-        return _require_string(prompt, f'step {step_id}.prompt')
-
-    relative_path = _require_relative_path(prompt_file, f'step {step_id}.prompt_file')
-    resolved_path = _resolve_source_file(source_directory, relative_path, f'step {step_id}.prompt_file')
-    return resolved_path.read_text(encoding='utf-8')
 
 
 def _parse_delegation(value: object, step_id: str) -> DelegationConfig:
@@ -351,15 +337,6 @@ def _step_snapshot(step: WorkflowStep) -> dict:
         'type': step.type,
         'steps': [_step_snapshot(child) for child in step.steps],
     }
-
-
-def _resolve_source_file(source_directory: Path, relative_path: str, field_name: str) -> Path:
-    resolved_path = (source_directory / relative_path).resolve()
-    if not resolved_path.is_relative_to(source_directory.resolve()):
-        raise WorkflowConfigError(f'{field_name} must stay inside the workflow directory')
-    if not resolved_path.is_file():
-        raise WorkflowConfigError(f'{field_name} does not exist: {resolved_path}')
-    return resolved_path
 
 
 def _require_mapping(value: object, field_name: str) -> dict:

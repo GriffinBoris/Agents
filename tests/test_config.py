@@ -15,9 +15,7 @@ from agent_flow.config import (
 )
 
 
-def test_loads_workflow_files_and_round_trips_snapshot(tmp_path: Path) -> None:
-    (tmp_path / 'prompts').mkdir()
-    (tmp_path / 'prompts' / 'research.md').write_text('Research the repository.', encoding='utf-8')
+def test_loads_workflow_and_round_trips_snapshot(tmp_path: Path) -> None:
     workflow_path = tmp_path / 'workflow.yml'
     workflow_path.write_text(
         """version: 1
@@ -36,7 +34,7 @@ defaults:
 steps:
   - id: research
     type: agent
-    prompt_file: prompts/research.md
+    prompt: Research the repository.
     inputs: [request.md]
     output: research.md
     delegation:
@@ -60,41 +58,41 @@ steps:
     assert load_workflow_snapshot(snapshot_path) == workflow
 
 
-def test_rejects_non_codex_provider(tmp_path: Path) -> None:
+def test_rejects_non_codex_provider() -> None:
     data = _base_workflow()
     data['models']['claude'] = {'provider': 'claude', 'model': 'sonnet'}
 
     with pytest.raises(WorkflowConfigError, match='Unsupported provider'):
-        parse_workflow(data, tmp_path)
+        parse_workflow(data)
 
 
-def test_rejects_unknown_model_with_clear_error(tmp_path: Path) -> None:
+def test_rejects_unknown_model_with_clear_error() -> None:
     data = _base_workflow()
     data['steps'][0]['model'] = 'missing'
 
     with pytest.raises(WorkflowConfigError, match='Unknown model profile'):
-        parse_workflow(data, tmp_path)
+        parse_workflow(data)
 
 
-def test_parallel_steps_are_limited_to_read_only_agents(tmp_path: Path) -> None:
+def test_parallel_steps_are_limited_to_read_only_agents() -> None:
     data = _base_workflow()
     child = data['steps'][0]
     child['mode'] = 'write'
     data['steps'] = [{'id': 'reviews', 'type': 'parallel', 'steps': [child]}]
 
     with pytest.raises(WorkflowConfigError, match='must use read mode'):
-        parse_workflow(data, tmp_path)
+        parse_workflow(data)
 
 
-def test_rejects_artifact_paths_that_escape_run_directory(tmp_path: Path) -> None:
+def test_rejects_artifact_paths_that_escape_run_directory() -> None:
     data = _base_workflow()
     data['steps'][0]['output'] = '../outside.md'
 
     with pytest.raises(WorkflowConfigError, match='safe relative path'):
-        parse_workflow(data, tmp_path)
+        parse_workflow(data)
 
 
-def test_parses_parallel_agent_group(tmp_path: Path) -> None:
+def test_parses_parallel_agent_group() -> None:
     data = _base_workflow()
     first = data['steps'][0]
     second = yaml.safe_load(yaml.safe_dump(first))
@@ -102,7 +100,7 @@ def test_parses_parallel_agent_group(tmp_path: Path) -> None:
     second['output'] = 'security.md'
     data['steps'] = [{'id': 'reviews', 'type': 'parallel', 'steps': [first, second]}]
 
-    workflow = parse_workflow(data, tmp_path)
+    workflow = parse_workflow(data)
 
     step = workflow.steps[0]
     assert isinstance(step, ParallelStep)
