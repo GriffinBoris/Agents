@@ -11,6 +11,7 @@ This repository also contains `agent-flow`, a small file-backed controller for w
 - Read-only parallel agent groups
 - Deterministic shell commands and explicit approval gates
 - Local JSON Schema validation before a worker result is accepted
+- GitHub issue intake through `gh`, question routing through the visible parent, and approval-controlled correction loops
 
 Install the controller, then invoke the bundled `agent-flow` skill from Codex Desktop:
 
@@ -20,6 +21,12 @@ uv tool install .
 
 ```text
 $agent-flow Run examples/agent-flow/deep-feature.yml with examples/agent-flow/request.md against this repository.
+```
+
+Or run the issue-to-PR example without creating a request file:
+
+```text
+$agent-flow Run examples/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
 ```
 
 The skill drives native Desktop subagents; the Python command does not launch Codex or Claude processes. Run state and artifacts live under `.agent-flow/runs/` in the target repository. See [Agent Flow](docs/agent-flow.md) for the workflow format, controller commands, and current limitations.

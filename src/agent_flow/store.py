@@ -69,18 +69,29 @@ class RunStore:
 
     @classmethod
     def create(cls, repository_root: Path, workflow: Workflow, request_path: Path) -> tuple['RunStore', RunState]:
-        root = repository_root.resolve()
-        if not root.is_dir():
-            raise RunStoreError(f'Repository root does not exist: {root}')
         source_request = request_path.resolve()
         if not source_request.is_file():
             raise RunStoreError(f'Request file does not exist: {source_request}')
+        return cls.create_from_text(repository_root, workflow, source_request.read_text(encoding='utf-8'))
+
+    @classmethod
+    def create_from_text(
+        cls,
+        repository_root: Path,
+        workflow: Workflow,
+        request_text: str,
+    ) -> tuple['RunStore', RunState]:
+        root = repository_root.resolve()
+        if not root.is_dir():
+            raise RunStoreError(f'Repository root does not exist: {root}')
+        if not request_text.strip():
+            raise RunStoreError('Request text must not be empty')
 
         now = _now()
         run_id = f'{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}-{_slug(workflow.name)}-{uuid.uuid4().hex[:8]}'
         store = cls(root / RUNS_DIRECTORY / run_id)
         store.log_directory.mkdir(parents=True)
-        (store.run_directory / 'request.md').write_text(source_request.read_text(encoding='utf-8'), encoding='utf-8')
+        (store.run_directory / 'request.md').write_text(request_text.rstrip() + '\n', encoding='utf-8')
         store.workflow_path.write_text(json.dumps(workflow_snapshot(workflow), indent=2) + '\n', encoding='utf-8')
 
         step_records = {}

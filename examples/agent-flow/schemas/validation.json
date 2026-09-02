@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "blocked"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": {"type": "string", "minLength": 1},
+          "exit_code": {"type": ["integer", "null"]},
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "blocked", "skipped"]
+          },
+          "summary": {"type": "string", "minLength": 1}
+        },
+        "required": ["command", "exit_code", "status", "summary"],
+        "additionalProperties": false
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "questions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "diff_scope_checked": {"type": "boolean"}
+  },
+  "required": ["status", "summary", "commands", "failures", "questions", "diff_scope_checked"],
+  "additionalProperties": false
+}

@@ -29,6 +29,11 @@ class WorkflowController:
         self._set_boundary(workflow, store, state)
         return store, state
 
+    def start_text(self, workflow: Workflow, request_text: str, repository_root: Path) -> tuple[RunStore, RunState]:
+        store, state = RunStore.create_from_text(repository_root, workflow, request_text)
+        self._set_boundary(workflow, store, state)
+        return store, state
+
     def status(self, store: RunStore) -> tuple[RunState, dict]:
         workflow = load_workflow_snapshot(store.workflow_path)
         state = store.load_state()

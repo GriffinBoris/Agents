@@ -1,0 +1,198 @@
+version: 1
+name: github-issue-to-pr
+
+models:
+  deep:
+    provider: codex
+    model: gpt-5.6-sol
+    effort: high
+
+  implementation:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: high
+
+  explorer:
+    provider: codex
+    model: gpt-5.6-luna
+    effort: medium
+
+  verification:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: high
+
+defaults:
+  model: implementation
+
+steps:
+  - id: gather-context
+    type: agent
+    model: deep
+    mode: read
+    prompt_file: prompts/issue-context.md
+    inputs: [request.md]
+    output: context.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: explorer
+      instructions: Split issue history, repository and test mapping, and applicable guidance discovery into disjoint evidence-gathering assignments.
+
+  - id: approve-context
+    type: approval
+    message: Review context.md, answer its open questions, and confirm the interpreted issue scope before planning.
+
+  - id: plan
+    type: agent
+    model: deep
+    mode: read
+    prompt_file: prompts/issue-plan.md
+    inputs: [request.md, context.md]
+    output: plan.md
+
+  - id: approve-plan
+    type: approval
+    message: Review plan.md and explicitly approve the implementation approach. Request changes or answer questions without approving if anything is unresolved.
+
+  - id: implement
+    type: agent
+    model: implementation
+    mode: write
+    prompt_file: prompts/issue-implement.md
+    inputs: [request.md, context.md, plan.md]
+    output: implementation.md
+
+  - id: validate
+    type: agent
+    model: verification
+    mode: write
+    prompt_file: prompts/issue-validate.md
+    inputs: [request.md, context.md, plan.md, implementation.md]
+    output: validation.json
+    schema_file: schemas/validation.json
+
+  - id: detailed-reviews
+    type: parallel
+    steps:
+      - id: guidance-review
+        type: agent
+        model: deep
+        mode: read
+        prompt_file: prompts/review-guidance.md
+        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
+        output: guidance-review.json
+        schema_file: schemas/detailed-review.json
+
+      - id: acceptance-review
+        type: agent
+        model: deep
+        mode: read
+        prompt_file: prompts/review-acceptance.md
+        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
+        output: acceptance-review.json
+        schema_file: schemas/detailed-review.json
+
+      - id: test-review
+        type: agent
+        model: verification
+        mode: read
+        prompt_file: prompts/review-tests.md
+        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
+        output: test-review.json
+        schema_file: schemas/detailed-review.json
+
+      - id: maintainability-review
+        type: agent
+        model: verification
+        mode: read
+        prompt_file: prompts/review-maintainability.md
+        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
+        output: maintainability-review.json
+        schema_file: schemas/detailed-review.json
+
+  - id: fix-review-findings
+    type: agent
+    model: implementation
+    mode: write
+    prompt_file: prompts/fix-detailed-reviews.md
+    inputs:
+      - request.md
+      - context.md
+      - plan.md
+      - guidance-review.json
+      - acceptance-review.json
+      - test-review.json
+      - maintainability-review.json
+    output: fixes.md
+
+  - id: validate-after-fixes
+    type: agent
+    model: verification
+    mode: write
+    prompt_file: prompts/issue-validate.md
+    inputs: [request.md, context.md, plan.md, implementation.md, fixes.md]
+    output: validation-after-fixes.json
+    schema_file: schemas/validation.json
+
+  - id: final-reviews
+    type: parallel
+    steps:
+      - id: final-guidance-review
+        type: agent
+        model: deep
+        mode: read
+        prompt_file: prompts/review-guidance.md
+        inputs: [request.md, context.md, plan.md, fixes.md, validation-after-fixes.json]
+        output: final-guidance-review.json
+        schema_file: schemas/detailed-review.json
+
+      - id: final-acceptance-review
+        type: agent
+        model: deep
+        mode: read
+        prompt_file: prompts/review-acceptance.md
+        inputs: [request.md, context.md, plan.md, fixes.md, validation-after-fixes.json]
+        output: final-acceptance-review.json
+        schema_file: schemas/detailed-review.json
+
+  - id: resolve-final-findings
+    type: agent
+    model: implementation
+    mode: write
+    prompt_file: prompts/resolve-final-findings.md
+    inputs:
+      - request.md
+      - context.md
+      - plan.md
+      - final-guidance-review.json
+      - final-acceptance-review.json
+    output: final-fixes.md
+
+  - id: final-validation
+    type: agent
+    model: verification
+    mode: write
+    prompt_file: prompts/issue-validate.md
+    inputs: [request.md, context.md, plan.md, final-fixes.md]
+    output: final-validation.json
+    schema_file: schemas/validation.json
+
+  - id: approve-pr
+    type: approval
+    message: Review the final diff, final-validation.json, and both final review artifacts. Request another correction pass if needed; approve only when the branch is ready to publish as a pull request.
+
+  - id: create-pr
+    type: agent
+    model: implementation
+    mode: write
+    prompt_file: prompts/create-pr.md
+    inputs:
+      - request.md
+      - context.md
+      - plan.md
+      - final-guidance-review.json
+      - final-acceptance-review.json
+      - final-validation.json
+    output: pr.json
+    schema_file: schemas/pr.json

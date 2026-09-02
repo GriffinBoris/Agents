@@ -44,6 +44,22 @@ Invoke the skill in a Codex Desktop task:
 $agent-flow Run examples/agent-flow/deep-feature.yml with examples/agent-flow/request.md against this repository.
 ```
 
+For the GitHub-issue-to-PR example, the issue itself becomes the snapshotted request:
+
+```text
+$agent-flow Run examples/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
+```
+
+The parent starts that workflow with:
+
+```bash
+agent-flow start examples/agent-flow/github-issue-to-pr.yml \
+  --issue https://github.com/OWNER/REPO/issues/123 \
+  --repo /path/to/REPO
+```
+
+`--issue` calls the authenticated `gh` CLI read-only and stores the issue metadata and body as the run's `request.md`. Use `--request` instead for a local specification. The two options are mutually exclusive.
+
 The current task is the parent by default. If you explicitly ask for a dedicated task, the invoking task may create one and instruct it to run the skill. Agent steps do not create unrelated sidebar tasks; they use native subagents beneath the parent.
 
 The skill begins a run with:
@@ -62,6 +78,7 @@ The controller exposes small state transitions rather than a background daemon:
 
 ```text
 agent-flow start <workflow> --request <file> --repo <repository>
+agent-flow start <workflow> --issue <issue-url-or-number> --repo <repository>
 agent-flow status <run-id> --repo <repository>
 agent-flow begin <run-id> <step-id> --repo <repository>
 agent-flow attach <run-id> <step-id> <worker-id> --repo <repository>
@@ -74,6 +91,8 @@ agent-flow approve <run-id> --repo <repository>
 `begin` marks the current step as running. `attach` records the native worker returned by Desktop. The parent writes the worker's final response to the declared artifact path, then `complete` validates it and advances. A failed step remains current and can be retried with `begin`; completed steps do not rerun.
 
 An approval step saves `waiting_for_approval` state. The Desktop parent presents the message and relevant artifacts, then stops. Only explicit user approval permits `agent-flow approve`.
+
+While a native worker is running, it can escalate a material ambiguity to the parent. The parent asks the user in the visible Desktop task, forwards the answer to that worker, and records the decision in the durable artifact. Approval gates can also act as human-controlled correction loops: requested changes are implemented and revalidated while the gate remains waiting, and the workflow advances only after explicit approval.
 
 ## Durable state
 
@@ -229,7 +248,7 @@ This keeps the parent coherent without reducing workers to disconnected subproce
 ## Current limits
 
 - The Desktop-native path currently supports Codex workers only. ACP-backed external providers can be added later, but they will not automatically become native Desktop child threads.
-- The workflow is an ordered list; there is no generic conditional, loop, or arbitrary DAG syntax.
+- The workflow is an ordered list; there is no generic unattended conditional, loop, or arbitrary DAG syntax. Repeatable correction passes can be declared as explicit steps, and approval gates support user-controlled correction loops.
 - Parallel children are read-only agent steps.
 - The parent task must remain available to coordinate native workers; the controller is not an unattended daemon.
 - Closing completed worker threads depends on host capability. Completed threads may remain inspectable in Desktop.

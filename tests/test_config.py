@@ -124,6 +124,16 @@ def test_parses_parallel_agent_group(tmp_path: Path) -> None:
     assert [child.id for child in step.steps] == ['research', 'security']
 
 
+def test_shipped_github_issue_workflow_is_valid() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+
+    workflow = load_workflow(repository_root / 'examples' / 'agent-flow' / 'github-issue-to-pr.yml')
+
+    assert workflow.name == 'github-issue-to-pr'
+    assert workflow.steps[0].id == 'gather-context'
+    assert workflow.steps[-1].id == 'create-pr'
+
+
 def _base_workflow() -> dict:
     return {
         'version': 1,

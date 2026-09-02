@@ -22,6 +22,14 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
    agent-flow start <workflow> --request <request> --repo <repository>
    ```
 
+   When the user supplies a GitHub issue URL or number instead of a request file, execute:
+
+   ```text
+   agent-flow start <workflow> --issue <issue-url-or-number> --repo <repository>
+   ```
+
+   This uses the authenticated `gh` CLI read-only and snapshots the issue as the run's `request.md`.
+
    For an existing run, execute `agent-flow status <run-id> --repo <repository>`.
 3. Treat the returned JSON as authoritative for the current step, model, effort, input paths, output path, delegation policy, and approval state.
 4. Continue through ready steps until the run completes, fails, or reaches an approval gate. Do not skip, reorder, or silently substitute steps.
@@ -48,6 +56,17 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
 8. After the artifact is durable and no follow-up is needed, close the completed worker thread when the host supports closing. Otherwise leave it in the completed list; never delete useful output before it is captured.
 
 When `delegation.strategy` is `native`, the step worker may itself spawn at most `max_agents` bounded subagents. Give it the configured delegated model, effort, and delegation instructions. It must wait for those children and return one synthesized artifact to the parent.
+
+### Questions and decisions
+
+Workers may send questions or escalations to the persistent parent while a step is running. When a question could materially affect behavior, scope, architecture, compatibility, permissions, published state, or destructive work:
+
+1. Keep the current step running; do not invent an answer or mark it complete.
+2. Present one concise question to the user with the relevant evidence, options, and impact.
+3. Forward the user's answer to the same worker and let it continue. If that worker has already exited, retry the current step with the answer included and record the new worker ID.
+4. Persist established decisions in the step artifact so later workers receive them.
+
+Answer small, evidence-backed implementation questions within the parent only when the issue, repository guidance, or a prior explicit user decision determines the answer unambiguously.
 
 ### Parallel step
 
@@ -80,6 +99,8 @@ agent-flow approve <run-id> --repo <repository>
 
 Then continue from the returned step. If the user rejects the result or requests changes, do not approve; use the parent conversation to determine the bounded correction before changing workflow state.
 
+An approval gate may serve as a human-controlled correction loop. Keep it waiting while bounded correction workers update the repository or artifacts, rerun the relevant validation, and present the gate again. There is no automatic approval and no generic unattended loop.
+
 ### Failure and retry
 
 When an agent step cannot complete, record the failure:
@@ -97,7 +118,7 @@ Keep the parent task alive, report the failed step and available evidence, and r
 - Route cross-worker communication through the parent. Share only the information another worker needs.
 - Persist important results in the run directory before closing workers.
 - Do not expose a worker's existence as proof that its output was accepted; artifact validation and `complete` are the acceptance boundary.
-- Do not substitute unavailable models, broaden permissions, create new tasks, push changes, or open pull requests unless the user separately authorizes those actions.
+- Do not substitute unavailable models, broaden permissions, create new tasks, push changes, or open pull requests unless the user separately authorizes those actions. Invoking a workflow that clearly declares a PR-publication step is authorization for that step only after its preceding approval gate is explicitly approved.
 
 ## Completion
 

@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
@@ -18,7 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     start_parser = subparsers.add_parser('start', help='Create a workflow run without launching agents')
     start_parser.add_argument('workflow', type=Path)
-    start_parser.add_argument('--request', required=True, type=Path)
+    request_source = start_parser.add_mutually_exclusive_group(required=True)
+    request_source.add_argument('--request', type=Path, help='Read the workflow request from a local file')
+    request_source.add_argument('--issue', help='Fetch a GitHub issue URL or number with the gh CLI')
     start_parser.add_argument('--repo', type=Path, default=Path.cwd())
 
     for command in ('status', 'approve'):
@@ -55,7 +58,11 @@ def main(arguments: Optional[list[str]] = None) -> int:
     try:
         if options.command == 'start':
             workflow = load_workflow(options.workflow)
-            store, state = controller.start(workflow, options.request, options.repo)
+            if options.issue is not None:
+                request_text = _load_github_issue(options.issue, options.repo)
+                store, state = controller.start_text(workflow, request_text, options.repo)
+            else:
+                store, state = controller.start(workflow, options.request, options.repo)
         else:
             store = RunStore.open(options.repo, options.run_id)
             if options.command == 'status':
@@ -83,6 +90,51 @@ def main(arguments: Optional[list[str]] = None) -> int:
 
 def _write_json(value: dict) -> None:
     sys.stdout.write(json.dumps(value, indent=2) + '\n')
+
+
+def _load_github_issue(issue: str, repository_root: Path) -> str:
+    try:
+        completed = subprocess.run(
+            [
+                'gh',
+                'issue',
+                'view',
+                issue,
+                '--json',
+                'number,title,body,url,state,labels,assignees',
+            ],
+            cwd=repository_root.resolve(),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError as error:
+        raise RunStoreError('Cannot fetch GitHub issue because the gh CLI is not installed') from error
+
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or 'unknown gh error'
+        raise RunStoreError(f'Cannot fetch GitHub issue {issue!r}: {detail}')
+
+    try:
+        value = json.loads(completed.stdout)
+        number = value['number']
+        title = value['title']
+        url = value['url']
+    except (json.JSONDecodeError, KeyError, TypeError) as error:
+        raise RunStoreError(f'gh returned invalid issue data for {issue!r}') from error
+
+    labels = ', '.join(label['name'] for label in value.get('labels', [])) or 'None'
+    assignees = ', '.join(assignee['login'] for assignee in value.get('assignees', [])) or 'None'
+    body = value.get('body') or '_No issue body was provided._'
+    state = value.get('state', 'UNKNOWN')
+    return (
+        f'# GitHub Issue #{number}: {title}\n\n'
+        f'- Source: {url}\n'
+        f'- State: {state}\n'
+        f'- Labels: {labels}\n'
+        f'- Assignees: {assignees}\n\n'
+        f'## Issue body\n\n{body}\n'
+    )
 
 
 if __name__ == '__main__':
