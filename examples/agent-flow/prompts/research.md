@@ -1,0 +1,1 @@
+Investigate the request and the current repository. Identify the relevant architecture, existing patterns, constraints, risks, and verification commands. Cite exact files and symbols. Do not propose an implementation plan until the evidence is complete.

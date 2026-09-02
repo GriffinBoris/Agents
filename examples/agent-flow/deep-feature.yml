@@ -1,0 +1,102 @@
+version: 1
+name: deep-feature
+
+models:
+  deep:
+    provider: codex
+    model: gpt-5.6-sol
+    effort: high
+
+  everyday:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: medium
+
+  fast:
+    provider: codex
+    model: gpt-5.6-luna
+    effort: medium
+
+  claude-review:
+    provider: claude
+    model: sonnet
+    effort: high
+
+defaults:
+  model: everyday
+
+steps:
+  - id: research
+    type: agent
+    mode: read
+    prompt_file: prompts/research.md
+    inputs: [request.md]
+    output: research.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: fast
+      instructions: Split repository exploration, documentation verification, and dependency analysis.
+
+  - id: approve-research
+    type: approval
+    message: Review research.md before planning.
+
+  - id: plan
+    type: agent
+    model: deep
+    mode: read
+    prompt_file: prompts/plan.md
+    inputs: [request.md, research.md]
+    output: plan.md
+
+  - id: approve-plan
+    type: approval
+    message: Approve plan.md before implementation.
+
+  - id: implement
+    type: agent
+    mode: write
+    prompt_file: prompts/implement.md
+    inputs: [request.md, research.md, plan.md]
+
+  - id: tests
+    type: shell
+    command: ["python3", "-m", "pytest", "-q"]
+    output: test-output.txt
+
+  - id: reviews
+    type: parallel
+    steps:
+      - id: correctness-review
+        type: agent
+        model: deep
+        mode: read
+        prompt_file: prompts/review-correctness.md
+        inputs: [request.md, plan.md, test-output.txt]
+        output: correctness-review.json
+        schema_file: schemas/review.json
+
+      - id: simplicity-review
+        type: agent
+        model: claude-review
+        mode: read
+        prompt_file: prompts/review-simplicity.md
+        inputs: [request.md, plan.md, test-output.txt]
+        output: simplicity-review.json
+        schema_file: schemas/review.json
+
+  - id: fix-findings
+    type: agent
+    mode: write
+    prompt_file: prompts/fix-findings.md
+    inputs: [request.md, plan.md, correctness-review.json, simplicity-review.json]
+
+  - id: final-tests
+    type: shell
+    command: ["python3", "-m", "pytest", "-q"]
+    output: final-test-output.txt
+
+  - id: final-approval
+    type: approval
+    message: Review the final diff, review artifacts, and test output.

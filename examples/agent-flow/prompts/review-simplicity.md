@@ -1,0 +1,1 @@
+Review the implemented repository change for unnecessary complexity, unclear ownership, duplication, and maintainability risks. Confirm that each abstraction is justified by the current requirement. Report only actionable findings with exact file references and evidence.
