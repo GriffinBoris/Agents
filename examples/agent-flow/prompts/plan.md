@@ -1,1 +1,0 @@
-Create a concrete implementation plan grounded in the research artifact and the current repository. Name the files and responsibilities that should change, define the verification strategy, and identify decisions that require human approval. Keep the plan proportional to the request.

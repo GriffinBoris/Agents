@@ -1,1 +1,0 @@
-Implement the approved plan. Preserve unrelated work, follow the repository's local instructions, and run focused verification while you work. Do not broaden the change beyond the approved request and plan.

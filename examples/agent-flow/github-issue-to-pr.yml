@@ -72,44 +72,19 @@ steps:
     output: validation.json
     schema_file: schemas/validation.json
 
-  - id: detailed-reviews
-    type: parallel
-    steps:
-      - id: guidance-review
-        type: agent
-        model: deep
-        mode: read
-        prompt_file: prompts/review-guidance.md
-        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
-        output: guidance-review.json
-        schema_file: schemas/detailed-review.json
-
-      - id: acceptance-review
-        type: agent
-        model: deep
-        mode: read
-        prompt_file: prompts/review-acceptance.md
-        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
-        output: acceptance-review.json
-        schema_file: schemas/detailed-review.json
-
-      - id: test-review
-        type: agent
-        model: verification
-        mode: read
-        prompt_file: prompts/review-tests.md
-        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
-        output: test-review.json
-        schema_file: schemas/detailed-review.json
-
-      - id: maintainability-review
-        type: agent
-        model: verification
-        mode: read
-        prompt_file: prompts/review-maintainability.md
-        inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
-        output: maintainability-review.json
-        schema_file: schemas/detailed-review.json
+  - id: detailed-review
+    type: agent
+    model: deep
+    mode: read
+    prompt_file: prompts/detailed-review.md
+    inputs: [request.md, context.md, plan.md, implementation.md, validation.json]
+    output: detailed-review.json
+    schema_file: schemas/detailed-review.json
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: verification
+      instructions: Assign separate evidence-based reviews for guidance compliance, issue acceptance and tests, and maintainability and safety; then synthesize one deduplicated report.
 
   - id: fix-review-findings
     type: agent
@@ -120,67 +95,35 @@ steps:
       - request.md
       - context.md
       - plan.md
-      - guidance-review.json
-      - acceptance-review.json
-      - test-review.json
-      - maintainability-review.json
+      - detailed-review.json
     output: fixes.md
-
-  - id: validate-after-fixes
-    type: agent
-    model: verification
-    mode: write
-    prompt_file: prompts/issue-validate.md
-    inputs: [request.md, context.md, plan.md, implementation.md, fixes.md]
-    output: validation-after-fixes.json
-    schema_file: schemas/validation.json
-
-  - id: final-reviews
-    type: parallel
-    steps:
-      - id: final-guidance-review
-        type: agent
-        model: deep
-        mode: read
-        prompt_file: prompts/review-guidance.md
-        inputs: [request.md, context.md, plan.md, fixes.md, validation-after-fixes.json]
-        output: final-guidance-review.json
-        schema_file: schemas/detailed-review.json
-
-      - id: final-acceptance-review
-        type: agent
-        model: deep
-        mode: read
-        prompt_file: prompts/review-acceptance.md
-        inputs: [request.md, context.md, plan.md, fixes.md, validation-after-fixes.json]
-        output: final-acceptance-review.json
-        schema_file: schemas/detailed-review.json
-
-  - id: resolve-final-findings
-    type: agent
-    model: implementation
-    mode: write
-    prompt_file: prompts/resolve-final-findings.md
-    inputs:
-      - request.md
-      - context.md
-      - plan.md
-      - final-guidance-review.json
-      - final-acceptance-review.json
-    output: final-fixes.md
 
   - id: final-validation
     type: agent
     model: verification
     mode: write
     prompt_file: prompts/issue-validate.md
-    inputs: [request.md, context.md, plan.md, final-fixes.md]
+    inputs: [request.md, context.md, plan.md, implementation.md, fixes.md]
     output: final-validation.json
     schema_file: schemas/validation.json
 
+  - id: final-review
+    type: agent
+    model: deep
+    mode: read
+    prompt_file: prompts/detailed-review.md
+    inputs: [request.md, context.md, plan.md, fixes.md, final-validation.json]
+    output: final-review.json
+    schema_file: schemas/detailed-review.json
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: verification
+      instructions: Recheck guidance compliance, issue acceptance and tests, and maintainability and safety after fixes; then synthesize one final report.
+
   - id: approve-pr
     type: approval
-    message: Review the final diff, final-validation.json, and both final review artifacts. Request another correction pass if needed; approve only when the branch is ready to publish as a pull request.
+    message: Review the final diff, final-validation.json, and final-review.json. Request another correction pass if needed; approve only when the branch is ready to publish as a pull request.
 
   - id: create-pr
     type: agent
@@ -191,8 +134,7 @@ steps:
       - request.md
       - context.md
       - plan.md
-      - final-guidance-review.json
-      - final-acceptance-review.json
+      - final-review.json
       - final-validation.json
     output: pr.json
     schema_file: schemas/pr.json
