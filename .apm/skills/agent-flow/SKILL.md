@@ -39,6 +39,7 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
    This uses the authenticated `gh` CLI read-only and snapshots the issue as the run's internal `request.md`. The `--prompt`, `--request`, and `--issue` sources are mutually exclusive.
 
    For an existing run, execute `agent-flow status <run-id> --repo <repository>`.
+   When the user asks to see a run visually, execute `agent-flow view <run-id> --repo <repository>` in a terminal that can remain open. The loopback-only viewer refreshes from durable run state and stops when that terminal receives `Ctrl-C`.
 3. Treat the returned JSON as authoritative for the current step, model, effort, input paths, output path, delegation policy, and approval state.
 4. Continue through ready steps until the run completes, fails, or reaches an approval gate. Do not skip, reorder, or silently substitute steps.
 

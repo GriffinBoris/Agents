@@ -8,6 +8,7 @@ from typing import Optional
 from agent_flow.config import WorkflowConfigError, load_workflow, load_workflow_snapshot
 from agent_flow.controller import WorkflowController, WorkflowStateError
 from agent_flow.store import RunStore, RunStoreError
+from agent_flow.viewer import ViewerError, serve_viewer
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -48,6 +49,12 @@ def build_parser() -> argparse.ArgumentParser:
     fail_parser.add_argument('--message', required=True)
     fail_parser.add_argument('--repo', type=Path, default=Path.cwd())
 
+    view_parser = subparsers.add_parser('view', help='Open the live workflow viewer')
+    view_parser.add_argument('run_id', nargs='?', help='Run to select initially; defaults to the most recent run')
+    view_parser.add_argument('--repo', type=Path, default=Path.cwd())
+    view_parser.add_argument('--port', type=int, default=8765)
+    view_parser.add_argument('--no-open', action='store_true', help='Print the URL without opening a browser')
+
     return parser
 
 
@@ -57,6 +64,14 @@ def main(arguments: Optional[list[str]] = None) -> int:
     controller = WorkflowController()
 
     try:
+        if options.command == 'view':
+            serve_viewer(
+                options.repo,
+                run_id=options.run_id,
+                port=options.port,
+                open_browser=not options.no_open,
+            )
+            return 0
         if options.command == 'start':
             workflow = load_workflow(options.workflow)
             if options.issue is not None:
@@ -86,7 +101,7 @@ def main(arguments: Optional[list[str]] = None) -> int:
         workflow = load_workflow_snapshot(store.workflow_path)
         _write_json(controller.describe(workflow, store, state))
         return 0
-    except (RunStoreError, WorkflowConfigError, WorkflowStateError) as error:
+    except (RunStoreError, ViewerError, WorkflowConfigError, WorkflowStateError) as error:
         sys.stderr.write(f'agent-flow: {error}\n')
         return 1
 

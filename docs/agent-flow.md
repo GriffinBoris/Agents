@@ -82,6 +82,24 @@ agent-flow start workflows/deep-feature.yml \
 
 The command returns the current step as JSON, including resolved input and output paths, the selected model and effort, the prompt, and the delegation policy. The Desktop parent uses that descriptor to spawn a native worker.
 
+## Live viewer
+
+Open the viewer for the most recently updated run in a repository:
+
+```bash
+agent-flow view --repo /path/to/repository
+```
+
+Select a particular run or choose another port when needed:
+
+```bash
+agent-flow view <run-id> --repo /path/to/repository --port 9012
+```
+
+The command starts a loopback-only HTTP server, opens the browser, and refreshes the page every two seconds. Use `--no-open` to print the URL without opening it automatically. Press `Ctrl-C` in the serving terminal to stop it.
+
+The viewer is read-only. It renders the resolved workflow snapshot, step and approval status, workflow-level parallel children, worker IDs attached through `agent-flow attach`, recent events, and run files. Nested workers that are created inside another worker appear only when their IDs are reported to the controller; Codex session hierarchy is not inferred from unrelated Desktop tasks.
+
 ## Controller lifecycle
 
 The controller exposes small state transitions rather than a background daemon:
@@ -96,6 +114,7 @@ agent-flow complete <run-id> <step-id> --repo <repository>
 agent-flow fail <run-id> <step-id> --message <error> --repo <repository>
 agent-flow shell <run-id> <step-id> --repo <repository>
 agent-flow approve <run-id> --repo <repository>
+agent-flow view [<run-id>] --repo <repository>
 ```
 
 `begin` marks the current step as running. `attach` records the native worker returned by Desktop. The parent writes the worker's final response to the declared artifact path, then `complete` verifies it exists and advances. A failed step remains current and can be retried with `begin`; completed steps do not rerun.

@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Agent Flow</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#eef1f6, #0b1018);
+      --panel: light-dark(#ffffff, #151b26);
+      --canvas: light-dark(#f8f9fc, #10151f);
+      --border: light-dark(#dde2eb, #2b3444);
+      --line: light-dark(#cfd6e2, #384357);
+      --text: light-dark(#172033, #edf2fb);
+      --muted: light-dark(#6c768a, #9ea9bc);
+      --accent: light-dark(#5f67df, #8188f4);
+      --accent-soft: light-dark(#eef0ff, #242b46);
+      --success: light-dark(#289269, #51c794);
+      --warning: light-dark(#bd7416, #e7a64e);
+      --danger: light-dark(#c94f5b, #eb7480);
+      --shadow: light-dark(rgba(24, 34, 54, .12), rgba(0, 0, 0, .35));
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 760px;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font: 14px/1.45 ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 60px 1fr;
+      background: var(--canvas);
+    }
+    .topbar {
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 11px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .brand, .live, .run-head, .progress-copy, .toolbar, .tabs, .step-head, .sub-head, .detail-head {
+      display: flex;
+      align-items: center;
+    }
+    .brand { gap: 10px; min-width: 0; }
+    .logo {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border-radius: 9px;
+      color: #fff;
+      background: var(--accent);
+      font-weight: 650;
+    }
+    .brand strong { display: block; font-weight: 600; }
+    .brand small, .muted, .step small, .subagent small, dt { color: var(--muted); }
+    .live { gap: 8px; color: var(--success); }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(400px, 1fr) 300px;
+      min-height: calc(100vh - 60px);
+    }
+    .sidebar, .inspector { background: var(--panel); }
+    .sidebar { padding: 16px 12px; border-right: 1px solid var(--border); }
+    .inspector { padding: 18px; border-left: 1px solid var(--border); overflow: auto; }
+    .section-label {
+      margin: 4px 9px 9px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .run-list { display: grid; gap: 4px; }
+    .run-item {
+      width: 100%;
+      padding: 10px;
+      border: 0;
+      border-radius: 9px;
+      text-align: left;
+      background: transparent;
+      cursor: pointer;
+    }
+    .run-item:hover { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
+    .run-item[aria-pressed='true'] { color: var(--accent); background: var(--accent-soft); }
+    .run-item strong { display: block; overflow: hidden; font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
+    .run-state { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .empty {
+      padding: 18px 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .canvas { min-width: 0; padding: 22px 24px 36px; overflow: auto; }
+    .run-head { justify-content: space-between; gap: 20px; margin-bottom: 10px; }
+    .run-title { margin: 0 0 3px; font-size: 20px; font-weight: 600; }
+    .run-request { max-width: 700px; margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+    .progress-copy { gap: 8px; white-space: nowrap; }
+    .progress-track {
+      height: 3px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--border);
+    }
+    .progress-fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .25s ease; }
+    .toolbar {
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-top: 13px;
+      border-top: 1px solid var(--border);
+    }
+    .tabs { gap: 3px; }
+    .tab {
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+    }
+    .tab[aria-selected='true'] { color: var(--text); background: var(--border); }
+    .nested-toggle { display: flex; align-items: center; gap: 7px; color: var(--muted); white-space: nowrap; }
+    .nested-toggle input { accent-color: var(--accent); }
+    .flow { position: relative; max-width: 720px; margin: 0 auto; }
+    .flow::before {
+      content: '';
+      position: absolute;
+      top: 27px;
+      bottom: 27px;
+      left: 17px;
+      width: 2px;
+      background: var(--line);
+    }
+    .step-wrap { position: relative; margin-bottom: 12px; padding-left: 44px; }
+    .rail-dot {
+      position: absolute;
+      z-index: 2;
+      top: 14px;
+      left: 5px;
+      display: grid;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      place-items: center;
+      overflow: hidden;
+      border: 3px solid var(--canvas);
+      border-radius: 50%;
+      color: #fff;
+      background: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+    }
+    [data-state='done'] > .rail-dot { background: var(--success); }
+    [data-state='running'] > .rail-dot, [data-state='ready'] > .rail-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent);
+    }
+    [data-state='waiting'] > .rail-dot { background: var(--warning); }
+    [data-state='failed'] > .rail-dot { background: var(--danger); }
+    .step {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      text-align: left;
+      background: transparent;
+      cursor: pointer;
+    }
+    .step:hover { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+    .step[aria-pressed='true'] { border-color: color-mix(in srgb, var(--accent) 48%, var(--border)); background: var(--accent-soft); }
+    .step-head { justify-content: space-between; gap: 12px; }
+    .step-head strong { font-size: 15px; font-weight: 560; }
+    .state { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    [data-state='done'] .state { color: var(--success); }
+    [data-state='running'] .state, [data-state='ready'] .state { color: var(--accent); }
+    [data-state='waiting'] .state { color: var(--warning); }
+    [data-state='failed'] .state { color: var(--danger); }
+    .nested {
+      position: relative;
+      margin: 7px 0 5px 20px;
+      padding: 4px 0 2px 20px;
+      border-left: 1px solid var(--line);
+    }
+    .nested-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 5px 6px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .subagent {
+      position: relative;
+      width: 100%;
+      margin: 3px 0;
+      padding: 8px 9px;
+      border: 0;
+      border-radius: 8px;
+      text-align: left;
+      background: transparent;
+      cursor: pointer;
+    }
+    .subagent::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: -20px;
+      width: 13px;
+      border-top: 1px solid var(--line);
+    }
+    .subagent:hover { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+    .subagent[aria-pressed='true'] { background: var(--accent-soft); }
+    .sub-head { justify-content: space-between; gap: 8px; }
+    .sub-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .depth {
+      display: inline-grid;
+      min-width: 22px;
+      height: 22px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 13%, transparent);
+      font-size: 11px;
+    }
+    .definition {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+    pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .detail-head { justify-content: space-between; gap: 8px; }
+    .detail-title { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+    .pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .breadcrumb { margin: 8px 0 18px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+    dl { display: grid; grid-template-columns: 72px 1fr; gap: 9px; margin: 0; }
+    dt, dd { margin: 0; overflow-wrap: anywhere; }
+    .detail-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .detail-section strong { display: block; margin-bottom: 7px; font-weight: 600; }
+    .artifact { padding: 6px 0; color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+    .error-banner {
+      max-width: 720px;
+      margin: 20px auto;
+      padding: 14px;
+      border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border));
+      border-radius: 10px;
+      color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, transparent);
+    }
+    [hidden] { display: none !important; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 190px minmax(400px, 1fr); }
+      .inspector { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class='app'>
+    <header class='topbar'>
+      <div class='brand'><span class='logo'>AF</span><span><strong>Agent Flow</strong><small id='repo-label'>Loading repository…</small></span></div>
+      <div class='live'><span class='live-dot'></span><span id='sync-label'>Connecting…</span></div>
+    </header>
+    <div class='layout'>
+      <aside class='sidebar'>
+        <div class='section-label'>Runs</div>
+        <div class='run-list' id='run-list'></div>
+      </aside>
+      <main class='canvas'>
+        <div id='run-content'><div class='empty'>Loading runs…</div></div>
+      </main>
+      <aside class='inspector' id='inspector'><div class='empty'>Select a step or worker.</div></aside>
+    </div>
+  </div>
+  <script>
+    (function () {
+      'use strict';
+      var app = {
+        runs: [],
+        payload: null,
+        runId: new URLSearchParams(location.search).get('run'),
+        selected: null,
+        tab: 'graph',
+        showNested: true,
+        nodes: {},
+        payloadSignature: null
+      };
+      var runList = document.getElementById('run-list');
+      var runContent = document.getElementById('run-content');
+      var inspector = document.getElementById('inspector');
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function title(value) {
+        return String(value || '').replaceAll('-', ' ').replaceAll('_', ' ').replace(/\b\w/g, function (letter) {
+          return letter.toUpperCase();
+        });
+      }
+
+      function statusLabel(value) {
+        return String(value || 'pending').replaceAll('_', ' ').replace(/\b\w/g, function (letter) {
+          return letter.toUpperCase();
+        });
+      }
+
+      function visualStatus(record, index, state) {
+        if (!record) return 'queued';
+        if (record.status === 'succeeded') return 'done';
+        if (record.status === 'waiting') return 'waiting';
+        if (record.status === 'failed') return 'failed';
+        if (record.status === 'running') return 'running';
+        if (index === state.current_step && state.status === 'ready') return 'ready';
+        return 'queued';
+      }
+
+      function modelFor(workflow, step) {
+        if (!step || step.type !== 'agent') return null;
+        var name = step.model || (workflow.defaults && workflow.defaults.model);
+        var profile = workflow.models && workflow.models[name];
+        if (!profile) return name || null;
+        return [profile.model, profile.effort].filter(Boolean).join(' · ');
+      }
+
+      async function getJson(path) {
+        var response = await fetch(path, { cache: 'no-store' });
+        var value = await response.json();
+        if (!response.ok) throw new Error(value.error || 'Request failed');
+        return value;
+      }
+
+      async function refresh() {
+        try {
+          var listing = await getJson('/api/runs');
+          app.runs = listing.runs;
+          if (!app.runId || !app.runs.some(function (run) { return run.run_id === app.runId; })) {
+            app.runId = app.runs.length ? app.runs[0].run_id : null;
+          }
+          renderRunList();
+          if (app.runId) {
+            var payload = await getJson('/api/runs/' + encodeURIComponent(app.runId));
+            var signature = JSON.stringify(payload);
+            if (signature !== app.payloadSignature) {
+              app.payload = payload;
+              app.payloadSignature = signature;
+              render();
+            }
+          } else {
+            app.payload = null;
+            runContent.innerHTML = '<div class=\"empty\">No Agent Flow runs exist in this repository yet.</div>';
+            inspector.innerHTML = '<div class=\"empty\">Start a workflow to populate the viewer.</div>';
+          }
+          document.getElementById('sync-label').textContent = 'Live · just now';
+        } catch (error) {
+          document.getElementById('sync-label').textContent = 'Disconnected';
+          runContent.innerHTML = '<div class=\"error-banner\">' + escapeHtml(error.message) + '</div>';
+        }
+      }
+
+      function renderRunList() {
+        if (!app.runs.length) {
+          runList.innerHTML = '<div class=\"empty\">No runs</div>';
+          return;
+        }
+        runList.innerHTML = app.runs.map(function (run) {
+          return '<button class=\"run-item\" data-run=\"' + escapeHtml(run.run_id) + '\" aria-pressed=\"' +
+            String(run.run_id === app.runId) + '\"><strong>' + escapeHtml(run.workflow_name) +
+            '</strong><span class=\"run-state\">' + escapeHtml(statusLabel(run.status)) + ' · ' +
+            escapeHtml(run.run_id.slice(0, 15)) + '</span></button>';
+        }).join('');
+      }
+
+      function render() {
+        var payload = app.payload;
+        var workflow = payload.workflow;
+        var state = payload.state;
+        app.nodes = {};
+        document.getElementById('repo-label').textContent = state.repository_root;
+        var steps = workflow.steps || [];
+        var completed = steps.filter(function (step) {
+          var record = state.steps[step.id];
+          return record && record.status === 'succeeded';
+        }).length;
+        var percent = steps.length ? Math.round(completed / steps.length * 100) : 0;
+        var graph = steps.map(function (step, index) { return renderStep(step, index, workflow, state); }).join('');
+        var tabBody = app.tab === 'graph'
+          ? '<div class=\"flow\">' + graph + '</div>'
+          : '<div class=\"definition\"><pre>' + escapeHtml(JSON.stringify(workflow, null, 2)) + '</pre></div>';
+        runContent.innerHTML =
+          '<div class=\"run-head\"><div><h1 class=\"run-title\">' + escapeHtml(workflow.name) +
+          '</h1><p class=\"run-request\">' + escapeHtml(state.run_id) + '</p></div>' +
+          '<div class=\"progress-copy\"><strong>' + completed + ' of ' + steps.length +
+          '</strong><span class=\"muted\">steps</span></div></div>' +
+          '<div class=\"progress-track\"><span class=\"progress-fill\" style=\"width:' + percent + '%\"></span></div>' +
+          '<div class=\"toolbar\"><div class=\"tabs\"><button class=\"tab\" data-tab=\"graph\" aria-selected=\"' +
+          String(app.tab === 'graph') + '\">Live graph</button><button class=\"tab\" data-tab=\"definition\" aria-selected=\"' +
+          String(app.tab === 'definition') + '\">Definition</button></div>' +
+          '<label class=\"nested-toggle\"><input type=\"checkbox\" data-nested-toggle ' +
+          (app.showNested ? 'checked' : '') + '> Show workers</label></div>' + tabBody;
+
+        if (!app.selected || !app.nodes[app.selected]) {
+          var current = steps[Math.min(state.current_step, Math.max(steps.length - 1, 0))];
+          app.selected = current ? 'step:' + current.id : null;
+        }
+        renderSelection();
+      }
+
+      function renderStep(step, index, workflow, state) {
+        var record = state.steps[step.id] || {};
+        var status = visualStatus(record, index, state);
+        var key = 'step:' + step.id;
+        var model = modelFor(workflow, step);
+        var detail = step.type === 'approval' ? step.message
+          : step.type === 'shell' ? (step.command || []).join(' ')
+          : step.type === 'parallel' ? (step.steps || []).length + ' parallel workers'
+          : [model, step.mode].filter(Boolean).join(' · ');
+        app.nodes[key] = {
+          title: title(step.id),
+          status: status,
+          kind: step.type,
+          model: model || '—',
+          mode: step.mode || (step.type === 'parallel' ? 'read' : '—'),
+          attempts: record.attempts || 0,
+          parent: record.parent || 'workflow',
+          prompt: step.prompt || step.message || detail || '—',
+          workers: ((record.metadata || {}).worker_ids || []),
+          artifact: (record.metadata || {}).artifact || '—'
+        };
+
+        var nested = '';
+        if (app.showNested) {
+          var childRows = [];
+          if (step.type === 'parallel') {
+            (step.steps || []).forEach(function (child) {
+              childRows.push(renderChild(child, workflow, state, step.id));
+            });
+          }
+          ((record.metadata || {}).worker_ids || []).forEach(function (worker, workerIndex) {
+            childRows.push(renderWorker(worker, step, record, workerIndex, model));
+          });
+          if (childRows.length) {
+            nested = '<div class=\"nested\"><div class=\"nested-heading\"><span>Execution</span><span>' +
+              childRows.length + ' sessions</span></div>' + childRows.join('') + '</div>';
+          } else if (step.delegation && step.delegation.strategy === 'native') {
+            nested = '<div class=\"nested\"><div class=\"nested-heading\"><span>Native delegation enabled</span><span>up to ' +
+              escapeHtml(step.delegation.max_agents) + '</span></div></div>';
+          }
+        }
+        var glyph = status === 'done' ? '✓' : status === 'failed' ? '×' : status === 'waiting' ? '!' : '';
+        return '<div class=\"step-wrap\" data-state=\"' + status + '\"><span class=\"rail-dot\">' + glyph +
+          '</span><button class=\"step\" data-node=\"' + escapeHtml(key) + '\" aria-pressed=\"' +
+          String(app.selected === key) + '\"><span class=\"step-head\"><strong>' + escapeHtml(title(step.id)) +
+          '</strong><span class=\"state\">' + escapeHtml(statusLabel(status)) + '</span></span><small>' +
+          escapeHtml(detail || step.type) + '</small></button>' + nested + '</div>';
+      }
+
+      function renderChild(step, workflow, state, parent) {
+        var record = state.steps[step.id] || {};
+        var key = 'step:' + step.id;
+        var status = record.status === 'succeeded' ? 'done' : record.status || 'pending';
+        var model = modelFor(workflow, step);
+        app.nodes[key] = {
+          title: title(step.id), status: status, kind: 'parallel child', model: model || '—',
+          mode: step.mode || 'read', attempts: record.attempts || 0, parent: parent,
+          prompt: step.prompt || '—', workers: ((record.metadata || {}).worker_ids || []),
+          artifact: (record.metadata || {}).artifact || '—'
+        };
+        return '<button class=\"subagent\" data-node=\"' + escapeHtml(key) + '\" aria-pressed=\"' +
+          String(app.selected === key) + '\"><span class=\"sub-head\"><span class=\"sub-title\"><span class=\"depth\">1</span><span>' +
+          escapeHtml(title(step.id)) + '</span></span><span class=\"state\">' + escapeHtml(statusLabel(status)) +
+          '</span></span><small>' + escapeHtml(model || 'Codex worker') + '</small></button>';
+      }
+
+      function renderWorker(worker, step, record, index, model) {
+        var key = 'worker:' + step.id + ':' + index;
+        app.nodes[key] = {
+          title: worker, status: record.status || 'running', kind: 'attached worker',
+          model: model || 'Configured by parent', mode: step.mode || 'read', attempts: record.attempts || 0,
+          parent: step.id, prompt: 'Native Codex session attached to this workflow step.',
+          workers: [worker], artifact: (record.metadata || {}).artifact || '—'
+        };
+        return '<button class=\"subagent\" data-node=\"' + escapeHtml(key) + '\" aria-pressed=\"' +
+          String(app.selected === key) + '\"><span class=\"sub-head\"><span class=\"sub-title\"><span class=\"depth\">1</span><span>' +
+          escapeHtml(worker) + '</span></span><span class=\"state\">' +
+          escapeHtml(statusLabel(record.status || 'running')) + '</span></span><small>Native Codex worker</small></button>';
+      }
+
+      function renderSelection() {
+        var node = app.nodes[app.selected];
+        if (!node) {
+          inspector.innerHTML = '<div class=\"empty\">Select a step or worker.</div>';
+          return;
+        }
+        var latest = app.payload.events.length ? app.payload.events[app.payload.events.length - 1] : null;
+        var artifacts = app.payload.artifacts.length
+          ? app.payload.artifacts.map(function (artifact) {
+              return '<div class=\"artifact\">' + escapeHtml(artifact.path) + '</div>';
+            }).join('')
+          : '<div class=\"muted\">No artifacts yet.</div>';
+        inspector.innerHTML =
+          '<div class=\"detail-head\"><div class=\"detail-title\">' + escapeHtml(node.title) +
+          '</div><span class=\"pill\">' + escapeHtml(statusLabel(node.status)) + '</span></div>' +
+          '<div class=\"breadcrumb\">' + escapeHtml(node.parent) + ' / ' + escapeHtml(node.title) + '</div>' +
+          '<dl><dt>Kind</dt><dd>' + escapeHtml(node.kind) + '</dd><dt>Model</dt><dd>' +
+          escapeHtml(node.model) + '</dd><dt>Mode</dt><dd>' + escapeHtml(node.mode) +
+          '</dd><dt>Attempts</dt><dd>' + escapeHtml(node.attempts) + '</dd><dt>Workers</dt><dd>' +
+          escapeHtml(node.workers.length ? node.workers.join(', ') : '—') + '</dd><dt>Artifact</dt><dd>' +
+          escapeHtml(node.artifact) + '</dd></dl>' +
+          '<div class=\"detail-section\"><strong>Instructions</strong><div class=\"muted\">' +
+          escapeHtml(node.prompt) + '</div></div>' +
+          '<div class=\"detail-section\"><strong>Latest event</strong><div class=\"muted\">' +
+          escapeHtml(latest ? statusLabel(latest.type) + ' · ' + latest.time : 'No events') + '</div></div>' +
+          '<div class=\"detail-section\"><strong>Run files</strong>' + artifacts + '</div>';
+        document.querySelectorAll('[data-node]').forEach(function (button) {
+          button.setAttribute('aria-pressed', String(button.dataset.node === app.selected));
+        });
+      }
+
+      document.addEventListener('click', function (event) {
+        var runButton = event.target.closest('[data-run]');
+        if (runButton) {
+          app.runId = runButton.dataset.run;
+          app.selected = null;
+          app.payloadSignature = null;
+          history.replaceState(null, '', '?run=' + encodeURIComponent(app.runId));
+          refresh();
+          return;
+        }
+        var nodeButton = event.target.closest('[data-node]');
+        if (nodeButton) {
+          app.selected = nodeButton.dataset.node;
+          renderSelection();
+          return;
+        }
+        var tabButton = event.target.closest('[data-tab]');
+        if (tabButton) {
+          app.tab = tabButton.dataset.tab;
+          render();
+        }
+      });
+
+      document.addEventListener('change', function (event) {
+        if (event.target.matches('[data-nested-toggle]')) {
+          app.showNested = event.target.checked;
+          render();
+        }
+      });
+
+      refresh();
+      setInterval(refresh, 2000);
+    }());
+  </script>
+</body>
+</html>

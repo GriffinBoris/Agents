@@ -2,7 +2,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from agent_flow.cli import main
+from agent_flow.cli import build_parser, main
 from agent_flow.store import RunStore
 
 
@@ -144,3 +144,13 @@ steps:
     request = Path(started['run_directory']) / 'request.md'
 
     assert request.read_text(encoding='utf-8') == f'{prompt}\n'
+
+
+def test_cli_parses_viewer_options(tmp_path: Path) -> None:
+    options = build_parser().parse_args(['view', 'run-123', '--repo', str(tmp_path), '--port', '9012', '--no-open'])
+
+    assert options.command == 'view'
+    assert options.run_id == 'run-123'
+    assert options.repo == tmp_path
+    assert options.port == 9012
+    assert options.no_open is True

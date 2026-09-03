@@ -25,13 +25,21 @@ $agent-flow Run examples/agent-flow/deep-feature.yml against this repository. In
 
 Inline request text is snapshotted inside the run as `request.md`; no separate request file is required. Local request files remain supported for longer specifications.
 
+Open the live, read-only viewer for the most recent run:
+
+```bash
+agent-flow view --repo /path/to/repository
+```
+
+Pass a run ID to select a particular run. The viewer opens on `127.0.0.1`, refreshes from `.agent-flow/runs/` every two seconds, and shows workflow progress, parallel children, attached native workers, events, artifacts, and the resolved workflow definition.
+
 Or run the issue-to-PR example without creating a request file:
 
 ```text
 $agent-flow Run examples/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
 ```
 
-The skill drives native Desktop subagents; the Python command does not launch Codex or Claude processes. Run state and artifacts live under `.agent-flow/runs/` in the target repository. See [Agent Flow](docs/agent-flow.md) for the workflow format, controller commands, and current limitations.
+The skill drives native Desktop subagents; the Python command does not launch Codex or Claude processes. Run state and artifacts live under `.agent-flow/runs/` in the target repository. See [Agent Flow](docs/agent-flow.md) for the workflow format, controller commands, live viewer, and current limitations.
 
 ## Use it in a project
 
