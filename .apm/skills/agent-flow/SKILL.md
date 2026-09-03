@@ -15,8 +15,16 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
 
 ## Workflow
 
-1. Resolve the workflow file, request file, and target repository. Use `agent-flow` when it is installed; inside the Agent Flow source checkout, use `uv run agent-flow`. If neither is available, report the missing installation rather than substituting provider CLI calls.
-2. For a new run, execute:
+1. Resolve the workflow file, initial request, and target repository. The initial request may be inline prompt text, a local file, or a GitHub issue. Use `agent-flow` when it is installed; inside the Agent Flow source checkout, use `uv run agent-flow`. If neither is available, report the missing installation rather than substituting provider CLI calls.
+2. When the user supplies the initial request directly in the Desktop prompt, execute:
+
+   ```text
+   agent-flow start <workflow> --prompt <request-text> --repo <repository>
+   ```
+
+   Pass the user's request faithfully as one argument. Do not make the user create a request file merely to start the workflow. The controller snapshots the text as the run's internal `request.md`.
+
+   When the user supplies a local request file instead, execute:
 
    ```text
    agent-flow start <workflow> --request <request> --repo <repository>
@@ -28,7 +36,7 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
    agent-flow start <workflow> --issue <issue-url-or-number> --repo <repository>
    ```
 
-   This uses the authenticated `gh` CLI read-only and snapshots the issue as the run's `request.md`.
+   This uses the authenticated `gh` CLI read-only and snapshots the issue as the run's internal `request.md`. The `--prompt`, `--request`, and `--issue` sources are mutually exclusive.
 
    For an existing run, execute `agent-flow status <run-id> --repo <repository>`.
 3. Treat the returned JSON as authoritative for the current step, model, effort, input paths, output path, delegation policy, and approval state.

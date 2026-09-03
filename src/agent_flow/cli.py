@@ -20,6 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     start_parser = subparsers.add_parser('start', help='Create a workflow run without launching agents')
     start_parser.add_argument('workflow', type=Path)
     request_source = start_parser.add_mutually_exclusive_group(required=True)
+    request_source.add_argument('--prompt', help='Use inline text as the workflow request')
     request_source.add_argument('--request', type=Path, help='Read the workflow request from a local file')
     request_source.add_argument('--issue', help='Fetch a GitHub issue URL or number with the gh CLI')
     start_parser.add_argument('--repo', type=Path, default=Path.cwd())
@@ -61,6 +62,8 @@ def main(arguments: Optional[list[str]] = None) -> int:
             if options.issue is not None:
                 request_text = _load_github_issue(options.issue, options.repo)
                 store, state = controller.start_text(workflow, request_text, options.repo)
+            elif options.prompt is not None:
+                store, state = controller.start_text(workflow, options.prompt, options.repo)
             else:
                 store, state = controller.start(workflow, options.request, options.repo)
         else:

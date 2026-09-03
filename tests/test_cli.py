@@ -112,3 +112,35 @@ steps:
 
     assert '# GitHub Issue #42: Keep the parent visible' in request.read_text(encoding='utf-8')
     assert 'Use native subagents.' in request.read_text(encoding='utf-8')
+
+
+def test_cli_can_use_inline_prompt_as_request(tmp_path: Path, capsys) -> None:
+    repository = tmp_path / 'repository'
+    repository.mkdir()
+    workflow = repository / 'workflow.yml'
+    workflow.write_text(
+        """version: 1
+name: prompt-flow
+models:
+  default:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: medium
+defaults:
+  model: default
+steps:
+  - id: research
+    type: agent
+    prompt: Inspect the request.
+    inputs: [request.md]
+    output: research.md
+""",
+        encoding='utf-8',
+    )
+    prompt = 'Audit the payments Django app against applicable repository guidance.'
+
+    assert main(['start', str(workflow), '--prompt', prompt, '--repo', str(repository)]) == 0
+    started = json.loads(capsys.readouterr().out)
+    request = Path(started['run_directory']) / 'request.md'
+
+    assert request.read_text(encoding='utf-8') == f'{prompt}\n'

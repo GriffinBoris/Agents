@@ -20,8 +20,10 @@ uv tool install .
 ```
 
 ```text
-$agent-flow Run examples/agent-flow/deep-feature.yml with examples/agent-flow/request.md against this repository.
+$agent-flow Run examples/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
 ```
+
+Inline request text is snapshotted inside the run as `request.md`; no separate request file is required. Local request files remain supported for longer specifications.
 
 Or run the issue-to-PR example without creating a request file:
 

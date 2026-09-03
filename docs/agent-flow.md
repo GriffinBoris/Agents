@@ -41,8 +41,18 @@ The `agent-flow` skill is authored at `.apm/skills/agent-flow/`. Compile this pa
 Invoke the skill in a Codex Desktop task:
 
 ```text
-$agent-flow Run examples/agent-flow/deep-feature.yml with examples/agent-flow/request.md against this repository.
+$agent-flow Run examples/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
 ```
+
+When the initial request is supplied directly in the Desktop prompt, the parent starts the run with:
+
+```bash
+agent-flow start examples/agent-flow/deep-feature.yml \
+  --prompt "Add the requested feature and validate it against repository guidance." \
+  --repo /path/to/repository
+```
+
+The inline prompt is stored as the run's internal `request.md`, so later workers and resumed runs use the same durable request without requiring a user-managed request file.
 
 For the GitHub-issue-to-PR example, the issue itself becomes the snapshotted request:
 
@@ -58,11 +68,11 @@ agent-flow start examples/agent-flow/github-issue-to-pr.yml \
   --repo /path/to/REPO
 ```
 
-`--issue` calls the authenticated `gh` CLI read-only and stores the issue metadata and body as the run's `request.md`. Use `--request` instead for a local specification. The two options are mutually exclusive.
+`--issue` calls the authenticated `gh` CLI read-only and stores the issue metadata and body as the run's `request.md`. Use `--prompt` for inline request text or `--request` for a local specification. The three options are mutually exclusive.
 
 The current task is the parent by default. If you explicitly ask for a dedicated task, the invoking task may create one and instruct it to run the skill. Agent steps do not create unrelated sidebar tasks; they use native subagents beneath the parent.
 
-The skill begins a run with:
+The skill can also begin a run from a local request file with:
 
 ```bash
 agent-flow start workflows/deep-feature.yml \
