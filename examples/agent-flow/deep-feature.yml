@@ -1,0 +1,102 @@
+version: 1
+name: deep-feature
+
+models:
+  deep:
+    provider: codex
+    model: gpt-5.6-sol
+    effort: high
+
+  everyday:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: medium
+
+  fast:
+    provider: codex
+    model: gpt-5.6-luna
+    effort: medium
+
+  review-fast:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: high
+
+defaults:
+  model: everyday
+
+steps:
+  - id: research
+    type: agent
+    mode: read
+    prompt: Research the request and repository. Return an evidence-backed implementation brief.
+    inputs: [request.md]
+    output: research.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: fast
+      instructions: Split repository exploration, documentation verification, and dependency analysis.
+
+  - id: approve-research
+    type: approval
+    message: Review research.md before planning.
+
+  - id: plan
+    type: agent
+    model: deep
+    mode: read
+    prompt: Produce an actionable implementation plan from the request and approved research.
+    inputs: [request.md, research.md]
+    output: plan.md
+
+  - id: approve-plan
+    type: approval
+    message: Approve plan.md before implementation.
+
+  - id: implement
+    type: agent
+    mode: write
+    prompt: Implement the approved plan, preserve unrelated changes, and report the files and tests changed.
+    inputs: [request.md, research.md, plan.md]
+
+  - id: tests
+    type: shell
+    command: ["python3", "-m", "pytest", "-q"]
+    output: test-output.txt
+    timeout_seconds: 1800
+
+  - id: reviews
+    type: parallel
+    steps:
+      - id: correctness-review
+        type: agent
+        model: deep
+        mode: read
+        prompt: Review the implementation for correctness, regressions, and missing acceptance criteria. Return a concise Markdown report.
+        inputs: [request.md, plan.md, test-output.txt]
+        output: correctness-review.md
+
+      - id: simplicity-review
+        type: agent
+        model: review-fast
+        mode: read
+        prompt: Review the implementation for unnecessary complexity and maintainability risks. Return a concise Markdown report.
+        inputs: [request.md, plan.md, test-output.txt]
+        output: simplicity-review.md
+
+  - id: fix-findings
+    type: agent
+    mode: write
+    prompt: Resolve verified review findings, preserve scope, and run focused validation.
+    inputs: [request.md, plan.md, correctness-review.md, simplicity-review.md]
+
+  - id: final-tests
+    type: shell
+    command: ["python3", "-m", "pytest", "-q"]
+    output: final-test-output.txt
+    timeout_seconds: 1800
+
+  - id: final-approval
+    type: approval
+    message: Review the final diff, review artifacts, and test output.

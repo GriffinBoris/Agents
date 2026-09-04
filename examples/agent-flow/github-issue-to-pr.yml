@@ -1,0 +1,186 @@
+version: 1
+name: github-issue-to-pr
+
+models:
+  deep:
+    provider: codex
+    model: gpt-5.6-sol
+    effort: high
+
+  implementation:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: high
+
+  explorer:
+    provider: codex
+    model: gpt-5.6-luna
+    effort: medium
+
+  verification:
+    provider: codex
+    model: gpt-5.6-terra
+    effort: high
+
+defaults:
+  model: implementation
+
+steps:
+  - id: gather-context
+    type: agent
+    model: deep
+    mode: read
+    prompt: |
+      Build an evidence-backed implementation brief for the GitHub issue in request.md. Do not modify the repository.
+
+      Delegate distinct context-gathering assignments covering issue history and acceptance criteria; relevant code, architecture, and tests; and every applicable local or upstream guidance source. Prefer primary official documentation. Record exact paths, symbols, URLs, and sections.
+
+      Create a guidance matrix for each material requirement with its source, applicability, affected behavior, and verification evidence. Distinguish facts from inferences and do not invent requirements.
+
+      If ambiguity could materially affect behavior, architecture, compatibility, permissions, or scope, ask the Desktop parent with the options and impact, then wait. Record resolved and open questions.
+
+      Return Markdown covering issue interpretation, history, repository map, test commands, guidance matrix, risks, decisions, and open questions.
+    inputs: [request.md]
+    output: context.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: explorer
+      instructions: Split issue history, repository and test mapping, and applicable guidance discovery into disjoint evidence-gathering assignments.
+
+  - id: approve-context
+    type: approval
+    message: Review context.md, answer its open questions, and confirm the interpreted issue scope before planning.
+
+  - id: plan
+    type: agent
+    model: deep
+    mode: read
+    prompt: |
+      Produce an actionable implementation plan from request.md and context.md without modifying the repository.
+
+      Map every acceptance criterion and guidance requirement to concrete code and verification work. Include intended behavior, non-goals, ordered steps, affected files or symbols, compatibility and security considerations, tests, repository-native commands, and a traceability table.
+
+      Ask the Desktop parent before making any material product or architecture decision not established by the issue or guidance. Return one Markdown plan detailed enough for a fresh implementation worker.
+    inputs: [request.md, context.md]
+    output: plan.md
+
+  - id: approve-plan
+    type: approval
+    message: Review plan.md and explicitly approve the implementation approach. Request changes or answer questions without approving if anything is unresolved.
+
+  - id: implement
+    type: agent
+    model: implementation
+    mode: write
+    prompt: |
+      Implement the approved plan in the current checkout. Inspect git status and governing guidance first, preserve unrelated changes, and make the smallest coherent change that satisfies the issue.
+
+      Add or update tests and run focused checks. Do not commit, push, or create a PR yet. Ask the Desktop parent before acting on material ambiguity, destructive work, missing credentials, surprising repository state, or conflicts with the plan.
+
+      Return a Markdown report of changed behavior and files, satisfied criteria and guidance, tests run, deviations, and remaining questions.
+    inputs: [request.md, context.md, plan.md]
+    output: implementation.md
+
+  - id: validate
+    type: agent
+    model: verification
+    mode: write
+    prompt: |
+      Validate the current checkout against the issue, plan, and applicable guidance without changing source code.
+
+      Inspect the diff, then run the relevant repository-native formatting, lint, type, unit, integration, build, and broader CI-equivalent checks. Record every command, exit code, and result. Treat missing dependencies, credentials, services, or unsupported environments as blocked, not passed. Check for unrelated or generated changes.
+
+      Ask the Desktop parent if choosing a validation path materially changes confidence or cost. Return a Markdown report with overall status, command results, failures or blocked checks, diff scope, and questions.
+    inputs: [request.md, context.md, plan.md, implementation.md]
+    output: validation.md
+
+  - id: detailed-review
+    type: agent
+    model: deep
+    mode: read
+    prompt: |
+      Produce one rigorous review of the current diff without modifying the repository.
+
+      Delegate three disjoint reviews: one for one-to-one guidance compliance, one for issue acceptance and test coverage, and one for maintainability and safety. Re-open primary sources and cite exact paths, symbols, commands, URLs, or sections. Deduplicate the results and omit unsupported style preferences.
+
+      A pass requires positive evidence for every applicable requirement. Ask the Desktop parent and mark the result blocked when ambiguity prevents a defensible verdict. Return Markdown with a clear verdict, prioritized findings, verified requirements, evidence, and questions.
+    inputs: [request.md, context.md, plan.md, implementation.md, validation.md]
+    output: detailed-review.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: verification
+      instructions: Assign separate evidence-based reviews for guidance compliance, issue acceptance and tests, and maintainability and safety; then synthesize one deduplicated report.
+
+  - id: fix-review-findings
+    type: agent
+    model: implementation
+    mode: write
+    prompt: |
+      Resolve every actionable finding in detailed-review.md while preserving the approved issue scope and unrelated working-tree changes.
+
+      Re-open cited sources before editing. Address blocker, high, and medium findings unless concrete evidence disproves them; fix small, clearly beneficial low findings. Add tests and run focused checks. Do not commit, push, or create a PR.
+
+      Ask the Desktop parent if findings conflict, require a product decision, or materially expand scope. Return a Markdown ledger of each finding, disposition, changed files, and validation.
+    inputs:
+      - request.md
+      - context.md
+      - plan.md
+      - detailed-review.md
+    output: fixes.md
+
+  - id: final-validation
+    type: agent
+    model: verification
+    mode: write
+    prompt: |
+      Validate the current checkout against the issue, plan, and applicable guidance without changing source code.
+
+      Inspect the diff, then run the relevant repository-native formatting, lint, type, unit, integration, build, and broader CI-equivalent checks. Record every command, exit code, and result. Treat missing dependencies, credentials, services, or unsupported environments as blocked, not passed. Check for unrelated or generated changes.
+
+      Ask the Desktop parent if choosing a validation path materially changes confidence or cost. Return a Markdown report with overall status, command results, failures or blocked checks, diff scope, and questions.
+    inputs: [request.md, context.md, plan.md, implementation.md, fixes.md]
+    output: final-validation.md
+
+  - id: final-review
+    type: agent
+    model: deep
+    mode: read
+    prompt: |
+      Produce one rigorous final review of the current diff without modifying the repository.
+
+      Delegate three disjoint rechecks: one for one-to-one guidance compliance, one for issue acceptance and test coverage, and one for maintainability and safety. Re-open primary sources and cite exact evidence. Deduplicate results and omit unsupported style preferences.
+
+      A pass requires positive evidence for every applicable requirement. Ask the Desktop parent and mark the result blocked when ambiguity prevents a defensible verdict. Return Markdown with a clear verdict, prioritized findings, verified requirements, evidence, and questions.
+    inputs: [request.md, context.md, plan.md, fixes.md, final-validation.md]
+    output: final-review.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: verification
+      instructions: Recheck guidance compliance, issue acceptance and tests, and maintainability and safety after fixes; then synthesize one final report.
+
+  - id: approve-pr
+    type: approval
+    message: Review the final diff, final-validation.md, and final-review.md. Request another correction pass if needed; approve only when the branch is ready to publish as a pull request.
+
+  - id: create-pr
+    type: agent
+    model: implementation
+    mode: write
+    prompt: |
+      Publish the explicitly approved change as a GitHub pull request.
+
+      Inspect git status, the current branch, remotes, and the default branch. Refuse unrelated changes. If needed, create a non-default codex/ branch named for the issue. Never force-push or rewrite unrelated history.
+
+      Stage only issue files, commit, push with upstream tracking, and use gh pr create. Reference the issue, summarize behavior, list exact final-validation.md commands and results, disclose risks or blocked checks, and avoid unsupported pass claims.
+
+      Ask the Desktop parent if authentication, remotes, the base branch, or working-tree scope is ambiguous. After creation, verify the PR URL, number, title, state, base, head, SHA, and commit. Return those details in a concise Markdown receipt.
+    inputs:
+      - request.md
+      - context.md
+      - plan.md
+      - final-review.md
+      - final-validation.md
+    output: pr.md

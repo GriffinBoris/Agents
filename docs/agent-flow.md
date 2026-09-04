@@ -1,0 +1,329 @@
+# Agent Flow
+
+Agent Flow runs repeatable engineering workflows from a persistent Codex Desktop task. The Desktop task is the workflow parent: it retains requirements and decisions, spawns native Codex subagents, coordinates follow-ups, handles approvals, and presents the final result. Subagents use fresh contexts and become disposable after their accepted outputs are stored.
+
+The Python package is deliberately not an agent launcher. It validates YAML, snapshots the workflow, records state and worker IDs, verifies artifacts, and executes declared shell commands.
+
+## Architecture
+
+```text
+Codex Desktop parent task
+├── Agent Flow skill
+├── native research worker ──→ research.md
+├── native planning worker ──→ plan.md
+├── native implementation worker ──→ repository changes
+├── parallel native reviewers ──→ review artifacts
+└── agent-flow controller ──→ state, validation, shell steps
+```
+
+The parent task stays visible in Desktop. Native worker threads are inspectable while they run and return their results to the parent. After the parent persists and validates a result, the worker can be closed or left in Desktop's completed list.
+
+## Install into any repository
+
+Install the controller from a checkout, then initialize the project that will use it:
+
+```bash
+uv tool install .
+agent-flow --help
+cd /path/to/project
+agent-flow init --repo .
+agent-flow doctor --repo .
+```
+
+`agent-flow init` copies the Codex skill and example workflows into the target as ordinary files:
+
+```text
+.agents/
+├── skills/agent-flow/
+│   ├── SKILL.md
+│   └── agents/openai.yaml
+└── workflows/agent-flow/
+    ├── deep-feature.yml
+    └── github-issue-to-pr.yml
+```
+
+It also writes `.agent-flow/.gitignore` with `runs/`, because run requests, artifacts, logs, and issue context should remain local by default.
+
+The initializer never creates symlinks. Re-running it leaves identical files alone and refuses to overwrite modified project files. Use `--force` only when intentionally replacing local copies with the installed package version. Commit the installed `.agents/` files when that directory is team-owned. In an APM-managed repository, keep generated `.agents/` ignored and make `agent-flow init` part of local setup instead.
+
+To test an unmerged checkout in another repository without moving files manually:
+
+```bash
+temporary_checkout="$(mktemp -d)/agent-flow-source"
+git clone --branch codex/agent-flow-runner https://github.com/GriffinBoris/Agents.git "$temporary_checkout"
+uv tool install --force "$temporary_checkout"
+cd /path/to/project
+agent-flow init --repo .
+agent-flow doctor --repo .
+```
+
+The checkout can be removed after `uv tool install`; the installed tool and copied project files are independent of it. For a reviewed team release, install from a pinned tag instead of a moving branch.
+
+For development in this repository:
+
+```bash
+uv sync --extra dev
+uv run agent-flow --help
+```
+
+The source skill is authored at `.apm/skills/agent-flow/`. `agent-flow init` provides a direct repository-local Codex installation without requiring APM in the consuming project.
+
+## Run from Desktop
+
+Invoke the skill in a Codex Desktop task:
+
+```text
+$agent-flow Run .agents/workflows/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
+```
+
+When the initial request is supplied directly in the Desktop prompt, the parent starts the run with:
+
+```bash
+agent-flow start .agents/workflows/agent-flow/deep-feature.yml \
+  --prompt "Add the requested feature and validate it against repository guidance." \
+  --repo /path/to/repository
+```
+
+The inline prompt is stored as the run's internal `request.md`, so later workers and resumed runs use the same durable request without requiring a user-managed request file.
+
+For the GitHub-issue-to-PR example, the issue itself becomes the snapshotted request:
+
+```text
+$agent-flow Run .agents/workflows/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
+```
+
+The parent starts that workflow with:
+
+```bash
+agent-flow start .agents/workflows/agent-flow/github-issue-to-pr.yml \
+  --issue https://github.com/OWNER/REPO/issues/123 \
+  --repo /path/to/REPO
+```
+
+`--issue` calls the authenticated `gh` CLI read-only and stores the issue metadata and body as the run's `request.md`. Use `--prompt` for inline request text or `--request` for a local specification. The three options are mutually exclusive.
+
+The current task is the parent by default. If you explicitly ask for a dedicated task, the invoking task may create one and instruct it to run the skill. Agent steps do not create unrelated sidebar tasks; they use native subagents beneath the parent.
+
+The skill can also begin a run from a local request file with:
+
+```bash
+agent-flow start .agents/workflows/agent-flow/deep-feature.yml \
+  --request request.md \
+  --repo /path/to/repository
+```
+
+The command returns the current step as JSON, including resolved input and output paths, the selected model and effort, the prompt, and the delegation policy. The Desktop parent uses that descriptor to spawn a native worker.
+
+## Live viewer
+
+Open the viewer for the most recently updated run in a repository:
+
+```bash
+agent-flow view --repo /path/to/repository
+```
+
+Select a particular run or choose another port when needed:
+
+```bash
+agent-flow view <run-id> --repo /path/to/repository --port 9012
+```
+
+The command starts a loopback-only HTTP server on an available port, opens the browser, and refreshes the page every two seconds while it is visible. Pass `--port` when a stable port is required. Use `--no-open` to print the URL without opening it automatically. Press `Ctrl-C` in the serving terminal to stop it.
+
+The viewer is read-only. It renders the resolved workflow snapshot, step and approval status, workflow-level parallel children, worker IDs attached through `agent-flow attach`, recent events, and run files. Nested workers that are created inside another worker appear only when their IDs are reported to the controller; Codex session hierarchy is not inferred from unrelated Desktop tasks.
+
+## Controller lifecycle
+
+The controller exposes small state transitions rather than a background daemon:
+
+```text
+agent-flow init --repo <repository>
+agent-flow doctor --repo <repository>
+agent-flow start <workflow> --prompt <text> --repo <repository>
+agent-flow start <workflow> --request <file> --repo <repository>
+agent-flow start <workflow> --issue <issue-url-or-number> --repo <repository>
+agent-flow status <run-id> --repo <repository>
+agent-flow begin <run-id> <step-id> --repo <repository>
+agent-flow attach <run-id> <step-id> <worker-id> [--parent-worker <worker-id>] --repo <repository>
+agent-flow complete <run-id> <step-id> --repo <repository>
+agent-flow fail <run-id> <step-id> --message <error> --repo <repository>
+agent-flow shell <run-id> <step-id> --repo <repository>
+agent-flow approve <run-id> --repo <repository>
+agent-flow view [<run-id>] --repo <repository>
+```
+
+`begin` marks the current step as running. `attach` records the native worker returned by Desktop. The parent writes the worker's final response to the declared artifact path, then `complete` verifies it exists and advances. A failed step remains current and can be retried with `begin`; completed steps do not rerun.
+
+An approval step saves `waiting_for_approval` state. The Desktop parent presents the message and relevant artifacts, then stops. Only explicit user approval permits `agent-flow approve`.
+
+While a native worker is running, it can escalate a material ambiguity to the parent. The parent asks the user in the visible Desktop task, forwards the answer to that worker, and records the decision in the durable artifact. Approval gates can also act as human-controlled correction loops: requested changes are implemented and revalidated while the gate remains waiting, and the workflow advances only after explicit approval.
+
+## Durable state
+
+Each run stores its durable state in the target repository:
+
+```text
+.agent-flow/runs/<run-id>/
+├── events.jsonl
+├── logs/
+├── request.md
+├── state.json
+└── workflow.json
+```
+
+`workflow.json` is a resolved snapshot containing every inline step prompt. Later edits to the source workflow do not alter an active run. `state.json` records attempts, worker IDs, failures, artifact paths, and the current step.
+
+The Desktop conversation remains the human-visible coordination history. The run directory is the durable, machine-readable recovery boundary.
+
+## Workflow format
+
+A workflow defines Codex model profiles and an ordered list of steps:
+
+```yaml
+version: 1
+name: focused-change
+
+models:
+  deep:
+    provider: codex
+    model: gpt-5.6-sol
+    effort: high
+
+  fast:
+    provider: codex
+    model: gpt-5.6-luna
+    effort: medium
+
+defaults:
+  model: deep
+
+steps:
+  - id: research
+    type: agent
+    mode: read
+    prompt: Research the request and repository, then return an evidence-backed implementation brief.
+    inputs: [request.md]
+    output: research.md
+    delegation:
+      strategy: native
+      max_agents: 3
+      default_model: fast
+      instructions: Split documentation, code exploration, and dependency analysis.
+
+  - id: approve-research
+    type: approval
+    message: Review research.md before planning.
+
+  - id: tests
+    type: shell
+    command: ["uv", "run", "pytest", "-q"]
+    output: test-output.txt
+    timeout_seconds: 900
+```
+
+Prompts live directly in the workflow. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory. The loader rejects duplicate YAML keys and unknown fields so misspellings cannot silently change workflow behavior.
+
+### Agent steps
+
+Every agent step becomes one native Desktop subagent. The parent passes only the step prompt, explicit input paths, permissions, and output contract. The worker returns the complete artifact to the parent; the parent persists it and calls `complete`.
+
+| Field | Required | Purpose |
+| --- | --- | --- |
+| `id` | Yes | Unique step identifier. |
+| `type` | Yes | Must be `agent`. |
+| `model` | When no default exists | Named Codex model profile. |
+| `mode` | No | `read` by default; `write` permits repository changes. |
+| `prompt` | Yes | Inline instructions for the worker. Use a YAML block scalar for longer prompts. |
+| `inputs` | No | Run artifacts or repository files supplied to the worker. |
+| `output` | No | Run-relative artifact path; a default is used when omitted. |
+| `delegation` | No | Whether the step worker may spawn bounded native children. |
+
+The controller passes model names and effort values to the skill unchanged. The skill must not silently substitute an unavailable model.
+
+### Nested native subagents
+
+An agent step can permit its worker to delegate smaller tasks:
+
+```yaml
+delegation:
+  strategy: native
+  max_agents: 3
+  default_model: fast
+  instructions: Give each child a distinct package and request exact file references.
+```
+
+The step worker remains responsible for its children. It waits for them, synthesizes their results, and returns one artifact to the Desktop parent. Important information must reach the parent artifact before children are closed.
+
+After attaching the step worker, record each reported delegated child with its actual parent so the viewer can render the hierarchy and selected model accurately:
+
+```bash
+agent-flow attach <run-id> <step-id> <child-worker-id> \
+  --parent-worker <parent-worker-id> \
+  --repo <repository>
+```
+
+Existing flat worker records remain readable; hierarchy is shown only when parent identifiers were recorded.
+
+Use nested delegation for bounded exploration or analysis. Keep workflow-level stages in the main YAML when their outputs need independent validation, retry, or approval.
+
+### Parallel steps
+
+A parallel step asks the Desktop parent to spawn one native worker per child concurrently:
+
+```yaml
+- id: reviews
+  type: parallel
+  steps:
+    - id: correctness
+      type: agent
+      model: deep
+      mode: read
+      prompt: Review the implementation for correctness and regressions.
+      inputs: [plan.md]
+      output: correctness-review.md
+
+    - id: simplicity
+      type: agent
+      model: fast
+      mode: read
+      prompt: Review the implementation for unnecessary complexity.
+      inputs: [plan.md]
+      output: simplicity-review.md
+```
+
+Parallel children must be read-only. The parent waits for every worker, persists each output, and completes the group only after every artifact validates.
+
+### Shell steps
+
+Shell commands are stored as argument lists and executed directly without shell interpolation:
+
+```yaml
+- id: tests
+  type: shell
+  command: ["uv", "run", "pytest", "-q"]
+  output: test-output.txt
+  timeout_seconds: 900
+```
+
+`timeout_seconds` is optional, defaults to 1,800 seconds, and must be a positive integer. A timeout, missing executable, or non-zero exit is logged and leaves the step failed and retryable. Use a checked-in script when a command requires pipes, redirection, or complex shell behavior.
+
+## Communication model
+
+- The Desktop parent owns requirements, decisions, approvals, and final synthesis.
+- Workers communicate findings and questions back to the parent through native subagent messaging.
+- Cross-worker context is routed deliberately by the parent rather than shared automatically.
+- Scratch context stays inside workers; accepted results become run artifacts.
+- A worker is logically disposable only after its result is durable and accepted.
+
+This keeps the parent coherent without reducing workers to disconnected subprocesses.
+
+## Current limits
+
+- The Desktop-native path currently supports Codex workers only. ACP-backed external providers can be added later, but they will not automatically become native Desktop child threads.
+- The workflow is an ordered list; there is no generic unattended conditional, loop, or arbitrary DAG syntax. Repeatable correction passes can be declared as explicit steps, and approval gates support user-controlled correction loops.
+- Parallel children are read-only agent steps.
+- The parent task must remain available to coordinate native workers; the controller is not an unattended daemon.
+- Closing completed worker threads depends on host capability. Completed threads may remain inspectable in Desktop.
+- Agent cancellation and automatic worktree management are not implemented. Declared shell steps support timeouts.
+
+These constraints keep the execution model visible, recoverable, and aligned with Codex Desktop's native parent/subagent behavior.

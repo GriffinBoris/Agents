@@ -9,11 +9,60 @@ on:
       - 'v*'
 
 jobs:
+  agent-flow:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Test Agent Flow
+        run: |
+          python -m pip install -e '.[dev]'
+          ruff check src tests
+          ruff format --check src tests
+          pytest -q
+
+      - name: Verify distributable project assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          wheel_dir="$(mktemp -d)"
+          project_dir="$(mktemp -d)"
+          python -m pip wheel . --no-deps --wheel-dir "$wheel_dir"
+          python -m pip install --force-reinstall "$wheel_dir"/*.whl
+          agent-flow init --repo "$project_dir"
+          agent-flow doctor --repo "$project_dir"
+          test -f "$project_dir/.agents/skills/agent-flow/SKILL.md"
+          test ! -L "$project_dir/.agents/skills/agent-flow/SKILL.md"
+          test -f "$project_dir/.agents/workflows/agent-flow/deep-feature.yml"
+          test -f "$project_dir/.agents/workflows/agent-flow/github-issue-to-pr.yml"
+          test -f "$project_dir/.agent-flow/.gitignore"
+
   package:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install and verify Agent Flow
+        run: |
+          python -m pip install -e '.[dev]'
+          ruff check src tests
+          ruff format --check src tests
+          pytest -q
 
       - uses: microsoft/apm-action@v1
         with:
