@@ -26,6 +26,12 @@ agent-flow = "agent_flow.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_flow"]
 
+[tool.hatch.build.targets.wheel.force-include]
+".apm/skills/agent-flow" = "agent_flow/resources/skill"
+"examples/agent-flow/deep-feature.yml" = "agent_flow/resources/workflows/deep-feature.yml"
+"examples/agent-flow/github-issue-to-pr.yml" = "agent_flow/resources/workflows/github-issue-to-pr.yml"
+"templates/agent-flow.gitignore" = "agent_flow/resources/project.gitignore"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

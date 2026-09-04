@@ -13,14 +13,21 @@ This repository also contains `agent-flow`, a small file-backed controller for w
 - Durable Markdown artifacts before a worker result is accepted
 - GitHub issue intake through `gh`, question routing through the visible parent, and approval-controlled correction loops
 
-Install the controller, then invoke the bundled `agent-flow` skill from Codex Desktop:
+Install the controller, copy its ready-to-use project assets into the repository, and verify the setup:
 
 ```bash
 uv tool install .
+cd /path/to/project
+agent-flow init --repo .
+agent-flow doctor --repo .
 ```
 
+`init` writes regular files—never symlinks—to `.agents/skills/agent-flow/` and `.agents/workflows/agent-flow/`. It also ignores `.agent-flow/runs/`, which can contain request and repository context. It is safe to run again and refuses to overwrite team changes unless `--force` is explicit. Commit the installed skill and workflows when `.agents/` is team-owned; in an APM-managed repository, keep generated `.agents/` ignored and make `agent-flow init` part of local setup instead.
+
+Then invoke the installed skill from a Codex Desktop task:
+
 ```text
-$agent-flow Run examples/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
+$agent-flow Run .agents/workflows/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
 ```
 
 Inline request text is snapshotted inside the run as `request.md`; no separate request file is required. Local request files remain supported for longer specifications.
@@ -31,12 +38,14 @@ Open the live, read-only viewer for the most recent run:
 agent-flow view --repo /path/to/repository
 ```
 
+The viewer chooses an available loopback port by default, so multiple teams or repositories can use it at the same time without coordinating port numbers.
+
 Pass a run ID to select a particular run. The viewer opens on `127.0.0.1`, refreshes from `.agent-flow/runs/` every two seconds, and shows workflow progress, parallel children, attached native workers, events, artifacts, and the resolved workflow definition.
 
 Or run the issue-to-PR example without creating a request file:
 
 ```text
-$agent-flow Run examples/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
+$agent-flow Run .agents/workflows/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
 ```
 
 The skill drives native Desktop subagents; the Python command does not launch Codex or Claude processes. Run state and artifacts live under `.agent-flow/runs/` in the target repository. See [Agent Flow](docs/agent-flow.md) for the workflow format, controller commands, live viewer, and current limitations.

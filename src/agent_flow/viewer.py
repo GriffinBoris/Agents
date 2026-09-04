@@ -1,12 +1,14 @@
 import json
 import threading
 import webbrowser
+from collections import deque
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Optional
 from urllib.parse import quote, unquote, urlparse
 
+from agent_flow.config import WorkflowConfigError, load_workflow_snapshot, workflow_snapshot
 from agent_flow.store import RUNS_DIRECTORY, RunStore, RunStoreError
 
 
@@ -18,7 +20,7 @@ def serve_viewer(
     repository_root: Path,
     *,
     run_id: Optional[str] = None,
-    port: int = 8765,
+    port: int = 0,
     open_browser: bool = True,
 ) -> None:
     server = create_viewer_server(repository_root, run_id=run_id, port=port)
@@ -43,7 +45,7 @@ def create_viewer_server(
     repository_root: Path,
     *,
     run_id: Optional[str] = None,
-    port: int = 8765,
+    port: int = 0,
 ) -> ThreadingHTTPServer:
     root = repository_root.resolve()
     if not root.is_dir():
@@ -65,13 +67,16 @@ def create_viewer_server(
 
 def _handler_for(repository_root: Path) -> type[BaseHTTPRequestHandler]:
     class ViewerHandler(BaseHTTPRequestHandler):
+        server_version = 'AgentFlow'
+        sys_version = ''
+
         def do_GET(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path == '/':
                 self._send_bytes(_viewer_html(), 'text/html; charset=utf-8')
                 return
             if parsed.path == '/api/runs':
-                self._send_json({'runs': _list_runs(repository_root)})
+                self._send_json({'repository_root': str(repository_root), 'runs': _list_runs(repository_root)})
                 return
             if parsed.path.startswith('/api/runs/'):
                 run_id = unquote(parsed.path.removeprefix('/api/runs/'))
@@ -82,16 +87,33 @@ def _handler_for(repository_root: Path) -> type[BaseHTTPRequestHandler]:
                     return
                 self._send_json(payload)
                 return
+            if parsed.path == '/favicon.ico':
+                self._send_bytes(b'', 'image/x-icon', status=HTTPStatus.NO_CONTENT)
+                return
             self._send_json({'error': 'Not found'}, status=HTTPStatus.NOT_FOUND)
+
+        def do_HEAD(self) -> None:
+            parsed = urlparse(self.path)
+            if parsed.path == '/':
+                self._send_bytes(_viewer_html(), 'text/html; charset=utf-8', include_body=False)
+                return
+            self._send_json({'error': 'Not found'}, status=HTTPStatus.NOT_FOUND, include_body=False)
 
         def log_message(self, format: str, *args: object) -> None:
             return
 
-        def _send_json(self, value: dict, *, status: HTTPStatus = HTTPStatus.OK) -> None:
+        def _send_json(
+            self,
+            value: dict,
+            *,
+            status: HTTPStatus = HTTPStatus.OK,
+            include_body: bool = True,
+        ) -> None:
             self._send_bytes(
                 json.dumps(value, separators=(',', ':')).encode('utf-8'),
                 'application/json; charset=utf-8',
                 status=status,
+                include_body=include_body,
             )
 
         def _send_bytes(
@@ -100,6 +122,7 @@ def _handler_for(repository_root: Path) -> type[BaseHTTPRequestHandler]:
             content_type: str,
             *,
             status: HTTPStatus = HTTPStatus.OK,
+            include_body: bool = True,
         ) -> None:
             self.send_response(status)
             self.send_header('Content-Type', content_type)
@@ -107,10 +130,15 @@ def _handler_for(repository_root: Path) -> type[BaseHTTPRequestHandler]:
             self.send_header('Cache-Control', 'no-store')
             self.send_header(
                 'Content-Security-Policy',
-                "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'",
+                "default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; "
+                "style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'",
             )
+            self.send_header('Cross-Origin-Resource-Policy', 'same-origin')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.send_header('X-Content-Type-Options', 'nosniff')
             self.end_headers()
-            self.wfile.write(content)
+            if include_body:
+                self.wfile.write(content)
 
     return ViewerHandler
 
@@ -126,13 +154,20 @@ def _list_runs(repository_root: Path) -> list[dict]:
     runs_directory = repository_root / RUNS_DIRECTORY
     if not runs_directory.is_dir():
         return []
+    if not runs_directory.resolve().is_relative_to(repository_root):
+        return []
+
+    try:
+        paths = list(runs_directory.iterdir())
+    except OSError:
+        return []
 
     runs = []
-    for path in runs_directory.iterdir():
+    for path in paths:
         if not path.is_dir():
             continue
-        store = RunStore(path)
         try:
+            store = RunStore.open(repository_root, path.name)
             state = store.load_state()
         except RunStoreError:
             continue
@@ -153,26 +188,43 @@ def _load_run(repository_root: Path, run_id: str) -> dict:
     store = RunStore.open(repository_root, run_id)
     state = store.load_state()
     try:
-        workflow = json.loads(store.workflow_path.read_text(encoding='utf-8'))
-    except (json.JSONDecodeError, OSError) as error:
+        workflow = workflow_snapshot(load_workflow_snapshot(store.workflow_path))
+    except WorkflowConfigError as error:
         raise RunStoreError(f'Cannot read workflow snapshot {store.workflow_path}: {error}') from error
 
     events = []
-    if store.events_path.is_file():
+    warnings = []
+    if store.events_path.is_symlink():
+        warnings.append('Ignored unsafe events.jsonl symlink')
+    elif store.events_path.is_file():
         try:
-            lines = store.events_path.read_text(encoding='utf-8').splitlines()
-            for line in lines[-200:]:
+            with store.events_path.open('r', encoding='utf-8', errors='replace') as event_file:
+                lines = deque(enumerate(event_file, start=1), maxlen=200)
+            for line_number, line in lines:
                 if line.strip():
-                    events.append(json.loads(line))
-        except (json.JSONDecodeError, OSError) as error:
+                    try:
+                        event = json.loads(line)
+                        if not isinstance(event, dict):
+                            raise ValueError
+                        events.append(event)
+                    except (json.JSONDecodeError, ValueError):
+                        warnings.append(f'Ignored malformed event at events.jsonl:{line_number}')
+        except OSError as error:
             raise RunStoreError(f'Cannot read run events {store.events_path}: {error}') from error
 
     artifacts = []
-    excluded = {store.state_path, store.workflow_path, store.events_path}
+    excluded = {store.state_path, store.workflow_path, store.events_path, store.lock_path}
     for path in store.run_directory.rglob('*'):
         if not path.is_file() or path in excluded:
             continue
-        stat = path.stat()
+        if path.is_symlink():
+            warnings.append(f'Ignored unsafe run file symlink: {path.relative_to(store.run_directory)}')
+            continue
+        try:
+            stat = path.stat()
+        except OSError:
+            warnings.append(f'Ignored unreadable run file: {path.relative_to(store.run_directory)}')
+            continue
         artifacts.append(
             {
                 'path': str(path.relative_to(store.run_directory)),
@@ -180,10 +232,14 @@ def _load_run(repository_root: Path, run_id: str) -> dict:
                 'updated_at': stat.st_mtime,
             }
         )
+        if len(artifacts) == 1000:
+            warnings.append('Showing the first 1,000 run files')
+            break
 
     return {
         'state': state.to_dict(),
         'workflow': workflow,
         'events': events,
         'artifacts': sorted(artifacts, key=lambda item: item['path']),
+        'warnings': warnings,
     }

@@ -64,6 +64,7 @@ steps:
     type: shell
     command: ["python3", "-m", "pytest", "-q"]
     output: test-output.txt
+    timeout_seconds: 1800
 
   - id: reviews
     type: parallel
@@ -94,6 +95,7 @@ steps:
     type: shell
     command: ["python3", "-m", "pytest", "-q"]
     output: final-test-output.txt
+    timeout_seconds: 1800
 
   - id: final-approval
     type: approval

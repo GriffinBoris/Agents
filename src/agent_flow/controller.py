@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -44,15 +45,43 @@ class WorkflowController:
             raise WorkflowStateError(f'Run cannot begin a step from status {state.status!r}')
 
         self._mark_started(state.steps[step.id])
+        if isinstance(step, AgentStep):
+            self._record_artifact_baseline(store, step, state.steps[step.id])
         if isinstance(step, ParallelStep):
             for child in step.steps:
                 self._mark_started(state.steps[child.id])
+                self._record_artifact_baseline(store, child, state.steps[child.id])
         state.status = 'running'
         store.save_state(state)
         store.append_event('step.started', {'step': step.id, 'step_type': step.type})
         return state
 
-    def attach_worker(self, store: RunStore, step_id: str, worker_id: str) -> RunState:
+    def attach_worker(
+        self,
+        store: RunStore,
+        step_id: str,
+        worker_id: str,
+        *,
+        parent_worker_id: str | None = None,
+    ) -> RunState:
+        with store.lock():
+            return self._attach_worker(store, step_id, worker_id, parent_worker_id=parent_worker_id)
+
+    def _attach_worker(
+        self,
+        store: RunStore,
+        step_id: str,
+        worker_id: str,
+        *,
+        parent_worker_id: str | None = None,
+    ) -> RunState:
+        if not worker_id.strip():
+            raise WorkflowStateError('Worker ID must not be empty')
+        if parent_worker_id is not None and not parent_worker_id.strip():
+            raise WorkflowStateError('Parent worker ID must not be empty')
+        if parent_worker_id == worker_id:
+            raise WorkflowStateError('A worker cannot be its own parent')
+        workflow = load_workflow_snapshot(store.workflow_path)
         state = store.load_state()
         if state.status != 'running':
             raise WorkflowStateError('Workers can be attached only while a step is running')
@@ -60,11 +89,57 @@ class WorkflowController:
         if record is None or record['status'] != 'running':
             raise WorkflowStateError(f'Step {step_id!r} is not a running workflow step')
 
+        step = self._running_agent_step(workflow, state, step_id)
+
         worker_ids = record['metadata'].setdefault('worker_ids', [])
+        workers = record['metadata'].setdefault('workers', [])
+        if not isinstance(worker_ids, list) or not all(isinstance(value, str) for value in worker_ids):
+            raise WorkflowStateError(f'Step {step_id!r} contains invalid worker IDs')
+        if not isinstance(workers, list) or not all(isinstance(value, dict) for value in workers):
+            raise WorkflowStateError(f'Step {step_id!r} contains invalid worker details')
+        if parent_worker_id is not None and parent_worker_id not in worker_ids:
+            raise WorkflowStateError(f'Parent worker {parent_worker_id!r} is not attached to step {step_id!r}')
+        existing = next((worker for worker in workers if worker.get('id') == worker_id), None)
+        if existing is not None:
+            if existing.get('parent_worker_id') != parent_worker_id:
+                raise WorkflowStateError(f'Worker {worker_id!r} is already attached with a different parent')
+            return state
+        if parent_worker_id is not None and step.delegation.strategy != 'native':
+            raise WorkflowStateError(f'Step {step_id!r} does not allow nested workers')
+        if parent_worker_id is not None:
+            nested_count = sum(worker.get('parent_worker_id') == parent_worker_id for worker in workers)
+            if nested_count >= step.delegation.max_agents:
+                raise WorkflowStateError(
+                    f'Parent worker {parent_worker_id!r} already has the maximum of '
+                    f'{step.delegation.max_agents} nested workers'
+                )
+        profile = workflow.delegated_model_for(step) if parent_worker_id is not None else workflow.model_for(step)
+        if profile is None:
+            profile = workflow.model_for(step)
         if worker_id not in worker_ids:
             worker_ids.append(worker_id)
+        worker = {
+            'id': worker_id,
+            'parent_worker_id': parent_worker_id,
+            'attempt': record['attempts'],
+            'model': {
+                'profile': profile.name,
+                'provider': profile.provider,
+                'model': profile.model,
+                'effort': profile.effort,
+            },
+        }
+        workers.append(worker)
         store.save_state(state)
-        store.append_event('worker.attached', {'step': step_id, 'worker_id': worker_id})
+        store.append_event(
+            'worker.attached',
+            {
+                'step': step_id,
+                'worker_id': worker_id,
+                'parent_worker_id': parent_worker_id,
+                'model_profile': profile.name,
+            },
+        )
         return state
 
     def complete(self, store: RunStore, step_id: str, *, allow_shell: bool = False) -> RunState:
@@ -80,18 +155,20 @@ class WorkflowController:
             raise WorkflowStateError(f'Run cannot complete a step from status {state.status!r}')
 
         if isinstance(step, AgentStep):
-            artifact = self._require_agent_artifact(store, step)
+            artifact = self._require_agent_artifact(store, step, state.steps[step.id])
             state.steps[step.id]['metadata']['artifact'] = str(artifact)
+            state.steps[step.id]['metadata'].pop('_artifact_baseline', None)
         elif isinstance(step, ParallelStep):
             artifacts = {}
             for child in step.steps:
-                artifact = self._require_agent_artifact(store, child)
+                artifact = self._require_agent_artifact(store, child, state.steps[child.id])
                 artifacts[child.id] = str(artifact)
                 child_record = state.steps[child.id]
                 child_record['status'] = 'succeeded'
                 child_record['completed_at'] = _now()
                 child_record['error'] = None
                 child_record['metadata']['artifact'] = str(artifact)
+                child_record['metadata'].pop('_artifact_baseline', None)
             state.steps[step.id]['metadata']['artifacts'] = artifacts
 
         record = state.steps[step.id]
@@ -99,11 +176,17 @@ class WorkflowController:
         record['completed_at'] = _now()
         record['error'] = None
         state.current_step += 1
-        store.append_event('step.succeeded', {'step': step.id, 'metadata': record['metadata']})
-        self._set_boundary(workflow, store, state)
+        self._set_boundary(
+            workflow,
+            store,
+            state,
+            preceding_event=('step.succeeded', {'step': step.id, 'metadata': record['metadata']}),
+        )
         return state
 
     def fail(self, store: RunStore, step_id: str, message: str) -> RunState:
+        if not message.strip():
+            raise WorkflowStateError('Failure message must not be empty')
         workflow = load_workflow_snapshot(store.workflow_path)
         state = store.load_state()
         step = self._current_step(workflow, state)
@@ -143,8 +226,12 @@ class WorkflowController:
         state.current_step += 1
         state.waiting_step = None
         state.waiting_message = None
-        store.append_event('step.approved', {'step': step.id})
-        self._set_boundary(workflow, store, state)
+        self._set_boundary(
+            workflow,
+            store,
+            state,
+            preceding_event=('step.approved', {'step': step.id}),
+        )
         return state
 
     def run_shell(self, store: RunStore, step_id: str) -> RunState:
@@ -156,17 +243,39 @@ class WorkflowController:
             raise WorkflowStateError(f'Step {step.id!r} is not a shell step')
 
         self.begin(store, step_id, allow_shell=True)
-        completed_process = subprocess.run(
-            list(step.command),
-            cwd=Path(state.repository_root),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        log_path = store.log_directory / f'{step.id}.log'
-        log_path.write_text(
-            f'$ {" ".join(step.command)}\n\nSTDOUT\n{completed_process.stdout}\nSTDERR\n{completed_process.stderr}',
-            encoding='utf-8',
+        try:
+            completed_process = subprocess.run(
+                list(step.command),
+                cwd=store.repository_root,
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                check=False,
+                timeout=step.timeout_seconds,
+            )
+        except subprocess.TimeoutExpired as error:
+            log_path = store.write_log(
+                step.id,
+                _shell_log(step.command, _subprocess_text(error.stdout), _subprocess_text(error.stderr)),
+            )
+            message = f'Command timed out after {step.timeout_seconds} seconds; see {log_path}'
+            self.fail(store, step.id, message)
+            raise WorkflowStateError(message) from error
+        except KeyboardInterrupt as error:
+            log_path = store.write_log(step.id, _shell_log(step.command, '', 'Interrupted by user'))
+            message = f'Command was interrupted; see {log_path}'
+            self.fail(store, step.id, message)
+            raise WorkflowStateError(message) from error
+        except OSError as error:
+            log_path = store.write_log(step.id, _shell_log(step.command, '', str(error)))
+            message = f'Cannot execute command: {error}; see {log_path}'
+            self.fail(store, step.id, message)
+            raise WorkflowStateError(message) from error
+
+        log_path = store.write_log(
+            step.id,
+            _shell_log(step.command, completed_process.stdout, completed_process.stderr),
         )
         if step.output is not None:
             store.write_artifact(step.output, completed_process.stdout)
@@ -185,7 +294,7 @@ class WorkflowController:
     def describe(self, workflow: Workflow, store: RunStore, state: RunState) -> dict:
         step = None
         if state.current_step < len(workflow.steps):
-            step = self._describe_step(workflow, workflow.steps[state.current_step], store, Path(state.repository_root))
+            step = self._describe_step(workflow, workflow.steps[state.current_step], store, store.repository_root)
         return {
             'run_id': state.run_id,
             'run_directory': str(store.run_directory),
@@ -196,17 +305,22 @@ class WorkflowController:
             'step': step,
         }
 
-    def _set_boundary(self, workflow: Workflow, store: RunStore, state: RunState) -> None:
+    def _set_boundary(
+        self,
+        workflow: Workflow,
+        store: RunStore,
+        state: RunState,
+        *,
+        preceding_event: tuple[str, dict] | None = None,
+    ) -> None:
+        boundary_event = None
         if state.current_step >= len(workflow.steps):
             state.status = 'completed'
             state.waiting_step = None
             state.waiting_message = None
-            store.save_state(state)
-            store.append_event('run.completed', {'workflow': workflow.name})
-            return
-
-        step = workflow.steps[state.current_step]
-        if isinstance(step, ApprovalStep):
+            boundary_event = ('run.completed', {'workflow': workflow.name})
+        elif isinstance(workflow.steps[state.current_step], ApprovalStep):
+            step = workflow.steps[state.current_step]
             record = state.steps[step.id]
             record['status'] = 'waiting'
             record['started_at'] = record['started_at'] or _now()
@@ -214,14 +328,16 @@ class WorkflowController:
             state.status = 'waiting_for_approval'
             state.waiting_step = step.id
             state.waiting_message = step.message
-            store.save_state(state)
-            store.append_event('step.waiting_for_approval', {'step': step.id, 'message': step.message})
-            return
-
-        state.status = 'ready'
-        state.waiting_step = None
-        state.waiting_message = None
+            boundary_event = ('step.waiting_for_approval', {'step': step.id, 'message': step.message})
+        else:
+            state.status = 'ready'
+            state.waiting_step = None
+            state.waiting_message = None
         store.save_state(state)
+        if preceding_event is not None:
+            store.append_event(*preceding_event)
+        if boundary_event is not None:
+            store.append_event(*boundary_event)
 
     @staticmethod
     def _current_step(workflow: Workflow, state: RunState) -> WorkflowStep:
@@ -234,6 +350,17 @@ class WorkflowController:
         if step.id != step_id:
             raise WorkflowStateError(f'Current step is {step.id!r}, not {step_id!r}')
 
+    @classmethod
+    def _running_agent_step(cls, workflow: Workflow, state: RunState, step_id: str) -> AgentStep:
+        step = cls._current_step(workflow, state)
+        if isinstance(step, AgentStep) and step.id == step_id:
+            return step
+        if isinstance(step, ParallelStep):
+            child = next((child for child in step.steps if child.id == step_id), None)
+            if child is not None:
+                return child
+        raise WorkflowStateError(f'Step {step_id!r} is not a running agent step')
+
     @staticmethod
     def _mark_started(record: dict) -> None:
         record['status'] = 'running'
@@ -243,12 +370,26 @@ class WorkflowController:
         record['error'] = None
 
     @staticmethod
-    def _require_agent_artifact(store: RunStore, step: AgentStep) -> Path:
+    def _require_agent_artifact(store: RunStore, step: AgentStep, record: dict) -> Path:
         output_path = _agent_output(step)
         artifact = (store.run_directory / output_path).resolve()
         if not artifact.is_relative_to(store.run_directory) or not artifact.is_file():
             raise WorkflowStateError(f'Step {step.id!r} has no artifact at {artifact}')
+        baseline = record.get('metadata', {}).get('_artifact_baseline')
+        stat = artifact.stat()
+        fingerprint = {'size': stat.st_size, 'modified_ns': stat.st_mtime_ns}
+        if baseline == fingerprint:
+            raise WorkflowStateError(f'Step {step.id!r} artifact predates the current attempt: {artifact}')
         return artifact
+
+    @staticmethod
+    def _record_artifact_baseline(store: RunStore, step: AgentStep, record: dict) -> None:
+        artifact = (store.run_directory / _agent_output(step)).resolve()
+        baseline = None
+        if artifact.is_relative_to(store.run_directory) and artifact.is_file():
+            stat = artifact.stat()
+            baseline = {'size': stat.st_size, 'modified_ns': stat.st_mtime_ns}
+        record['metadata']['_artifact_baseline'] = baseline
 
     def _describe_step(
         self,
@@ -265,6 +406,7 @@ class WorkflowController:
                 'type': step.type,
                 'command': list(step.command),
                 'output': str(store.run_directory / step.output) if step.output is not None else None,
+                'timeout_seconds': step.timeout_seconds,
             }
         if isinstance(step, ParallelStep):
             return {
@@ -319,6 +461,18 @@ class WorkflowController:
 
 def _agent_output(step: AgentStep) -> str:
     return step.output or f'artifacts/{step.id}.md'
+
+
+def _shell_log(command: tuple[str, ...], stdout: str, stderr: str) -> str:
+    return f'$ {shlex.join(command)}\n\nSTDOUT\n{stdout}\nSTDERR\n{stderr}'
+
+
+def _subprocess_text(value: str | bytes | None) -> str:
+    if value is None:
+        return ''
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')
+    return value
 
 
 def _now() -> str:

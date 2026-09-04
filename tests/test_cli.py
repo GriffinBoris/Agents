@@ -154,3 +154,38 @@ def test_cli_parses_viewer_options(tmp_path: Path) -> None:
     assert options.repo == tmp_path
     assert options.port == 9012
     assert options.no_open is True
+
+
+def test_cli_parses_nested_worker_parent() -> None:
+    options = build_parser().parse_args(['attach', 'run-123', 'research', 'child-1', '--parent-worker', 'parent-1'])
+
+    assert options.parent_worker == 'parent-1'
+
+
+def test_viewer_uses_an_available_port_by_default() -> None:
+    options = build_parser().parse_args(['view', '--no-open'])
+
+    assert options.port == 0
+
+
+def test_cli_initializes_repository_assets(tmp_path: Path, capsys) -> None:
+    repository = tmp_path / 'repository'
+    repository.mkdir()
+
+    assert main(['init', '--repo', str(repository)]) == 0
+    initialized = json.loads(capsys.readouterr().out)
+
+    assert initialized['repository'] == str(repository.resolve())
+    assert (repository / '.agents' / 'skills' / 'agent-flow' / 'SKILL.md').is_file()
+    assert main(['doctor', '--repo', str(repository)]) == 0
+
+
+def test_cli_doctor_fails_for_uninitialized_repository(tmp_path: Path, capsys) -> None:
+    repository = tmp_path / 'repository'
+    repository.mkdir()
+
+    assert main(['doctor', '--repo', str(repository)]) == 1
+    report = json.loads(capsys.readouterr().out)
+
+    assert report['healthy'] is False
+    assert report['recommendations'] == ['Run agent-flow init --repo .']

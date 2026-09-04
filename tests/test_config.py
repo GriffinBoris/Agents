@@ -7,6 +7,7 @@ import yaml
 from agent_flow.config import (
     AgentStep,
     ParallelStep,
+    ShellStep,
     WorkflowConfigError,
     load_workflow,
     load_workflow_snapshot,
@@ -115,6 +116,57 @@ def test_shipped_github_issue_workflow_is_valid() -> None:
     assert workflow.name == 'github-issue-to-pr'
     assert workflow.steps[0].id == 'gather-context'
     assert workflow.steps[-1].id == 'create-pr'
+
+
+def test_rejects_unknown_fields_instead_of_ignoring_typos() -> None:
+    data = _base_workflow()
+    data['steps'][0]['promt'] = 'This misspelling must not be ignored.'
+
+    with pytest.raises(WorkflowConfigError, match=r'step research contains unknown field\(s\): promt'):
+        parse_workflow(data)
+
+
+def test_rejects_boolean_workflow_version() -> None:
+    data = _base_workflow()
+    data['version'] = True
+
+    with pytest.raises(WorkflowConfigError, match='Workflow version must be 1'):
+        parse_workflow(data)
+
+
+def test_rejects_duplicate_yaml_keys(tmp_path: Path) -> None:
+    workflow_path = tmp_path / 'workflow.yml'
+    workflow_path.write_text(
+        """version: 1
+name: first
+name: second
+models: {}
+steps: []
+""",
+        encoding='utf-8',
+    )
+
+    with pytest.raises(WorkflowConfigError, match='duplicate key'):
+        load_workflow(workflow_path)
+
+
+def test_shell_timeout_round_trips_in_snapshot() -> None:
+    data = _base_workflow()
+    data['steps'] = [
+        {
+            'id': 'tests',
+            'type': 'shell',
+            'command': ['python3', '-m', 'pytest'],
+            'timeout_seconds': 120,
+        }
+    ]
+
+    workflow = parse_workflow(data)
+
+    step = workflow.steps[0]
+    assert isinstance(step, ShellStep)
+    assert step.timeout_seconds == 120
+    assert workflow_snapshot(workflow)['steps'][0]['timeout_seconds'] == 120
 
 
 def _base_workflow() -> dict:

@@ -56,6 +56,7 @@ class ShellStep:
     type: str
     command: tuple[str, ...]
     output: Optional[str]
+    timeout_seconds: int
 
 
 @dataclass(frozen=True)
@@ -95,7 +96,9 @@ def load_workflow(path: Path) -> Workflow:
         raise WorkflowConfigError(f'Workflow does not exist: {source_path}')
 
     try:
-        data = yaml.safe_load(source_path.read_text(encoding='utf-8'))
+        data = yaml.load(source_path.read_text(encoding='utf-8'), Loader=_UniqueKeyLoader)
+    except OSError as error:
+        raise WorkflowConfigError(f'Cannot read workflow {source_path}: {error}') from error
     except yaml.YAMLError as error:
         raise WorkflowConfigError(f'Invalid workflow YAML: {error}') from error
 
@@ -113,8 +116,9 @@ def load_workflow_snapshot(path: Path) -> Workflow:
 
 def parse_workflow(data: object) -> Workflow:
     root = _require_mapping(data, 'workflow')
+    _reject_unknown_keys(root, {'version', 'name', 'models', 'defaults', 'steps'}, 'workflow')
     version = root.get('version')
-    if version != 1:
+    if not isinstance(version, int) or isinstance(version, bool) or version != 1:
         raise WorkflowConfigError('Workflow version must be 1')
 
     name = _require_string(root.get('name'), 'workflow.name')
@@ -122,6 +126,7 @@ def parse_workflow(data: object) -> Workflow:
 
     defaults = root.get('defaults', {})
     defaults_mapping = _require_mapping(defaults, 'workflow.defaults')
+    _reject_unknown_keys(defaults_mapping, {'model'}, 'workflow.defaults')
     default_model = _optional_string(defaults_mapping.get('model'), 'workflow.defaults.model')
     if default_model is not None and default_model not in models:
         raise WorkflowConfigError(f'Unknown default model profile: {default_model}')
@@ -162,6 +167,7 @@ def _parse_models(value: object) -> dict[str, ModelProfile]:
     for name, raw_profile in raw_models.items():
         profile_name = _require_string(name, 'model profile name')
         profile = _require_mapping(raw_profile, f'models.{profile_name}')
+        _reject_unknown_keys(profile, {'provider', 'model', 'effort'}, f'models.{profile_name}')
         provider = _require_string(profile.get('provider'), f'models.{profile_name}.provider')
         if provider not in SUPPORTED_PROVIDERS:
             raise WorkflowConfigError(f'Unsupported provider for model profile {profile_name!r}: {provider}')
@@ -183,14 +189,21 @@ def _parse_step(value: object) -> WorkflowStep:
         raise WorkflowConfigError(f'Unsupported step type for {step_id!r}: {step_type}')
 
     if step_type == 'agent':
+        _reject_unknown_keys(
+            raw_step,
+            {'id', 'type', 'model', 'mode', 'prompt', 'inputs', 'output', 'delegation'},
+            f'step {step_id}',
+        )
         return _parse_agent_step(raw_step, step_id)
     if step_type == 'approval':
+        _reject_unknown_keys(raw_step, {'id', 'type', 'message'}, f'step {step_id}')
         return ApprovalStep(
             id=step_id,
             type=step_type,
             message=_require_string(raw_step.get('message'), f'step {step_id}.message'),
         )
     if step_type == 'shell':
+        _reject_unknown_keys(raw_step, {'id', 'type', 'command', 'output', 'timeout_seconds'}, f'step {step_id}')
         command = _require_string_list(raw_step.get('command'), f'step {step_id}.command')
         if not command:
             raise WorkflowConfigError(f'Shell step {step_id!r} must contain a command')
@@ -199,8 +212,13 @@ def _parse_step(value: object) -> WorkflowStep:
             type=step_type,
             command=tuple(command),
             output=_optional_relative_path(raw_step.get('output'), f'step {step_id}.output'),
+            timeout_seconds=_require_positive_integer(
+                raw_step.get('timeout_seconds', 1800),
+                f'step {step_id}.timeout_seconds',
+            ),
         )
 
+    _reject_unknown_keys(raw_step, {'id', 'type', 'steps'}, f'step {step_id}')
     raw_children = _require_list(raw_step.get('steps'), f'step {step_id}.steps')
     if not raw_children:
         raise WorkflowConfigError(f'Parallel step {step_id!r} must contain at least one child')
@@ -240,6 +258,11 @@ def _parse_agent_step(raw_step: dict, step_id: str) -> AgentStep:
 
 def _parse_delegation(value: object, step_id: str) -> DelegationConfig:
     raw_delegation = _require_mapping(value, f'step {step_id}.delegation')
+    _reject_unknown_keys(
+        raw_delegation,
+        {'strategy', 'max_agents', 'default_model', 'instructions'},
+        f'step {step_id}.delegation',
+    )
     strategy = raw_delegation.get('strategy', 'off')
     if strategy not in SUPPORTED_DELEGATION_STRATEGIES:
         raise WorkflowConfigError(f'Unsupported delegation strategy for {step_id!r}: {strategy}')
@@ -331,7 +354,13 @@ def _step_snapshot(step: WorkflowStep) -> dict:
     if isinstance(step, ApprovalStep):
         return {'id': step.id, 'type': step.type, 'message': step.message}
     if isinstance(step, ShellStep):
-        return {'id': step.id, 'type': step.type, 'command': list(step.command), 'output': step.output}
+        return {
+            'id': step.id,
+            'type': step.type,
+            'command': list(step.command),
+            'output': step.output,
+            'timeout_seconds': step.timeout_seconds,
+        }
     return {
         'id': step.id,
         'type': step.type,
@@ -343,6 +372,13 @@ def _require_mapping(value: object, field_name: str) -> dict:
     if not isinstance(value, dict):
         raise WorkflowConfigError(f'{field_name} must be a mapping')
     return value
+
+
+def _reject_unknown_keys(value: dict, allowed: set[str], field_name: str) -> None:
+    unknown = sorted(str(key) for key in value if key not in allowed)
+    if unknown:
+        joined = ', '.join(unknown)
+        raise WorkflowConfigError(f'{field_name} contains unknown field(s): {joined}')
 
 
 def _require_list(value: object, field_name: str) -> list:
@@ -361,6 +397,12 @@ def _optional_string(value: object, field_name: str) -> Optional[str]:
     if value is None:
         return None
     return _require_string(value, field_name)
+
+
+def _require_positive_integer(value: object, field_name: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        raise WorkflowConfigError(f'{field_name} must be a positive integer')
+    return value
 
 
 def _require_string_list(value: object, field_name: str) -> list[str]:
@@ -392,3 +434,35 @@ def _validate_relative_path(value: str, field_name: str) -> None:
     path = PurePath(value)
     if path.is_absolute() or '..' in path.parts or value in {'', '.'}:
         raise WorkflowConfigError(f'{field_name} must be a safe relative path')
+
+
+class _UniqueKeyLoader(yaml.SafeLoader):
+    pass
+
+
+def _construct_unique_mapping(loader: _UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False) -> dict:
+    loader.flatten_mapping(node)
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        try:
+            duplicate = key in mapping
+        except TypeError as error:
+            raise yaml.constructor.ConstructorError(
+                'while constructing a mapping',
+                node.start_mark,
+                'found an unhashable key',
+                key_node.start_mark,
+            ) from error
+        if duplicate:
+            raise yaml.constructor.ConstructorError(
+                'while constructing a mapping',
+                node.start_mark,
+                f'found duplicate key {key!r}',
+                key_node.start_mark,
+            )
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_unique_mapping)

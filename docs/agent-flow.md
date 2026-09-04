@@ -18,14 +18,46 @@ Codex Desktop parent task
 
 The parent task stays visible in Desktop. Native worker threads are inspectable while they run and return their results to the parent. After the parent persists and validates a result, the worker can be closed or left in Desktop's completed list.
 
-## Install
+## Install into any repository
 
-Install the controller from a checkout:
+Install the controller from a checkout, then initialize the project that will use it:
 
 ```bash
 uv tool install .
 agent-flow --help
+cd /path/to/project
+agent-flow init --repo .
+agent-flow doctor --repo .
 ```
+
+`agent-flow init` copies the Codex skill and example workflows into the target as ordinary files:
+
+```text
+.agents/
+├── skills/agent-flow/
+│   ├── SKILL.md
+│   └── agents/openai.yaml
+└── workflows/agent-flow/
+    ├── deep-feature.yml
+    └── github-issue-to-pr.yml
+```
+
+It also writes `.agent-flow/.gitignore` with `runs/`, because run requests, artifacts, logs, and issue context should remain local by default.
+
+The initializer never creates symlinks. Re-running it leaves identical files alone and refuses to overwrite modified project files. Use `--force` only when intentionally replacing local copies with the installed package version. Commit the installed `.agents/` files when that directory is team-owned. In an APM-managed repository, keep generated `.agents/` ignored and make `agent-flow init` part of local setup instead.
+
+To test an unmerged checkout in another repository without moving files manually:
+
+```bash
+temporary_checkout="$(mktemp -d)/agent-flow-source"
+git clone --branch codex/agent-flow-runner https://github.com/GriffinBoris/Agents.git "$temporary_checkout"
+uv tool install --force "$temporary_checkout"
+cd /path/to/project
+agent-flow init --repo .
+agent-flow doctor --repo .
+```
+
+The checkout can be removed after `uv tool install`; the installed tool and copied project files are independent of it. For a reviewed team release, install from a pinned tag instead of a moving branch.
 
 For development in this repository:
 
@@ -34,20 +66,20 @@ uv sync --extra dev
 uv run agent-flow --help
 ```
 
-The `agent-flow` skill is authored at `.apm/skills/agent-flow/`. Compile this package for Codex or install it through APM so Desktop can discover the skill.
+The source skill is authored at `.apm/skills/agent-flow/`. `agent-flow init` provides a direct repository-local Codex installation without requiring APM in the consuming project.
 
 ## Run from Desktop
 
 Invoke the skill in a Codex Desktop task:
 
 ```text
-$agent-flow Run examples/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
+$agent-flow Run .agents/workflows/agent-flow/deep-feature.yml against this repository. Initial request: add the requested feature and validate it against repository guidance.
 ```
 
 When the initial request is supplied directly in the Desktop prompt, the parent starts the run with:
 
 ```bash
-agent-flow start examples/agent-flow/deep-feature.yml \
+agent-flow start .agents/workflows/agent-flow/deep-feature.yml \
   --prompt "Add the requested feature and validate it against repository guidance." \
   --repo /path/to/repository
 ```
@@ -57,13 +89,13 @@ The inline prompt is stored as the run's internal `request.md`, so later workers
 For the GitHub-issue-to-PR example, the issue itself becomes the snapshotted request:
 
 ```text
-$agent-flow Run examples/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
+$agent-flow Run .agents/workflows/agent-flow/github-issue-to-pr.yml for https://github.com/OWNER/REPO/issues/123 against /path/to/REPO.
 ```
 
 The parent starts that workflow with:
 
 ```bash
-agent-flow start examples/agent-flow/github-issue-to-pr.yml \
+agent-flow start .agents/workflows/agent-flow/github-issue-to-pr.yml \
   --issue https://github.com/OWNER/REPO/issues/123 \
   --repo /path/to/REPO
 ```
@@ -75,7 +107,7 @@ The current task is the parent by default. If you explicitly ask for a dedicated
 The skill can also begin a run from a local request file with:
 
 ```bash
-agent-flow start workflows/deep-feature.yml \
+agent-flow start .agents/workflows/agent-flow/deep-feature.yml \
   --request request.md \
   --repo /path/to/repository
 ```
@@ -96,7 +128,7 @@ Select a particular run or choose another port when needed:
 agent-flow view <run-id> --repo /path/to/repository --port 9012
 ```
 
-The command starts a loopback-only HTTP server, opens the browser, and refreshes the page every two seconds. Use `--no-open` to print the URL without opening it automatically. Press `Ctrl-C` in the serving terminal to stop it.
+The command starts a loopback-only HTTP server on an available port, opens the browser, and refreshes the page every two seconds while it is visible. Pass `--port` when a stable port is required. Use `--no-open` to print the URL without opening it automatically. Press `Ctrl-C` in the serving terminal to stop it.
 
 The viewer is read-only. It renders the resolved workflow snapshot, step and approval status, workflow-level parallel children, worker IDs attached through `agent-flow attach`, recent events, and run files. Nested workers that are created inside another worker appear only when their IDs are reported to the controller; Codex session hierarchy is not inferred from unrelated Desktop tasks.
 
@@ -105,11 +137,14 @@ The viewer is read-only. It renders the resolved workflow snapshot, step and app
 The controller exposes small state transitions rather than a background daemon:
 
 ```text
+agent-flow init --repo <repository>
+agent-flow doctor --repo <repository>
+agent-flow start <workflow> --prompt <text> --repo <repository>
 agent-flow start <workflow> --request <file> --repo <repository>
 agent-flow start <workflow> --issue <issue-url-or-number> --repo <repository>
 agent-flow status <run-id> --repo <repository>
 agent-flow begin <run-id> <step-id> --repo <repository>
-agent-flow attach <run-id> <step-id> <worker-id> --repo <repository>
+agent-flow attach <run-id> <step-id> <worker-id> [--parent-worker <worker-id>] --repo <repository>
 agent-flow complete <run-id> <step-id> --repo <repository>
 agent-flow fail <run-id> <step-id> --message <error> --repo <repository>
 agent-flow shell <run-id> <step-id> --repo <repository>
@@ -129,7 +164,6 @@ Each run stores its durable state in the target repository:
 
 ```text
 .agent-flow/runs/<run-id>/
-├── artifacts/
 ├── events.jsonl
 ├── logs/
 ├── request.md
@@ -184,9 +218,10 @@ steps:
     type: shell
     command: ["uv", "run", "pytest", "-q"]
     output: test-output.txt
+    timeout_seconds: 900
 ```
 
-Prompts live directly in the workflow. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory.
+Prompts live directly in the workflow. Inputs resolve first against the run directory and then against the target repository. Outputs stay inside the run directory. The loader rejects duplicate YAML keys and unknown fields so misspellings cannot silently change workflow behavior.
 
 ### Agent steps
 
@@ -218,6 +253,16 @@ delegation:
 ```
 
 The step worker remains responsible for its children. It waits for them, synthesizes their results, and returns one artifact to the Desktop parent. Important information must reach the parent artifact before children are closed.
+
+After attaching the step worker, record each reported delegated child with its actual parent so the viewer can render the hierarchy and selected model accurately:
+
+```bash
+agent-flow attach <run-id> <step-id> <child-worker-id> \
+  --parent-worker <parent-worker-id> \
+  --repo <repository>
+```
+
+Existing flat worker records remain readable; hierarchy is shown only when parent identifiers were recorded.
 
 Use nested delegation for bounded exploration or analysis. Keep workflow-level stages in the main YAML when their outputs need independent validation, retry, or approval.
 
@@ -257,9 +302,10 @@ Shell commands are stored as argument lists and executed directly without shell 
   type: shell
   command: ["uv", "run", "pytest", "-q"]
   output: test-output.txt
+  timeout_seconds: 900
 ```
 
-Use a checked-in script when a command requires pipes, redirection, or complex shell behavior.
+`timeout_seconds` is optional, defaults to 1,800 seconds, and must be a positive integer. A timeout, missing executable, or non-zero exit is logged and leaves the step failed and retryable. Use a checked-in script when a command requires pipes, redirection, or complex shell behavior.
 
 ## Communication model
 
@@ -278,6 +324,6 @@ This keeps the parent coherent without reducing workers to disconnected subproce
 - Parallel children are read-only agent steps.
 - The parent task must remain available to coordinate native workers; the controller is not an unattended daemon.
 - Closing completed worker threads depends on host capability. Completed threads may remain inspectable in Desktop.
-- Cancellation, timeouts, and automatic worktree management are not implemented.
+- Agent cancellation and automatic worktree management are not implemented. Declared shell steps support timeouts.
 
 These constraints keep the execution model visible, recoverable, and aligned with Codex Desktop's native parent/subagent behavior.

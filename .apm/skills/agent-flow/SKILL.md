@@ -66,6 +66,14 @@ If the user explicitly asks for a new or dedicated Desktop task, use the host's 
 
 When `delegation.strategy` is `native`, the step worker may itself spawn at most `max_agents` bounded subagents. Give it the configured delegated model, effort, and delegation instructions. It must wait for those children and return one synthesized artifact to the parent.
 
+When the step worker reports a delegated child's native identifier, preserve the hierarchy for recovery and the viewer:
+
+```text
+agent-flow attach <run-id> <step-id> <child-worker-id> --parent-worker <parent-worker-id> --repo <repository>
+```
+
+Attach the step worker before attaching its children. Use the actual identifiers returned by Desktop and do not infer parentage from names.
+
 ### Questions and decisions
 
 Workers may send questions or escalations to the persistent parent while a step is running. When a question could materially affect behavior, scope, architecture, compatibility, permissions, published state, or destructive work:
