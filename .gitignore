@@ -17,6 +17,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.task/
 
 # APM-generated agent output
 /AGENTS.md

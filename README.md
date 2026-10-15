@@ -97,11 +97,12 @@ Codex users can also invoke a skill explicitly with `$full-review` or select it 
 
 ### Optional Task wrapper
 
-If the project uses [Task](https://taskfile.dev), download the ready-made wrapper from the same tagged release:
+If the project uses [Task](https://taskfile.dev), copy [the Task wrapper](templates/tasks/ai.yml) from a reviewed revision. The cached wrapper is newer than v0.1.0, so select a release or commit containing this version of the template:
 
 ```bash
 mkdir -p tasks
-curl -fsSL https://raw.githubusercontent.com/GriffinBoris/Agents/v0.1.0/templates/tasks/ai.yml -o tasks/ai.yml
+wrapper_ref="<reviewed-release-or-commit>"
+curl -fsSL "https://raw.githubusercontent.com/GriffinBoris/Agents/$wrapper_ref/templates/tasks/ai.yml" -o tasks/ai.yml
 ```
 
 Add the Task namespace to the project's `Taskfile.yml`:
@@ -117,8 +118,9 @@ Then run `task ai:install` and `task ai:check`. The wrapper provides:
 
 | Command | Purpose |
 | --- | --- |
-| `task ai:install` | Initialize APM if needed, install the pinned guidance package, and compile outputs. |
-| `task ai:generate` | Rebuild generated harness files after a local guidance change. |
+| `task ai:install` | Initialize APM if needed, select the pinned guidance package, and force installation, compilation, and validation. |
+| `task ai:generate` | Refresh guidance when its inputs change or the six-hour interval expires. |
+| `task ai:precommit` | Refresh guidance when needed and audit installed-package integrity on every commit. |
 | `task ai:check` | Validate local guidance and detect installed-package drift. |
 | `task ai:setup` | Alias for `install`. |
 
@@ -128,6 +130,12 @@ The template defaults to Codex, Claude Code, and OpenCode. Override its package 
 AGENTS_PACKAGE=GriffinBoris/Agents#v0.2.0 task ai:install  # upgrade to a reviewed release
 APM_TARGETS=claude,codex,opencode,copilot,gemini task ai:install
 ```
+
+For an existing project, update `targets:` in `apm.yml` to the same list before changing `APM_TARGETS`. The integrity audit replays the targets declared in the manifest.
+
+Installation, compilation, and primitive validation share a six-hour cache. Changes to `.apm/`, `apm.yml`, `apm.lock.yaml`, `tasks/ai.yml`, or the selected targets, and missing installed packages or generated output, trigger an earlier refresh. A failed rebuild clears the old success timestamp; a new timestamp is written only after installation, compilation, and validation succeed. Python lockfile changes do not invalidate this cache. Set `REFRESH_INTERVAL_SECONDS=43200` for twelve hours, or run `task ai:install` to refresh immediately.
+
+Cached pre-commit runs still execute `apm audit --ci --no-policy`, including installed-package integrity and drift checks. `task ai:check` always validates and audits guidance. Keep `.task/` ignored along with the generated harness files. Existing projects must replace their copied Task wrapper and update their hook entry; installing a new guidance package does not replace a project-owned `tasks/ai.yml`.
 
 ### Optional pre-commit hooks
 
@@ -158,9 +166,9 @@ repos:
         types: [python]
         pass_filenames: false
 
-      - id: setup-all-agents
-        name: Setup All Agents
-        entry: bash -c "task ai:setup"
+      - id: agent-guidance-check
+        name: Build and Validate Agent Guidance
+        entry: task ai:precommit
         language: system
         pass_filenames: false
 ```
@@ -171,6 +179,8 @@ Install the hooks and run them once:
 uv run pre-commit install
 uv run pre-commit run --all-files
 ```
+
+To verify the cache directly, run `task ai:install`, followed by `task ai:precommit`. The second command should report that `ai:refresh` is up to date, skip installation and compilation, and pass the integrity audit. Use `task ai:check` to run validation and the audit unconditionally.
 
 ### Migrate an older repository
 

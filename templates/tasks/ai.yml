@@ -9,6 +9,7 @@ version: '3'
 vars:
   AGENTS_PACKAGE: '{{default "GriffinBoris/Agents#v0.1.0" .AGENTS_PACKAGE}}'
   APM_TARGETS: '{{default "claude,codex,opencode" .APM_TARGETS}}'
+  REFRESH_INTERVAL_SECONDS: '{{default "21600" .REFRESH_INTERVAL_SECONDS}}'
 
 tasks:
   default:
@@ -18,19 +19,76 @@ tasks:
     silent: true
 
   install:
-    desc: Install the pinned shared guidance package and deploy it locally
+    desc: Select the pinned package and force a complete guidance refresh
     cmds:
+      - rm -f .task/ai/last-refresh
       - |
         if [ ! -f apm.yml ]; then
           apm init --yes --target "{{.APM_TARGETS}}"
         fi
-        apm install "{{.AGENTS_PACKAGE}}" --target "{{.APM_TARGETS}}"
-        apm compile --target "{{.APM_TARGETS}}"
+        apm install {{.AGENTS_PACKAGE | shellQuote}} --target {{.APM_TARGETS | shellQuote}}
+      - task: refresh
+        vars:
+          PACKAGE_INSTALLED: 'true'
+
+  now:
+    desc: Print the current Unix timestamp
+    cmds:
+      - 'printf "%s\n" {{now | unixEpoch}}'
+    silent: true
+
+  refresh:
+    internal: true
+    desc: Install, compile, and validate guidance when inputs change or the interval expires
+    sources:
+      - apm.yml
+      - .apm/**/*
+      - tasks/ai.yml
+    generates:
+      - apm_modules/**/apm.yml
+    status:
+      - test ! apm.lock.yaml -nt .task/ai/last-refresh
+      - test -f .task/ai/targets && read -r targets < .task/ai/targets && test "$targets" = {{.APM_TARGETS | shellQuote}}
+      - |
+          targets={{.APM_TARGETS | shellQuote}}
+          case ",$targets," in
+            *,claude,*) test -d .claude/skills && test -d .claude/rules || exit 1 ;;
+          esac
+          case ",$targets," in
+            *,codex,*|*,opencode,*) test -d .agents/skills && test -f AGENTS.md || exit 1 ;;
+          esac
+          case ",$targets," in
+            *,copilot,*) test -f .github/copilot-instructions.md || exit 1 ;;
+          esac
+          case ",$targets," in
+            *,gemini,*) test -f GEMINI.md || exit 1 ;;
+          esac
+      - |
+          test -f .task/ai/last-refresh &&
+          read -r last_refresh < .task/ai/last-refresh &&
+          age=$(( {{now | unixEpoch}} - last_refresh )) &&
+          test "$age" -ge 0 && test "$age" -lt {{.REFRESH_INTERVAL_SECONDS}}
+    cmds:
+      # A failed rebuild must not leave the previous success marker reusable.
+      - rm -f .task/ai/last-refresh
+      # Explicit installation selected the package before Task fingerprints the manifest.
+      - '{{if ne .PACKAGE_INSTALLED "true"}}apm install --frozen --no-policy --target {{.APM_TARGETS | shellQuote}}{{end}}'
+      - apm compile --target {{.APM_TARGETS | shellQuote}}
+      - apm compile --validate --local-only
+      - mkdir -p .task/ai
+      - 'printf "%s\n" {{.APM_TARGETS | shellQuote}} > .task/ai/targets'
+      - '{{.TASK_EXE | shellQuote}} --silent ai:now > .task/ai/last-refresh'
 
   generate:
-    desc: Recompile committed APM sources into harness guidance
+    desc: Refresh guidance when its inputs change or the interval expires
     cmds:
-      - apm compile --target "{{.APM_TARGETS}}"
+      - task: refresh
+
+  precommit:
+    desc: Refresh guidance when needed and audit installed-package integrity
+    cmds:
+      - task: generate
+      - apm audit --ci --no-policy
 
   check:
     desc: Validate local guidance and installed-package integrity

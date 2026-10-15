@@ -14,4 +14,5 @@
 /.github/prompts/
 /.github/plugin/plugin.json
 /apm_modules/
+/.task/
 /dist/
